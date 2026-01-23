@@ -1368,6 +1368,13 @@ function updateTimeIndicator() {
 
 function restInDen() {
     const cat = GameState.catData;
+    
+    // Can only sleep at night
+    if (!GameState.isNight) {
+        showMessage('It is daytime! You can only sleep at night.');
+        return;
+    }
+    
     cat.health = Math.min(100, cat.health + 25);
     cat.age += 1;
     checkRankUp();
