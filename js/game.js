@@ -22,30 +22,49 @@ const GameState = {
     // Current location
     currentLocation: 'camp',
     // Collected herbs
-    herbs: []
+    herbs: [],
+    // Day/night cycle
+    isNight: false,
+    dayStartTime: null,
+    mealsToday: 0,
+    isGatheringNight: false
 };
 
-// Herb types
+// NPC Cats in the clan
+const CLAN_CATS = [
+    { name: 'Brambleclaw', rank: 'Warrior', furColor: '#8B4513', pattern: 'tabby' },
+    { name: 'Sandstorm', rank: 'Warrior', furColor: '#F4A460', pattern: 'solid' },
+    { name: 'Graystripe', rank: 'Warrior', furColor: '#808080', pattern: 'solid' },
+    { name: 'Dustpelt', rank: 'Warrior', furColor: '#8B7355', pattern: 'tabby' },
+    { name: 'Cloudtail', rank: 'Warrior', furColor: '#FFFFFF', pattern: 'solid' },
+    { name: 'Brightheart', rank: 'Warrior', furColor: '#FFA500', pattern: 'patched' },
+    { name: 'Leafpool', rank: 'Medicine Cat', furColor: '#D2B48C', pattern: 'tabby' },
+    { name: 'Firestar', rank: 'Leader', furColor: '#FF4500', pattern: 'solid' },
+    { name: 'Squirrelpaw', rank: 'Apprentice', furColor: '#CD853F', pattern: 'solid' },
+    { name: 'Spiderpaw', rank: 'Apprentice', furColor: '#2F2F2F', pattern: 'solid' }
+];
+
+// Herb types (no emojis)
 const HERBS = {
-    cobweb: { name: 'Cobweb', emoji: '🕸️', heals: 15, desc: 'Stops bleeding' },
-    catmint: { name: 'Catmint', emoji: '🌿', heals: 30, desc: 'Cures greencough' },
-    marigold: { name: 'Marigold', emoji: '🌼', heals: 20, desc: 'Heals wounds' },
-    poppy: { name: 'Poppy Seeds', emoji: '🌺', heals: 10, desc: 'Helps sleep' },
-    juniper: { name: 'Juniper Berries', emoji: '🫐', heals: 25, desc: 'Strength' },
-    dock: { name: 'Dock Leaves', emoji: '🍃', heals: 15, desc: 'Soothes scratches' }
+    cobweb: { name: 'Cobweb', heals: 15, desc: 'Stops bleeding' },
+    catmint: { name: 'Catmint', heals: 30, desc: 'Cures greencough' },
+    marigold: { name: 'Marigold', heals: 20, desc: 'Heals wounds' },
+    poppy: { name: 'Poppy Seeds', heals: 10, desc: 'Helps sleep' },
+    juniper: { name: 'Juniper Berries', heals: 25, desc: 'Strength' },
+    dock: { name: 'Dock Leaves', heals: 15, desc: 'Soothes scratches' }
 };
 
-// Camp locations/dens
+// Camp locations/dens (no emojis)
 const CAMP_LOCATIONS = {
-    nursery: { x: 50, y: 280, width: 80, height: 60, name: 'Nursery', emoji: '🍼' },
-    elders: { x: 320, y: 280, width: 80, height: 60, name: "Elders' Den", emoji: '👴' },
-    warriors: { x: 50, y: 150, width: 80, height: 60, name: "Warriors' Den", emoji: '⚔️' },
-    apprentices: { x: 320, y: 150, width: 80, height: 60, name: "Apprentices' Den", emoji: '📚' },
-    medicine: { x: 185, y: 80, width: 80, height: 60, name: 'Medicine Den', emoji: '💊' },
-    leader: { x: 185, y: 280, width: 80, height: 60, name: "Leader's Den", emoji: '👑' },
-    highrock: { x: 185, y: 180, width: 80, height: 50, name: 'High Rock', emoji: '🪨' },
-    freshkill: { x: 100, y: 220, width: 50, height: 40, name: 'Fresh-kill Pile', emoji: '🍖' },
-    exit: { x: 370, y: 30, width: 50, height: 50, name: 'Camp Exit', emoji: '🌲' }
+    nursery: { x: 50, y: 280, width: 80, height: 60, name: 'Nursery' },
+    elders: { x: 320, y: 280, width: 80, height: 60, name: "Elders' Den" },
+    warriors: { x: 50, y: 150, width: 80, height: 60, name: "Warriors' Den" },
+    apprentices: { x: 320, y: 150, width: 80, height: 60, name: "Apprentices' Den" },
+    medicine: { x: 185, y: 80, width: 80, height: 60, name: 'Medicine Den' },
+    leader: { x: 185, y: 280, width: 80, height: 60, name: "Leader's Den" },
+    highrock: { x: 185, y: 180, width: 80, height: 50, name: 'High Rock' },
+    freshkill: { x: 100, y: 220, width: 50, height: 40, name: 'Fresh-kill Pile' },
+    exit: { x: 370, y: 30, width: 50, height: 50, name: 'Camp Exit' }
 };
 
 // Name suffixes for different ranks
@@ -658,89 +677,88 @@ function renderCamp() {
     };
     const colors = clanColors[clan] || clanColors.thunder;
     
+    // Night overlay
+    const nightOverlay = GameState.isNight ? 
+        `<rect x="0" y="0" width="450" height="400" fill="rgba(0,0,50,0.4)"/>` : '';
+    
     let worldHTML = `
         <svg id="camp-svg" viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
             <!-- Camp ground -->
             <rect x="0" y="0" width="450" height="400" fill="${colors.ground}"/>
             <ellipse cx="225" cy="200" rx="200" ry="180" fill="${colors.accent}" opacity="0.3"/>
             
-            <!-- Dens -->
+            <!-- Dens (no emojis) -->
             <!-- Nursery -->
             <g class="camp-den" data-location="nursery">
                 <ellipse cx="90" cy="310" rx="50" ry="35" fill="#5d4037"/>
                 <ellipse cx="90" cy="300" rx="45" ry="30" fill="#6d5047"/>
-                <text x="90" y="310" text-anchor="middle" font-size="20">🍼</text>
-                <text x="90" y="330" text-anchor="middle" fill="white" font-size="10">Nursery</text>
+                <text x="90" y="315" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Nursery</text>
             </g>
             
             <!-- Elders Den -->
             <g class="camp-den" data-location="elders">
                 <ellipse cx="360" cy="310" rx="50" ry="35" fill="#4a3a2a"/>
                 <ellipse cx="360" cy="300" rx="45" ry="30" fill="#5a4a3a"/>
-                <text x="360" y="310" text-anchor="middle" font-size="20">👴</text>
-                <text x="360" y="330" text-anchor="middle" fill="white" font-size="10">Elders Den</text>
+                <text x="360" y="315" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Elders Den</text>
             </g>
             
             <!-- Warriors Den -->
             <g class="camp-den" data-location="warriors">
                 <ellipse cx="70" cy="150" rx="55" ry="40" fill="#3d4a3d"/>
                 <ellipse cx="70" cy="140" rx="50" ry="35" fill="#4d5a4d"/>
-                <text x="70" y="155" text-anchor="middle" font-size="20">⚔️</text>
-                <text x="70" y="175" text-anchor="middle" fill="white" font-size="10">Warriors Den</text>
+                <text x="70" y="155" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Warriors Den</text>
             </g>
             
             <!-- Apprentices Den -->
             <g class="camp-den" data-location="apprentices">
                 <ellipse cx="380" cy="150" rx="50" ry="35" fill="#3a4a5a"/>
                 <ellipse cx="380" cy="140" rx="45" ry="30" fill="#4a5a6a"/>
-                <text x="380" y="155" text-anchor="middle" font-size="20">📚</text>
-                <text x="380" y="175" text-anchor="middle" fill="white" font-size="10">Apprentices</text>
+                <text x="380" y="155" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Apprentices</text>
             </g>
             
             <!-- Medicine Den -->
             <g class="camp-den" data-location="medicine">
                 <ellipse cx="225" cy="80" rx="55" ry="40" fill="#4a5a4a"/>
                 <ellipse cx="225" cy="70" rx="50" ry="35" fill="#5a6a5a"/>
-                <text x="225" y="85" text-anchor="middle" font-size="20">💊</text>
-                <text x="225" y="105" text-anchor="middle" fill="white" font-size="10">Medicine Den</text>
+                <text x="225" y="85" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Medicine Den</text>
             </g>
             
             <!-- High Rock -->
             <g class="camp-den" data-location="highrock">
                 <polygon points="225,160 180,220 270,220" fill="#5a5a6a"/>
                 <polygon points="225,170 190,215 260,215" fill="#6a6a7a"/>
-                <text x="225" y="200" text-anchor="middle" font-size="16">🪨</text>
-                <text x="225" y="230" text-anchor="middle" fill="white" font-size="10">High Rock</text>
+                <text x="225" y="200" text-anchor="middle" fill="white" font-size="10" font-weight="bold">High Rock</text>
             </g>
             
             <!-- Leader's Den -->
             <g class="camp-den" data-location="leader">
                 <ellipse cx="225" cy="320" rx="45" ry="35" fill="#6a5a3a"/>
                 <ellipse cx="225" cy="310" rx="40" ry="30" fill="#7a6a4a"/>
-                <text x="225" y="320" text-anchor="middle" font-size="20">👑</text>
-                <text x="225" y="345" text-anchor="middle" fill="white" font-size="10">Leader's Den</text>
+                <text x="225" y="320" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Leader's Den</text>
             </g>
             
             <!-- Fresh-kill Pile -->
             <g class="camp-den" data-location="freshkill">
                 <ellipse cx="140" cy="230" rx="30" ry="20" fill="#5a4a3a"/>
-                <text x="140" y="235" text-anchor="middle" font-size="18">🍖</text>
+                <ellipse cx="140" cy="225" rx="20" ry="12" fill="#6a3a2a"/>
                 <text x="140" y="255" text-anchor="middle" fill="white" font-size="9">Fresh-kill</text>
             </g>
             
             <!-- Water -->
             <g class="camp-den" data-location="water">
                 <ellipse cx="310" cy="230" rx="30" ry="20" fill="#2a4a6a"/>
-                <text x="310" y="235" text-anchor="middle" font-size="18">💧</text>
+                <ellipse cx="310" cy="228" rx="22" ry="14" fill="#3a6a9a"/>
                 <text x="310" y="255" text-anchor="middle" fill="white" font-size="9">Water</text>
             </g>
             
             <!-- Camp Exit -->
             <g class="camp-den" data-location="exit">
                 <rect x="400" y="20" width="40" height="60" fill="#2d4a2d" rx="5"/>
-                <text x="420" y="55" text-anchor="middle" font-size="20">🌲</text>
+                <polygon points="420,25 410,50 430,50" fill="#1a3a1a"/>
                 <text x="420" y="75" text-anchor="middle" fill="white" font-size="8">Exit</text>
             </g>
+            
+            ${nightOverlay}
     `;
     
     // Add player cat
@@ -794,7 +812,7 @@ function renderForest() {
         worldHTML += `
             <g class="herb-spot" data-herb="${spot.herb}" data-index="${i}">
                 <circle cx="${spot.x}" cy="${spot.y}" r="20" fill="#2a4a2a" stroke="#4a6a4a" stroke-width="2"/>
-                <text x="${spot.x}" y="${spot.y + 5}" text-anchor="middle" font-size="18">${herb.emoji}</text>
+                <text x="${spot.x}" y="${spot.y + 5}" text-anchor="middle" font-size="10" fill="#8a8">${herb.name}</text>
             </g>
         `;
     });
@@ -803,7 +821,8 @@ function renderForest() {
     worldHTML += `
         <g class="prey-spot" data-action="hunt">
             <circle cx="225" cy="200" r="25" fill="#4a3a2a" stroke="#6a5a4a" stroke-width="2"/>
-            <text x="225" y="205" text-anchor="middle" font-size="20">🐭</text>
+            <ellipse cx="225" cy="200" rx="8" ry="5" fill="#8B7355"/>
+            <circle cx="220" cy="198" r="2" fill="#1a1a1a"/>
             <text x="225" y="230" text-anchor="middle" fill="white" font-size="10">Prey</text>
         </g>
     `;
@@ -812,7 +831,7 @@ function renderForest() {
     worldHTML += `
         <g class="camp-den" data-location="camp">
             <rect x="5" y="170" width="40" height="60" fill="#4a3a2a" rx="5"/>
-            <text x="25" y="205" text-anchor="middle" font-size="18">🏕️</text>
+            <polygon points="25,175 15,200 35,200" fill="#3a5a3a"/>
             <text x="25" y="225" text-anchor="middle" fill="white" font-size="8">Camp</text>
         </g>
     `;
@@ -1016,7 +1035,7 @@ function checkLocationAction() {
     if (location) {
         interactWithLocation(location.key);
     } else {
-        showMessage('🔍 Nothing interesting here...');
+        showMessage('Nothing interesting here...');
     }
 }
 
@@ -1031,39 +1050,62 @@ function interactWithLocation(locationKey) {
     
     switch (locationKey) {
         case 'nursery':
-            title.textContent = '🍼 Nursery';
-            desc.textContent = 'Where queens and kits rest safely.';
+            title.textContent = 'Nursery';
+            desc.textContent = 'Where queens and kits rest safely. Warriors leave food and water here.';
             if (cat.rank === 'Kit') {
-                addAction(actions, '😴 Sleep', () => {
+                addAction(actions, 'Sleep', () => {
                     restInDen();
                     closePopup();
                 });
-            } else {
-                desc.textContent += ' Only kits can sleep here.';
+                addAction(actions, 'Eat (food left by warriors)', () => {
+                    cat.hunger = Math.min(100, cat.hunger + 30);
+                    showMessage('You ate the food left by the warriors!');
+                    updateGameUI();
+                    saveGameData();
+                    closePopup();
+                });
+                addAction(actions, 'Drink (water in moss)', () => {
+                    cat.thirst = Math.min(100, cat.thirst + 30);
+                    showMessage('You drank water from the moss!');
+                    updateGameUI();
+                    saveGameData();
+                    closePopup();
+                });
+            } else if (cat.rank === 'Warrior' || cat.rank === 'Apprentice') {
+                addAction(actions, 'Leave food for kits', () => {
+                    showMessage('You left some prey for the kits!');
+                    cat.experience += 5;
+                    closePopup();
+                });
+                addAction(actions, 'Leave water in moss for kits', () => {
+                    showMessage('You brought water in moss for the kits!');
+                    cat.experience += 5;
+                    closePopup();
+                });
             }
             break;
             
         case 'elders':
-            title.textContent = "👴 Elders' Den";
+            title.textContent = "Elders' Den";
             desc.textContent = 'The elders share stories of the old days.';
             if (cat.rank === 'Elder') {
-                addAction(actions, '😴 Rest', () => {
+                addAction(actions, 'Rest', () => {
                     restInDen();
                     closePopup();
                 });
             }
-            addAction(actions, '📖 Listen to stories', () => {
-                showMessage('📖 The elders tell you about the great battles of the past!');
+            addAction(actions, 'Listen to stories', () => {
+                showMessage('The elders tell you about the great battles of the past!');
                 cat.experience += 5;
                 closePopup();
             });
             break;
             
         case 'warriors':
-            title.textContent = "⚔️ Warriors' Den";
+            title.textContent = "Warriors' Den";
             desc.textContent = 'Where the brave warriors rest between patrols.';
             if (cat.rank === 'Warrior' || cat.rank === 'Deputy') {
-                addAction(actions, '😴 Rest', () => {
+                addAction(actions, 'Rest', () => {
                     restInDen();
                     closePopup();
                 });
@@ -1071,10 +1113,10 @@ function interactWithLocation(locationKey) {
             break;
             
         case 'apprentices':
-            title.textContent = "📚 Apprentices' Den";
+            title.textContent = "Apprentices' Den";
             desc.textContent = 'Young cats learning to become warriors.';
             if (cat.rank === 'Apprentice') {
-                addAction(actions, '😴 Rest', () => {
+                addAction(actions, 'Rest', () => {
                     restInDen();
                     closePopup();
                 });
@@ -1082,16 +1124,16 @@ function interactWithLocation(locationKey) {
             break;
             
         case 'medicine':
-            title.textContent = '💊 Medicine Den';
+            title.textContent = 'Medicine Den';
             desc.textContent = 'The medicine cat can heal you with herbs.';
             if (GameState.herbs.length > 0) {
-                addAction(actions, '🌿 Give herbs to medicine cat', () => {
+                addAction(actions, 'Give herbs to medicine cat', () => {
                     giveHerbsToMedicineCat();
                     closePopup();
                 });
             }
             if (cat.health < 100) {
-                addAction(actions, '💊 Ask for healing', () => {
+                addAction(actions, 'Ask for healing', () => {
                     askForHealing();
                     closePopup();
                 });
@@ -1099,26 +1141,26 @@ function interactWithLocation(locationKey) {
             break;
             
         case 'leader':
-            title.textContent = "👑 Leader's Den";
+            title.textContent = "Leader's Den";
             desc.textContent = 'The clan leader rests here.';
             if (cat.rank === 'Leader') {
-                addAction(actions, '😴 Rest', () => {
+                addAction(actions, 'Rest', () => {
                     restInDen();
                     closePopup();
                 });
-                addAction(actions, '📢 Call a clan meeting', () => {
-                    showMessage('📢 All cats gather at the High Rock!');
+                addAction(actions, 'Call a clan meeting', () => {
+                    showMessage('All cats gather at the High Rock!');
                     closePopup();
                 });
             }
             break;
             
         case 'highrock':
-            title.textContent = '🪨 High Rock';
+            title.textContent = 'High Rock';
             desc.textContent = 'Where clan meetings are held.';
             if (cat.rank === 'Leader') {
-                addAction(actions, '📢 Address the clan', () => {
-                    showMessage('📢 "Let all cats old enough to catch their own prey gather!"');
+                addAction(actions, 'Address the clan', () => {
+                    showMessage('"Let all cats old enough to catch their own prey gather!"');
                     cat.experience += 10;
                     closePopup();
                 });
@@ -1126,20 +1168,37 @@ function interactWithLocation(locationKey) {
             break;
             
         case 'freshkill':
-            title.textContent = '🍖 Fresh-kill Pile';
-            desc.textContent = 'Food for the clan.';
-            addAction(actions, '🍖 Eat', () => {
-                eatFromPile();
-                closePopup();
-            });
+            title.textContent = 'Fresh-kill Pile';
+            desc.textContent = 'Food for the clan. Warriors and apprentices add prey here.';
+            // Check meal limit for warriors/apprentices
+            if (cat.rank === 'Warrior' || cat.rank === 'Apprentice' || cat.rank === 'Deputy') {
+                if (GameState.mealsToday >= 3) {
+                    desc.textContent += ' You have already eaten 3 times today.';
+                } else {
+                    addAction(actions, `Eat (${3 - GameState.mealsToday} meals left today)`, () => {
+                        eatFromPile();
+                        closePopup();
+                    });
+                }
+                addAction(actions, 'Add prey to pile', () => {
+                    showMessage('You added your catch to the fresh-kill pile!');
+                    cat.experience += 5;
+                    closePopup();
+                });
+            } else {
+                addAction(actions, 'Eat', () => {
+                    eatFromPile();
+                    closePopup();
+                });
+            }
             break;
             
         case 'water':
-            title.textContent = '💧 Water';
+            title.textContent = 'Water';
             desc.textContent = 'Fresh water for drinking.';
-            addAction(actions, '💧 Drink', () => {
+            addAction(actions, 'Drink', () => {
                 cat.thirst = Math.min(100, cat.thirst + 40);
-                showMessage('💧 Refreshing water!');
+                showMessage('Refreshing water!');
                 updateGameUI();
                 saveGameData();
                 closePopup();
@@ -1147,16 +1206,21 @@ function interactWithLocation(locationKey) {
             break;
             
         case 'exit':
-            title.textContent = '🌲 Camp Exit';
-            desc.textContent = 'Leave camp to hunt and gather herbs.';
-            addAction(actions, '🌲 Go to forest', () => {
-                GameState.currentLocation = 'forest';
-                GameState.playerX = 225;
-                GameState.playerY = 200;
-                renderGameWorld();
-                showMessage('🌲 You left the camp to explore the forest!');
-                closePopup();
-            });
+            title.textContent = 'Camp Exit';
+            // Kits cannot leave camp!
+            if (cat.rank === 'Kit') {
+                desc.textContent = 'You are too young to leave camp! Stay in the nursery where it is safe.';
+            } else {
+                desc.textContent = 'Leave camp to hunt and gather herbs.';
+                addAction(actions, 'Go to forest', () => {
+                    GameState.currentLocation = 'forest';
+                    GameState.playerX = 225;
+                    GameState.playerY = 200;
+                    renderGameWorld();
+                    showMessage('You left the camp to explore the forest!');
+                    closePopup();
+                });
+            }
             break;
     }
     
@@ -1187,7 +1251,7 @@ function showInventory() {
     } else {
         list.innerHTML = GameState.herbs.map(h => {
             const herb = HERBS[h];
-            return `<div class="herb-item"><span class="herb-emoji">${herb.emoji}</span> ${herb.name}</div>`;
+            return `<div class="herb-item">${herb.name}</div>`;
         }).join('');
     }
     
@@ -1195,20 +1259,39 @@ function showInventory() {
     popup.classList.remove('hidden');
 }
 
+// Update time indicator
+function updateTimeIndicator() {
+    const indicator = document.getElementById('time-indicator');
+    if (indicator) {
+        indicator.textContent = GameState.isNight ? 'Night' : 'Day';
+        indicator.style.background = GameState.isNight ? 'rgba(0, 0, 50, 0.8)' : 'rgba(0, 0, 0, 0.7)';
+    }
+}
+
 function restInDen() {
     const cat = GameState.catData;
     cat.health = Math.min(100, cat.health + 25);
     cat.age += 1;
     checkRankUp();
-    showMessage('😴 You had a good rest! (+1 moon old)');
+    showMessage('You had a good rest! (+1 moon old)');
     updateGameUI();
     saveGameData();
 }
 
 function eatFromPile() {
     const cat = GameState.catData;
+    
+    // Check meal limit for warriors and apprentices
+    if (cat.rank === 'Warrior' || cat.rank === 'Apprentice' || cat.rank === 'Deputy') {
+        if (GameState.mealsToday >= 3) {
+            showMessage('You have already eaten 3 times today. Wait until tomorrow.');
+            return;
+        }
+        GameState.mealsToday++;
+    }
+    
     cat.hunger = Math.min(100, cat.hunger + 35);
-    showMessage('🍖 Yummy! That was delicious!');
+    showMessage('Yummy! That was delicious!');
     updateGameUI();
     saveGameData();
 }
@@ -1217,7 +1300,7 @@ function collectHerb(herbType, index) {
     const herb = HERBS[herbType];
     GameState.herbs.push(herbType);
     document.getElementById('herb-count').textContent = GameState.herbs.length;
-    showMessage(`${herb.emoji} You found ${herb.name}!`);
+    showMessage(`You found ${herb.name}!`);
 }
 
 function huntPrey() {
@@ -1225,16 +1308,16 @@ function huntPrey() {
     
     // Kits and elders can't hunt
     if (cat.rank === 'Kit') {
-        showMessage("🐱 You're too young to hunt! The warriors will bring you food.");
+        showMessage("You're too young to hunt! The warriors will bring you food.");
         return;
     }
     
     if (Math.random() > 0.3) {
         cat.hunger = Math.min(100, cat.hunger + 30);
         cat.experience += 10;
-        showMessage('🎯 You caught a mouse! Yummy!');
+        showMessage('You caught a mouse! Yummy!');
     } else {
-        showMessage('🐭 The mouse got away...');
+        showMessage('The mouse got away...');
     }
     
     updateGameUI();
@@ -1267,12 +1350,30 @@ function askForHealing() {
 
 // Game loop
 let gameLoopInterval;
+let dayNightInterval;
+
+// Day/Night cycle constants
+const DAY_LENGTH_MS = 20 * 60 * 1000; // 20 minutes per day
 
 function startGameLoop() {
     if (gameLoopInterval) clearInterval(gameLoopInterval);
+    if (dayNightInterval) clearInterval(dayNightInterval);
+    
+    // Initialize day start time if not set
+    if (!GameState.dayStartTime) {
+        GameState.dayStartTime = Date.now();
+        GameState.mealsToday = 0;
+        GameState.isNight = false;
+    }
+    
+    // Day/night cycle check every 10 seconds
+    dayNightInterval = setInterval(() => {
+        checkDayNightCycle();
+    }, 10000);
     
     gameLoopInterval = setInterval(() => {
         if (GameState.catData.inStarClan) return;
+        if (GameState.isNight) return; // No actions during night
         
         const cat = GameState.catData;
         
@@ -1285,19 +1386,19 @@ function startGameLoop() {
             // Auto-feed when hungry
             if (cat.hunger < 30) {
                 cat.hunger = Math.min(100, cat.hunger + 25);
-                showMessage('🍖 A warrior brought you some fresh-kill!');
+                showMessage('A warrior brought you some fresh-kill!');
             }
             // Auto-water when thirsty
             if (cat.thirst < 30) {
                 cat.thirst = Math.min(100, cat.thirst + 20);
-                showMessage('💧 A warrior brought you water in moss!');
+                showMessage('A warrior brought you water in moss!');
             }
         }
         
         // If very thirsty, a cat brings you water in moss
         if (cat.thirst < 20 && cat.rank !== 'Kit' && cat.rank !== 'Elder') {
             cat.thirst = Math.min(100, cat.thirst + 25);
-            showMessage('💧 A clanmate noticed you were thirsty and brought water in moss!');
+            showMessage('A clanmate noticed you were thirsty and brought water in moss!');
         }
         
         // If sick (low health), cats come to help
@@ -1305,11 +1406,11 @@ function startGameLoop() {
             // Medicine cat or helper brings food and water
             if (cat.hunger < 50) {
                 cat.hunger = Math.min(100, cat.hunger + 20);
-                showMessage('🍖 A kind clanmate brought you fresh-kill while you rest.');
+                showMessage('A kind clanmate brought you fresh-kill while you rest.');
             }
             if (cat.thirst < 50) {
                 cat.thirst = Math.min(100, cat.thirst + 20);
-                showMessage('💧 The medicine cat brought you water soaked in moss.');
+                showMessage('The medicine cat brought you water soaked in moss.');
             }
         }
         
@@ -1330,6 +1431,68 @@ function startGameLoop() {
         updateGameUI();
         saveGameData();
     }, 1000);
+}
+
+// Check day/night cycle
+function checkDayNightCycle() {
+    const elapsed = Date.now() - GameState.dayStartTime;
+    
+    if (elapsed >= DAY_LENGTH_MS && !GameState.isNight) {
+        // Night time!
+        startNight();
+    }
+}
+
+function startNight() {
+    GameState.isNight = true;
+    const cat = GameState.catData;
+    
+    // Check if it's a gathering night (random chance, but not for kits)
+    const isGathering = Math.random() > 0.5 && cat.rank !== 'Kit';
+    GameState.isGatheringNight = isGathering;
+    
+    if (isGathering) {
+        showMessage('Tonight is a Gathering! All cats except kits go to Fourtrees to meet the other clans.');
+        setTimeout(() => {
+            showGatheringScreen();
+        }, 3000);
+    } else {
+        showMessage('Night has fallen. All cats go to sleep...');
+        setTimeout(() => {
+            endNight();
+        }, 5000);
+    }
+}
+
+function showGatheringScreen() {
+    const cat = GameState.catData;
+    showMessage('At the Gathering, the leaders share news from each clan. You meet cats from other clans!');
+    cat.experience += 15;
+    
+    setTimeout(() => {
+        showMessage('The Gathering is over. The clans return to their camps.');
+        setTimeout(() => {
+            endNight();
+        }, 3000);
+    }, 5000);
+}
+
+function endNight() {
+    GameState.isNight = false;
+    GameState.dayStartTime = Date.now();
+    GameState.mealsToday = 0; // Reset meal count for new day
+    GameState.isGatheringNight = false;
+    
+    const cat = GameState.catData;
+    // Heal a bit from sleeping
+    cat.health = Math.min(100, cat.health + 10);
+    cat.age += 1;
+    checkRankUp();
+    
+    showMessage('Morning has come! A new day begins. (+1 moon)');
+    renderGameWorld();
+    updateGameUI();
+    saveGameData();
 }
 
 // Perform an action

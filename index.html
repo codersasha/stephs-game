@@ -210,19 +210,19 @@
                 </div>
                 <div class="status-bars">
                     <div class="status-bar health-bar">
-                        <span class="bar-label">❤️</span>
+                        <span class="bar-label">HP</span>
                         <div class="bar-container">
                             <div class="bar-fill" id="health-fill" style="width: 100%"></div>
                         </div>
                     </div>
                     <div class="status-bar hunger-bar">
-                        <span class="bar-label">🍖</span>
+                        <span class="bar-label">Food</span>
                         <div class="bar-container">
                             <div class="bar-fill" id="hunger-fill" style="width: 100%"></div>
                         </div>
                     </div>
                     <div class="status-bar thirst-bar">
-                        <span class="bar-label">💧</span>
+                        <span class="bar-label">Water</span>
                         <div class="bar-container">
                             <div class="bar-fill" id="thirst-fill" style="width: 100%"></div>
                         </div>
@@ -236,19 +236,22 @@
 
             <!-- Movement controls for mobile -->
             <div class="movement-controls">
-                <button class="move-btn" id="move-up">▲</button>
+                <button class="move-btn" id="move-up">W</button>
                 <div class="move-row">
-                    <button class="move-btn" id="move-left">◀</button>
-                    <button class="move-btn" id="move-down">▼</button>
-                    <button class="move-btn" id="move-right">▶</button>
+                    <button class="move-btn" id="move-left">A</button>
+                    <button class="move-btn" id="move-down">S</button>
+                    <button class="move-btn" id="move-right">D</button>
                 </div>
             </div>
 
             <!-- Action button (context-sensitive) -->
             <div class="game-actions">
-                <button class="action-btn" id="action-btn">❓ Look Around</button>
-                <button class="action-btn" id="inventory-btn">🎒 Herbs (<span id="herb-count">0</span>)</button>
+                <button class="action-btn" id="action-btn">Look Around</button>
+                <button class="action-btn" id="inventory-btn">Herbs (<span id="herb-count">0</span>)</button>
             </div>
+            
+            <!-- Day/Night indicator -->
+            <div id="time-indicator" class="time-indicator">Day</div>
 
             <div id="game-message" class="game-message"></div>
             
@@ -262,7 +265,7 @@
 
             <!-- Inventory popup -->
             <div id="inventory-popup" class="inventory-popup hidden">
-                <h3>🎒 Your Herbs</h3>
+                <h3>Your Herbs</h3>
                 <div id="herb-list"></div>
                 <button class="close-popup-btn" id="close-inventory">Close</button>
             </div>
@@ -274,9 +277,9 @@
             <h2>Welcome to StarClan</h2>
             <p class="starclan-message">You have joined your warrior ancestors among the stars.</p>
             <div class="starclan-options">
-                <button class="starclan-btn" id="stay-starclan">✨ Stay in StarClan</button>
-                <button class="starclan-btn" id="visit-dreams">🌙 Visit a Cat's Dream</button>
-                <button class="starclan-btn portal-btn" id="restart-portal">🌀 Portal to New Life</button>
+                <button class="starclan-btn" id="stay-starclan">Stay in StarClan</button>
+                <button class="starclan-btn" id="visit-dreams">Visit a Cat's Dream</button>
+                <button class="starclan-btn portal-btn" id="restart-portal">Portal to New Life</button>
             </div>
         </div>
     </div>
