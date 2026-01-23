@@ -361,23 +361,24 @@ function updateCatPreview() {
     
     let patternMarkings = '';
     
+    // Body is centered at (50, 55) with rx=32, ry=22
     if (pattern === 'tabby') {
         patternMarkings = `
-            <path d="M35 25 Q40 35 35 45" stroke="${patternColor}" stroke-width="3" fill="none"/>
-            <path d="M50 20 Q55 35 50 50" stroke="${patternColor}" stroke-width="3" fill="none"/>
-            <path d="M65 25 Q60 35 65 45" stroke="${patternColor}" stroke-width="3" fill="none"/>
+            <path d="M30 45 Q35 55 30 65" stroke="${patternColor}" stroke-width="3" fill="none"/>
+            <path d="M45 40 Q50 55 45 70" stroke="${patternColor}" stroke-width="3" fill="none"/>
+            <path d="M60 42 Q65 55 60 68" stroke="${patternColor}" stroke-width="3" fill="none"/>
         `;
     } else if (pattern === 'spotted') {
         patternMarkings = `
-            <circle cx="35" cy="32" r="4" fill="${patternColor}"/>
-            <circle cx="55" cy="28" r="5" fill="${patternColor}"/>
-            <circle cx="48" cy="42" r="4" fill="${patternColor}"/>
-            <circle cx="65" cy="38" r="3" fill="${patternColor}"/>
+            <circle cx="30" cy="50" r="4" fill="${patternColor}"/>
+            <circle cx="45" cy="58" r="5" fill="${patternColor}"/>
+            <circle cx="55" cy="48" r="4" fill="${patternColor}"/>
+            <circle cx="65" cy="60" r="3" fill="${patternColor}"/>
         `;
     } else if (pattern === 'patched') {
         patternMarkings = `
-            <ellipse cx="40" cy="35" rx="12" ry="10" fill="${patternColor}"/>
-            <ellipse cx="62" cy="40" rx="8" ry="7" fill="${patternColor}"/>
+            <ellipse cx="35" cy="55" rx="12" ry="10" fill="${patternColor}"/>
+            <ellipse cx="60" cy="52" rx="10" ry="8" fill="${patternColor}"/>
         `;
     }
     
