@@ -1200,7 +1200,7 @@ function renderPlayerCat() {
     // Scale based on rank - kits are tiny!
     let scale = 1.0;
     if (cat.rank === 'Kit') {
-        scale = 0.4; // Kits are tiny - same size as NPC kits!
+        scale = 0.28; // Kits are super tiny like Molekit!
     } else if (cat.rank === 'Apprentice') {
         scale = 0.7; // Apprentices are smaller
     } else if (cat.rank === 'Elder') {
