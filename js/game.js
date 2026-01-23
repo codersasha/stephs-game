@@ -5,7 +5,9 @@ const GameState = {
     currentScreen: 'home',
     selectedClan: null,
     selectedSlot: null,
-    catData: null
+    catData: null,
+    tutorialPage: 1,
+    isNewGame: false
 };
 
 // Name suffixes for different ranks
@@ -162,6 +164,15 @@ function setupEventListeners() {
     document.getElementById('stay-starclan').addEventListener('click', stayInStarClan);
     document.getElementById('visit-dreams').addEventListener('click', visitDreams);
     document.getElementById('restart-portal').addEventListener('click', restartGame);
+
+    // Tutorial buttons
+    document.getElementById('tutorial-prev').addEventListener('click', tutorialPrev);
+    document.getElementById('tutorial-next').addEventListener('click', tutorialNext);
+    
+    // Tutorial dots
+    document.querySelectorAll('.tutorial-dots .dot').forEach(dot => {
+        dot.addEventListener('click', () => goToTutorialPage(parseInt(dot.dataset.page)));
+    });
 }
 
 // Initialize home screen
@@ -278,11 +289,72 @@ function beginAdventure() {
         experience: 0,
         isDeputy: false,
         isLeader: false,
-        inStarClan: false
+        inStarClan: false,
+        hasSeenTutorial: false
     };
     
     saveGameData();
-    startGameplay();
+    
+    // Show tutorial for new players
+    GameState.isNewGame = true;
+    GameState.tutorialPage = 1;
+    updateTutorialPage();
+    showScreen('tutorial');
+}
+
+// Tutorial navigation
+function tutorialPrev() {
+    if (GameState.tutorialPage > 1) {
+        GameState.tutorialPage--;
+        updateTutorialPage();
+    }
+}
+
+function tutorialNext() {
+    const totalPages = 4;
+    if (GameState.tutorialPage < totalPages) {
+        GameState.tutorialPage++;
+        updateTutorialPage();
+    } else {
+        // Tutorial finished, start gameplay
+        GameState.catData.hasSeenTutorial = true;
+        saveGameData();
+        startGameplay();
+    }
+}
+
+function goToTutorialPage(page) {
+    GameState.tutorialPage = page;
+    updateTutorialPage();
+}
+
+function updateTutorialPage() {
+    const totalPages = 4;
+    const currentPage = GameState.tutorialPage;
+    
+    // Update pages
+    document.querySelectorAll('.tutorial-page').forEach(page => {
+        page.classList.remove('active');
+    });
+    document.querySelector(`.tutorial-page[data-page="${currentPage}"]`).classList.add('active');
+    
+    // Update dots
+    document.querySelectorAll('.tutorial-dots .dot').forEach(dot => {
+        dot.classList.remove('active');
+    });
+    document.querySelector(`.tutorial-dots .dot[data-page="${currentPage}"]`).classList.add('active');
+    
+    // Update buttons
+    const prevBtn = document.getElementById('tutorial-prev');
+    const nextBtn = document.getElementById('tutorial-next');
+    
+    prevBtn.disabled = currentPage === 1;
+    
+    if (currentPage === totalPages) {
+        nextBtn.textContent = "Let's Play! 🐱";
+    } else {
+        nextBtn.textContent = 'Next →';
+    }
 }
 
 // Start the main gameplay

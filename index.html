@@ -82,6 +82,63 @@
             <button class="back-btn" id="back-to-saves">← Back</button>
         </div>
 
+        <!-- Tutorial Screen -->
+        <div id="tutorial-screen" class="screen">
+            <div class="tutorial-content">
+                <h2>How to Play</h2>
+                <div class="tutorial-pages">
+                    <div class="tutorial-page active" data-page="1">
+                        <div class="tutorial-icon">🐱</div>
+                        <h3>Welcome, Young Warrior!</h3>
+                        <p>You are a kit in your clan. Your goal is to survive, grow strong, and become the leader!</p>
+                    </div>
+                    <div class="tutorial-page" data-page="2">
+                        <div class="tutorial-icon">❤️ 🍖 💧</div>
+                        <h3>Stay Alive!</h3>
+                        <p>Watch your bars at the top:</p>
+                        <ul>
+                            <li><strong>❤️ Health</strong> - Don't let this reach zero!</li>
+                            <li><strong>🍖 Hunger</strong> - Hunt to fill this up</li>
+                            <li><strong>💧 Thirst</strong> - Drink water to stay hydrated</li>
+                        </ul>
+                    </div>
+                    <div class="tutorial-page" data-page="3">
+                        <div class="tutorial-icon">🎮</div>
+                        <h3>Use the Buttons!</h3>
+                        <p>Tap the buttons at the bottom to do things:</p>
+                        <ul>
+                            <li><strong>🎯 Hunt</strong> - Catch prey to eat</li>
+                            <li><strong>💧 Drink</strong> - Get water</li>
+                            <li><strong>👁️ Patrol</strong> - Guard your territory</li>
+                            <li><strong>😴 Rest</strong> - Heal and grow older</li>
+                        </ul>
+                    </div>
+                    <div class="tutorial-page" data-page="4">
+                        <div class="tutorial-icon">⭐</div>
+                        <h3>Rank Up!</h3>
+                        <p>As you grow, your rank changes:</p>
+                        <ul>
+                            <li><strong>Kit</strong> → <strong>Apprentice</strong> (at 6 moons)</li>
+                            <li><strong>Apprentice</strong> → <strong>Warrior</strong> (with experience)</li>
+                            <li><strong>Warrior</strong> → <strong>Deputy</strong> → <strong>Leader!</strong></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="tutorial-nav">
+                    <div class="tutorial-dots">
+                        <span class="dot active" data-page="1"></span>
+                        <span class="dot" data-page="2"></span>
+                        <span class="dot" data-page="3"></span>
+                        <span class="dot" data-page="4"></span>
+                    </div>
+                    <div class="tutorial-buttons">
+                        <button class="tutorial-btn" id="tutorial-prev" disabled>← Back</button>
+                        <button class="tutorial-btn primary" id="tutorial-next">Next →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Game Screen -->
         <div id="game-screen" class="screen">
             <div class="game-hud">

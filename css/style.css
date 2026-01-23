@@ -608,6 +608,144 @@ body {
     }
 }
 
+/* Tutorial Screen */
+#tutorial-screen {
+    background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+}
+
+.tutorial-content {
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+
+.tutorial-content h2 {
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    color: #ffd700;
+    margin-bottom: 1.5rem;
+}
+
+.tutorial-pages {
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tutorial-page {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.tutorial-page.active {
+    display: flex;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.tutorial-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.tutorial-page h3 {
+    font-size: 1.4rem;
+    color: #ffd700;
+    margin-bottom: 1rem;
+}
+
+.tutorial-page p {
+    color: #ccc;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.tutorial-page ul {
+    list-style: none;
+    text-align: left;
+    color: #aaa;
+}
+
+.tutorial-page li {
+    padding: 8px 0;
+    font-size: 1rem;
+}
+
+.tutorial-page li strong {
+    color: white;
+}
+
+.tutorial-nav {
+    margin-top: 2rem;
+}
+
+.tutorial-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dot.active {
+    background: #ffd700;
+    transform: scale(1.2);
+}
+
+.tutorial-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.tutorial-btn {
+    padding: 12px 30px;
+    background: transparent;
+    border: 2px solid #666;
+    border-radius: 25px;
+    color: #888;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.tutorial-btn:not(:disabled):hover {
+    border-color: white;
+    color: white;
+}
+
+.tutorial-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.tutorial-btn.primary {
+    background: linear-gradient(135deg, #ffd700, #ff9800);
+    border-color: #ffd700;
+    color: #1a1a2e;
+    font-weight: bold;
+}
+
+.tutorial-btn.primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
 /* Clan-specific game world backgrounds */
 .game-world.thunder {
     background: linear-gradient(180deg, #2d4a3e 0%, #1a3a2e 50%, #0d2a1e 100%);
