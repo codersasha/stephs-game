@@ -32,7 +32,8 @@ const GameState = {
     // Emotion/pose
     currentEmotion: 'normal',
     isSitting: false,
-    isSleeping: false
+    isSleeping: false,
+    isHiding: false
 };
 
 // NPC Cats in the clan
@@ -293,10 +294,12 @@ function setupEventListeners() {
     
     // Emotion/action buttons
     document.getElementById('emote-happy').addEventListener('click', () => setEmotion('happy'));
+    document.getElementById('emote-sad').addEventListener('click', () => doSad());
     document.getElementById('emote-mad').addEventListener('click', () => setEmotion('mad'));
     document.getElementById('emote-purr').addEventListener('click', () => doPurr());
     document.getElementById('emote-hiss').addEventListener('click', () => doHiss());
     document.getElementById('emote-sit').addEventListener('click', () => toggleSit());
+    document.getElementById('emote-hide').addEventListener('click', () => toggleHide());
     document.getElementById('emote-sleep').addEventListener('click', () => toggleRest());
     document.getElementById('emote-meow').addEventListener('click', () => doMeow());
     document.getElementById('emote-talk').addEventListener('click', () => openSpeechPopup());
@@ -1236,6 +1239,10 @@ function renderPlayerCat() {
     const emotion = GameState.currentEmotion || 'normal';
     const isSitting = GameState.isSitting;
     const isSleeping = GameState.isSleeping;
+    const isHiding = GameState.isHiding;
+    
+    // Hiding makes cat nearly invisible
+    const hideOpacity = isHiding ? 0.3 : 1.0;
     
     // Emotion-based eye and mouth variations
     let eyeStyle = '';
@@ -1274,6 +1281,26 @@ function renderPlayerCat() {
         // Angry marks
         extraEffects = `
             <text x="35" y="-18" fill="#ff4444" font-size="10" font-weight="bold">#</text>
+        `;
+    } else if (emotion === 'sad') {
+        // Sad - droopy eyes, frown
+        eyeStyle = `
+            <ellipse cx="15" cy="-9" rx="4" ry="3.5" fill="white"/>
+            <ellipse cx="25" cy="-9" rx="4" ry="3.5" fill="white"/>
+            <ellipse cx="15" cy="-8" rx="3" ry="3" fill="${eyeColor}"/>
+            <ellipse cx="25" cy="-8" rx="3" ry="3" fill="${eyeColor}"/>
+            <ellipse cx="15" cy="-8" rx="1.5" ry="2.5" fill="#1a1a2e"/>
+            <ellipse cx="25" cy="-8" rx="1.5" ry="2.5" fill="#1a1a2e"/>
+            <!-- Sad eyebrows (slanted down) -->
+            <line x1="12" y1="-13" x2="18" y2="-14" stroke="${darkerFur}" stroke-width="2" stroke-linecap="round"/>
+            <line x1="28" y1="-13" x2="22" y2="-14" stroke="${darkerFur}" stroke-width="2" stroke-linecap="round"/>
+        `;
+        mouthStyle = `
+            <path d="M16,-1 Q20,-4 24,-1" stroke="#e8a0a8" stroke-width="2" fill="none" stroke-linecap="round"/>
+        `;
+        // Tear drop
+        extraEffects = `
+            <ellipse cx="12" cy="-3" rx="1.5" ry="2" fill="#7ec8e3" opacity="0.8"/>
         `;
     } else if (isSleeping) {
         // Sleeping - closed eyes
@@ -1363,7 +1390,7 @@ function renderPlayerCat() {
     
     return `
         <!-- Player cat with improved graphics -->
-        <g id="player-cat" transform="translate(${x}, ${y}) scale(${scale})" filter="url(#softShadow)">
+        <g id="player-cat" transform="translate(${x}, ${y}) scale(${scale})" filter="url(#softShadow)" opacity="${hideOpacity}">
             <!-- Ground shadow -->
             <ellipse cx="0" cy="22" rx="22" ry="6" fill="rgba(0,0,0,0.35)"/>
             
@@ -2490,6 +2517,60 @@ function doHiss() {
         document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
         renderGameWorld();
     }, 4000);
+}
+
+function doSad() {
+    GameState.currentEmotion = 'sad';
+    GameState.isSitting = false;
+    GameState.isSleeping = false;
+    GameState.isHiding = false;
+    
+    showSpeechBubble('player', '*sniffles*');
+    showMessage('You feel sad... your ears droop and your tail hangs low.');
+    
+    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('emote-sad').classList.add('active');
+    
+    renderGameWorld();
+    
+    // NPCs might try to comfort you
+    setTimeout(() => {
+        if (Math.random() > 0.3) {
+            const responses = [
+                { cat: 'Sandstorm', text: 'What\'s wrong, little one?' },
+                { cat: 'Ferncloud', text: 'Are you okay?' },
+                { cat: 'Leafpool', text: 'Come here, let me comfort you.' },
+                { cat: 'Molekit', text: 'Don\'t be sad! Wanna play?' },
+                { cat: 'Cherrykit', text: 'I\'ll be your friend!' }
+            ];
+            const response = responses[Math.floor(Math.random() * responses.length)];
+            showSpeechBubble(response.cat, response.text);
+        }
+    }, 2000);
+    
+    setTimeout(() => {
+        GameState.currentEmotion = 'normal';
+        document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+        renderGameWorld();
+    }, 6000);
+}
+
+function toggleHide() {
+    GameState.isHiding = !GameState.isHiding;
+    GameState.isSitting = false;
+    GameState.isSleeping = false;
+    GameState.currentEmotion = 'normal';
+    
+    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+    
+    if (GameState.isHiding) {
+        document.getElementById('emote-hide').classList.add('active');
+        showMessage('You hide! No one can see you now...');
+        showSpeechBubble('player', '*hides*');
+    } else {
+        showMessage('You come out of hiding!');
+    }
+    renderGameWorld();
 }
 
 function doMeow() {
