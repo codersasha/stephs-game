@@ -257,6 +257,25 @@
                 <button class="emotion-btn" id="emote-sit" title="Sit">Sit</button>
                 <button class="emotion-btn" id="emote-sleep" title="Sleep">Zzz</button>
                 <button class="emotion-btn" id="emote-meow" title="Meow">Meow</button>
+                <button class="emotion-btn" id="emote-talk" title="Talk">Talk</button>
+            </div>
+            
+            <!-- Speech input popup -->
+            <div id="speech-popup" class="speech-popup hidden">
+                <h3>What do you want to say?</h3>
+                <input type="text" id="speech-input" placeholder="Type something..." maxlength="50">
+                <div class="speech-quick-buttons">
+                    <button class="quick-speech-btn" data-text="Hello!">Hello!</button>
+                    <button class="quick-speech-btn" data-text="Let's play!">Let's play!</button>
+                    <button class="quick-speech-btn" data-text="I'm hungry">I'm hungry</button>
+                    <button class="quick-speech-btn" data-text="Follow me!">Follow me!</button>
+                    <button class="quick-speech-btn" data-text="Watch out!">Watch out!</button>
+                    <button class="quick-speech-btn" data-text="Good job!">Good job!</button>
+                </div>
+                <div class="speech-buttons">
+                    <button class="speech-btn" id="say-speech">Say it!</button>
+                    <button class="speech-btn cancel" id="cancel-speech">Cancel</button>
+                </div>
             </div>
             
             <!-- Day/Night indicator -->

@@ -682,6 +682,103 @@ body {
     color: #333;
 }
 
+/* Speech Popup */
+.speech-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(30, 30, 60, 0.98);
+    border: 3px solid #ffd700;
+    border-radius: 20px;
+    padding: 20px;
+    min-width: 300px;
+    max-width: 90%;
+    text-align: center;
+    z-index: 35;
+    color: white;
+}
+
+.speech-popup.hidden {
+    display: none;
+}
+
+.speech-popup h3 {
+    color: #ffd700;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.speech-popup input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #6a6a8a;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    font-family: inherit;
+}
+
+.speech-popup input:focus {
+    outline: none;
+    border-color: #ffd700;
+}
+
+.speech-quick-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.quick-speech-btn {
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #4a6a4a, #3a5a3a);
+    border: 2px solid #6a8a6a;
+    border-radius: 15px;
+    color: white;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.quick-speech-btn:hover {
+    background: linear-gradient(135deg, #5a8a5a, #4a7a4a);
+    border-color: #ffd700;
+}
+
+.speech-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.speech-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    border: 2px solid #fff;
+    border-radius: 10px;
+    color: #333;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.speech-btn.cancel {
+    background: linear-gradient(135deg, #6a6a8a, #4a4a6a);
+    border-color: #8a8aaa;
+    color: white;
+}
+
+.speech-btn:hover {
+    transform: scale(1.05);
+}
+
 .game-message {
     position: absolute;
     top: 50%;

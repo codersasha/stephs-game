@@ -290,6 +290,22 @@ function setupEventListeners() {
     document.getElementById('emote-sit').addEventListener('click', () => toggleSit());
     document.getElementById('emote-sleep').addEventListener('click', () => toggleSleep());
     document.getElementById('emote-meow').addEventListener('click', () => doMeow());
+    document.getElementById('emote-talk').addEventListener('click', () => openSpeechPopup());
+    
+    // Speech popup
+    document.getElementById('say-speech').addEventListener('click', () => sayPlayerSpeech());
+    document.getElementById('cancel-speech').addEventListener('click', () => closeSpeechPopup());
+    document.getElementById('speech-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sayPlayerSpeech();
+    });
+    
+    // Quick speech buttons
+    document.querySelectorAll('.quick-speech-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('speech-input').value = btn.dataset.text;
+            sayPlayerSpeech();
+        });
+    });
 }
 
 // Initialize home screen
@@ -855,6 +871,10 @@ function renderCamp() {
     
     // Add player cat
     worldHTML += renderPlayerCat();
+    
+    // Add speech bubbles on top
+    worldHTML += renderSpeechBubbles();
+    
     worldHTML += `</svg>`;
     
     gameWorld.innerHTML = worldHTML;
@@ -1111,6 +1131,10 @@ function renderForest() {
     
     // Add player cat
     worldHTML += renderPlayerCat();
+    
+    // Add speech bubbles
+    worldHTML += renderSpeechBubbles();
+    
     worldHTML += `</svg>`;
     
     gameWorld.innerHTML = worldHTML;
@@ -1872,6 +1896,9 @@ function startGameLoop() {
         // Check for enemy raid
         checkForRaid();
         
+        // Random NPC chatter
+        triggerRandomNPCChat();
+        
         updateGameUI();
         saveGameData();
     }, 1000);
@@ -2150,21 +2177,198 @@ function toggleSleep() {
 }
 
 function doMeow() {
-    showMessage('MEOW! Your clanmates look at you.');
+    showSpeechBubble('player', 'Meow!');
     
-    // Random clanmate responds
+    // Random clanmate responds with speech bubble
     const responses = [
-        'Brambleclaw nods at you.',
-        'Sandstorm purrs warmly.',
-        'Firestar looks down from the High Rock.',
-        'Leafpool waves her tail in greeting.',
-        'Cloudtail meows back!',
-        'Squirrelpaw bounces over excitedly!'
+        { cat: 'Brambleclaw', text: 'Hello there!' },
+        { cat: 'Sandstorm', text: '*purrs*' },
+        { cat: 'Firestar', text: 'Greetings, young one.' },
+        { cat: 'Leafpool', text: 'StarClan bless you!' },
+        { cat: 'Cloudtail', text: 'Meow!' },
+        { cat: 'Squirrelpaw', text: 'Hi! Wanna play?' }
     ];
     
     setTimeout(() => {
-        showMessage(responses[Math.floor(Math.random() * responses.length)]);
-    }, 2000);
+        const response = responses[Math.floor(Math.random() * responses.length)];
+        showSpeechBubble(response.cat, response.text);
+    }, 1500);
+}
+
+// Speech Bubble System
+let activeSpeechBubbles = [];
+
+function openSpeechPopup() {
+    document.getElementById('speech-popup').classList.remove('hidden');
+    document.getElementById('speech-input').value = '';
+    document.getElementById('speech-input').focus();
+}
+
+function closeSpeechPopup() {
+    document.getElementById('speech-popup').classList.add('hidden');
+}
+
+function sayPlayerSpeech() {
+    const input = document.getElementById('speech-input');
+    const text = input.value.trim();
+    
+    if (text) {
+        showSpeechBubble('player', text);
+        
+        // NPCs might respond!
+        if (Math.random() > 0.4) {
+            setTimeout(() => {
+                triggerNPCResponse(text);
+            }, 2000);
+        }
+    }
+    
+    closeSpeechPopup();
+}
+
+function showSpeechBubble(speaker, text) {
+    // Remove old bubble for this speaker
+    activeSpeechBubbles = activeSpeechBubbles.filter(b => b.speaker !== speaker);
+    
+    // Add new bubble
+    const bubble = {
+        speaker: speaker,
+        text: text,
+        startTime: Date.now()
+    };
+    activeSpeechBubbles.push(bubble);
+    
+    // Re-render to show bubbles
+    renderGameWorld();
+    
+    // Remove bubble after 4 seconds
+    setTimeout(() => {
+        activeSpeechBubbles = activeSpeechBubbles.filter(b => b !== bubble);
+        renderGameWorld();
+    }, 4000);
+}
+
+function triggerNPCResponse(playerText) {
+    const npcs = ['Brambleclaw', 'Sandstorm', 'Leafpool', 'Cloudtail', 'Squirrelpaw', 'Dustpelt'];
+    const npc = npcs[Math.floor(Math.random() * npcs.length)];
+    
+    // Smart responses based on what player said
+    let response = '';
+    const lowerText = playerText.toLowerCase();
+    
+    if (lowerText.includes('hello') || lowerText.includes('hi')) {
+        response = ['Hello!', 'Hi there!', 'Greetings!', 'Hey!'][Math.floor(Math.random() * 4)];
+    } else if (lowerText.includes('play')) {
+        response = ['Sure!', 'Let\'s go!', 'Race you!', 'Sounds fun!'][Math.floor(Math.random() * 4)];
+    } else if (lowerText.includes('hungry') || lowerText.includes('food')) {
+        response = ['Check the fresh-kill pile!', 'I caught a mouse earlier!', 'Want to hunt together?'][Math.floor(Math.random() * 3)];
+    } else if (lowerText.includes('watch out') || lowerText.includes('danger')) {
+        response = ['What is it?!', 'Where?!', 'I\'m ready to fight!'][Math.floor(Math.random() * 3)];
+    } else if (lowerText.includes('follow')) {
+        response = ['Lead the way!', 'Right behind you!', 'Where are we going?'][Math.floor(Math.random() * 3)];
+    } else if (lowerText.includes('good') || lowerText.includes('nice')) {
+        response = ['Thanks!', '*purrs*', 'You too!'][Math.floor(Math.random() * 3)];
+    } else {
+        response = ['Interesting!', '*nods*', 'I see...', 'Hmm...', 'Oh!'][Math.floor(Math.random() * 5)];
+    }
+    
+    showSpeechBubble(npc, response);
+}
+
+function renderSpeechBubbles() {
+    let bubblesHTML = '';
+    
+    for (const bubble of activeSpeechBubbles) {
+        let x, y;
+        
+        if (bubble.speaker === 'player') {
+            x = GameState.playerX;
+            y = GameState.playerY - 45;
+        } else {
+            // Find NPC position
+            const npcPos = getNPCPosition(bubble.speaker);
+            x = npcPos.x;
+            y = npcPos.y - 30;
+        }
+        
+        // Truncate long text
+        const displayText = bubble.text.length > 25 ? bubble.text.substring(0, 22) + '...' : bubble.text;
+        
+        bubblesHTML += `
+            <g class="speech-bubble" transform="translate(${x}, ${y})">
+                <!-- Bubble background -->
+                <rect x="-50" y="-25" width="100" height="30" rx="10" fill="white" stroke="#333" stroke-width="1"/>
+                <!-- Pointer -->
+                <polygon points="-5,5 5,5 0,12" fill="white" stroke="#333" stroke-width="1"/>
+                <line x1="-4" y1="5" x2="4" y2="5" stroke="white" stroke-width="2"/>
+                <!-- Text -->
+                <text x="0" y="-6" text-anchor="middle" fill="#333" font-size="9" font-weight="bold">${displayText}</text>
+            </g>
+        `;
+    }
+    
+    return bubblesHTML;
+}
+
+function getNPCPosition(npcName) {
+    const npcs = window.npcPositions;
+    
+    // Check moving NPCs
+    if (npcName.toLowerCase() === 'dustpelt' && npcs.dustpelt) {
+        return { x: npcs.dustpelt.x, y: npcs.dustpelt.y };
+    }
+    if (npcName.toLowerCase() === 'cloudtail' && npcs.cloudtail) {
+        return { x: npcs.cloudtail.x, y: npcs.cloudtail.y };
+    }
+    if (npcName.toLowerCase() === 'brightheart' && npcs.brightheart) {
+        return { x: npcs.brightheart.x, y: npcs.brightheart.y };
+    }
+    if (npcName.toLowerCase() === 'ferncloud' && npcs.ferncloud) {
+        return { x: npcs.ferncloud.x, y: npcs.ferncloud.y };
+    }
+    
+    // Static NPC positions
+    const staticPositions = {
+        'Brambleclaw': { x: 85, y: 175 },
+        'Squirrelpaw': { x: 355, y: 175 },
+        'Leafpool': { x: 258, y: 105 },
+        'Sandstorm': { x: 290, y: 245 },
+        'Graystripe': { x: 160, y: 245 },
+        'Firestar': { x: 228, y: 168 },
+        'Spiderleg': { x: 150, y: 275 },
+        'Whitewing': { x: 330, y: 95 }
+    };
+    
+    return staticPositions[npcName] || { x: 200, y: 200 };
+}
+
+// Random NPC chatter
+function triggerRandomNPCChat() {
+    if (GameState.currentScreen !== 'game') return;
+    if (GameState.currentLocation !== 'camp') return;
+    if (GameState.isNight) return;
+    if (Math.random() > 0.01) return; // 1% chance per second
+    
+    const npcs = ['Brambleclaw', 'Sandstorm', 'Leafpool', 'Cloudtail', 'Squirrelpaw', 'Dustpelt'];
+    const npc = npcs[Math.floor(Math.random() * npcs.length)];
+    
+    const randomChat = [
+        'Nice weather today!',
+        'I smell prey...',
+        'StarClan guide us.',
+        '*yawns*',
+        'The clan is strong!',
+        'Want to train?',
+        '*stretches*',
+        'I had a strange dream...',
+        'The forest is quiet.',
+        'Time for patrol soon.',
+        '*grooms fur*',
+        'Any news?'
+    ];
+    
+    const text = randomChat[Math.floor(Math.random() * randomChat.length)];
+    showSpeechBubble(npc, text);
 }
 
 // Enemy Clan Raid System
