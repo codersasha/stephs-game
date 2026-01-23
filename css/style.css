@@ -555,8 +555,15 @@ body {
 .game-world {
     width: 100%;
     height: 100%;
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     overflow: hidden;
+}
+
+.game-world svg {
+    width: 100%;
+    height: 100%;
 }
 
 .game-actions {
@@ -613,6 +620,152 @@ body {
 @keyframes fadeInOut {
     0%, 100% { opacity: 0; }
     20%, 80% { opacity: 1; }
+}
+
+/* Movement Controls */
+.movement-controls {
+    position: absolute;
+    bottom: 80px;
+    left: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    z-index: 15;
+}
+
+.move-row {
+    display: flex;
+    gap: 5px;
+}
+
+.move-btn {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #666;
+    border-radius: 10px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.move-btn:active {
+    background: rgba(255, 215, 0, 0.3);
+    border-color: #ffd700;
+    transform: scale(0.95);
+}
+
+/* Location Popup */
+.location-popup, .inventory-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(20, 20, 40, 0.95);
+    border: 3px solid #ffd700;
+    border-radius: 20px;
+    padding: 20px;
+    min-width: 280px;
+    max-width: 90%;
+    text-align: center;
+    z-index: 30;
+    color: white;
+}
+
+.location-popup.hidden, .inventory-popup.hidden {
+    display: none;
+}
+
+.location-popup h3, .inventory-popup h3 {
+    color: #ffd700;
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+.location-popup p {
+    color: #aaa;
+    margin-bottom: 15px;
+}
+
+#location-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#location-actions button {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #4a4a6a, #3a3a5a);
+    border: 2px solid #6a6a8a;
+    border-radius: 10px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+#location-actions button:hover {
+    border-color: #ffd700;
+}
+
+.close-popup-btn {
+    padding: 10px 25px;
+    background: transparent;
+    border: 2px solid #666;
+    border-radius: 20px;
+    color: #888;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.close-popup-btn:hover {
+    border-color: white;
+    color: white;
+}
+
+/* Herb list */
+#herb-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 15px;
+    min-height: 50px;
+}
+
+.herb-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.herb-item .herb-emoji {
+    font-size: 1.5rem;
+}
+
+.no-herbs {
+    color: #888;
+    font-style: italic;
+}
+
+/* Camp view styles */
+.camp-den {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.camp-den:hover {
+    filter: brightness(1.3);
 }
 
 /* StarClan Screen */

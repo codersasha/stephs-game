@@ -225,14 +225,38 @@
                 <!-- Game world rendered here -->
             </div>
 
+            <!-- Movement controls for mobile -->
+            <div class="movement-controls">
+                <button class="move-btn" id="move-up">▲</button>
+                <div class="move-row">
+                    <button class="move-btn" id="move-left">◀</button>
+                    <button class="move-btn" id="move-down">▼</button>
+                    <button class="move-btn" id="move-right">▶</button>
+                </div>
+            </div>
+
+            <!-- Action button (context-sensitive) -->
             <div class="game-actions">
-                <button class="action-btn" id="hunt-btn">🎯 Hunt</button>
-                <button class="action-btn" id="drink-btn">💧 Drink</button>
-                <button class="action-btn" id="patrol-btn">👁️ Patrol</button>
-                <button class="action-btn" id="rest-btn">😴 Rest</button>
+                <button class="action-btn" id="action-btn">❓ Look Around</button>
+                <button class="action-btn" id="inventory-btn">🎒 Herbs (<span id="herb-count">0</span>)</button>
             </div>
 
             <div id="game-message" class="game-message"></div>
+            
+            <!-- Location popup -->
+            <div id="location-popup" class="location-popup hidden">
+                <h3 id="location-title">Location</h3>
+                <p id="location-desc">Description</p>
+                <div id="location-actions"></div>
+                <button class="close-popup-btn" id="close-popup">Close</button>
+            </div>
+
+            <!-- Inventory popup -->
+            <div id="inventory-popup" class="inventory-popup hidden">
+                <h3>🎒 Your Herbs</h3>
+                <div id="herb-list"></div>
+                <button class="close-popup-btn" id="close-inventory">Close</button>
+            </div>
         </div>
 
         <!-- StarClan Screen -->
