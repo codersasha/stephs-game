@@ -1685,9 +1685,48 @@ function interactWithLocation(locationKey) {
             
         case 'exit':
             title.textContent = 'Camp Exit';
-            // Kits cannot leave camp!
+            
+            // If visiting another clan, go back home
+            if (GameState.visitingClan) {
+                desc.textContent = 'Return to your own clan?';
+                addAction(actions, 'Go back home', () => {
+                    GameState.selectedClan = GameState.homeClan;
+                    cat.clan = GameState.homeClan;
+                    GameState.visitingClan = false;
+                    GameState.playerX = 200;
+                    GameState.playerY = 200;
+                    renderGameWorld();
+                    showMessage('You return to your own camp. Home sweet home!');
+                    closePopup();
+                });
+                addAction(actions, 'Stay a bit longer', closePopup);
+                break;
+            }
+            
+            // Kits can sneak out if no one is watching!
             if (cat.rank === 'Kit') {
-                desc.textContent = 'You are too young to leave camp! Stay in the nursery where it is safe.';
+                const isWatching = Math.random() > 0.4; // 40% chance no one is watching
+                if (isWatching) {
+                    desc.textContent = 'A warrior is watching the exit! You cannot sneak out right now...';
+                } else {
+                    desc.textContent = 'No one is watching the exit! You could sneak out...';
+                    addAction(actions, 'Sneak to the forest', () => {
+                        sneakOutOfCamp('forest');
+                        closePopup();
+                    });
+                    addAction(actions, 'Sneak to ShadowClan', () => {
+                        sneakOutOfCamp('shadow');
+                        closePopup();
+                    });
+                    addAction(actions, 'Sneak to RiverClan', () => {
+                        sneakOutOfCamp('river');
+                        closePopup();
+                    });
+                    addAction(actions, 'Sneak to WindClan', () => {
+                        sneakOutOfCamp('wind');
+                        closePopup();
+                    });
+                }
             } else {
                 desc.textContent = 'Leave camp to hunt and gather herbs.';
                 addAction(actions, 'Go to forest', () => {
@@ -1697,6 +1736,11 @@ function interactWithLocation(locationKey) {
                     renderGameWorld();
                     showMessage('You left the camp to explore the forest!');
                     closePopup();
+                });
+                // Warriors can also visit other clans
+                addAction(actions, 'Visit another clan', () => {
+                    closePopup();
+                    showClanVisitOptions();
                 });
             }
             break;
@@ -1735,6 +1779,169 @@ function showInventory() {
     
     document.getElementById('herb-count').textContent = GameState.herbs.length;
     popup.classList.remove('hidden');
+}
+
+// Kit sneaking out of camp!
+function sneakOutOfCamp(destination) {
+    const cat = GameState.catData;
+    
+    showMessage('You sneak past the camp entrance... your heart is racing!');
+    
+    setTimeout(() => {
+        // Chance of getting caught!
+        if (Math.random() < 0.3) {
+            // Caught!
+            const catchers = ['Sandstorm', 'Brambleclaw', 'Dustpelt', 'Ferncloud'];
+            const catcher = catchers[Math.floor(Math.random() * catchers.length)];
+            showMessage(`${catcher} spots you! "Where do you think you're going, little one?"`);
+            setTimeout(() => {
+                showMessage('You are carried back to the nursery...');
+            }, 2500);
+            return;
+        }
+        
+        // Made it out!
+        showMessage('You made it out! The forest stretches before you...');
+        
+        setTimeout(() => {
+            if (destination === 'forest') {
+                GameState.currentLocation = 'forest';
+                GameState.playerX = 225;
+                GameState.playerY = 200;
+                renderGameWorld();
+                showMessage('The forest is big and scary for a little kit! Be careful!');
+            } else {
+                // Going to another clan!
+                visitOtherClan(destination);
+            }
+        }, 2500);
+    }, 2500);
+}
+
+// Visit another clan's territory
+function visitOtherClan(clanKey) {
+    const cat = GameState.catData;
+    const clanNames = {
+        'shadow': 'ShadowClan',
+        'river': 'RiverClan',
+        'wind': 'WindClan',
+        'thunder': 'ThunderClan'
+    };
+    const clanName = clanNames[clanKey] || 'the other clan';
+    
+    showMessage(`You sneak through the forest toward ${clanName} territory...`);
+    
+    setTimeout(() => {
+        // Different outcomes
+        const outcome = Math.random();
+        
+        if (outcome < 0.3) {
+            // Get caught by a patrol and sent back
+            showMessage(`A ${clanName} patrol spots you! "What are you doing here, little kit?"`);
+            setTimeout(() => {
+                showMessage(`They escort you back to the border. "Go home where you belong!"`);
+                setTimeout(() => {
+                    showMessage('You run back to your camp...');
+                    GameState.playerX = 200;
+                    GameState.playerY = 200;
+                    renderGameWorld();
+                }, 2500);
+            }, 2500);
+        } else if (outcome < 0.6) {
+            // Meet a friendly cat
+            showMessage(`A ${clanName} cat finds you. "Hello little one, are you lost?"`);
+            setTimeout(() => {
+                showMessage('They are kind and show you around a bit before sending you home.');
+                cat.experience += 10;
+                setTimeout(() => {
+                    showMessage('What an adventure! You head back to camp.');
+                    GameState.playerX = 200;
+                    GameState.playerY = 200;
+                    renderGameWorld();
+                }, 2500);
+            }, 2500);
+        } else if (outcome < 0.85) {
+            // You get to explore!
+            showMessage(`You sneak into ${clanName}'s camp and hide in the bushes!`);
+            setTimeout(() => {
+                showMessage('You see their warriors, their leader on the high rock... This is exciting!');
+                cat.experience += 15;
+                setTimeout(() => {
+                    showMessage('Before anyone notices, you sneak back home. What an adventure!');
+                    GameState.playerX = 200;
+                    GameState.playerY = 200;
+                    renderGameWorld();
+                }, 3000);
+            }, 2500);
+        } else {
+            // You can stay for a while! (Temporary visit)
+            showMessage(`You made it to ${clanName}'s camp! You hide and watch...`);
+            setTimeout(() => {
+                // Temporarily change to that clan's camp view
+                const oldClan = cat.clan;
+                GameState.selectedClan = clanKey;
+                GameState.playerX = 380;
+                GameState.playerY = 350;
+                renderGameWorld();
+                showMessage(`You are exploring ${clanName}! Don't get caught! Click Exit to go home.`);
+                
+                // Set a flag so they can go back
+                GameState.visitingClan = true;
+                GameState.homeClan = oldClan;
+            }, 2500);
+        }
+    }, 2500);
+}
+
+// Show clan visit options for warriors
+function showClanVisitOptions() {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Visit Another Clan';
+    desc.textContent = 'Where would you like to go? (Diplomatic visit)';
+    actions.innerHTML = '';
+    
+    const clans = ['thunder', 'shadow', 'river', 'wind'];
+    for (const clan of clans) {
+        if (clan !== cat.clan) {
+            addAction(actions, `Visit ${CLANS[clan].name}`, () => {
+                closePopup();
+                diplomaticVisit(clan);
+            });
+        }
+    }
+    addAction(actions, 'Cancel', closePopup);
+    
+    popup.classList.remove('hidden');
+}
+
+// Diplomatic visit for warriors
+function diplomaticVisit(clanKey) {
+    const clanName = CLANS[clanKey].name;
+    const cat = GameState.catData;
+    
+    showMessage(`You travel to ${clanName} for a diplomatic visit...`);
+    
+    setTimeout(() => {
+        showMessage(`The ${clanName} cats greet you at the border.`);
+        setTimeout(() => {
+            // Temporarily show that clan's camp
+            const oldClan = cat.clan;
+            GameState.selectedClan = clanKey;
+            GameState.playerX = 380;
+            GameState.playerY = 350;
+            renderGameWorld();
+            showMessage(`Welcome to ${clanName}! Click Exit to return home.`);
+            
+            GameState.visitingClan = true;
+            GameState.homeClan = oldClan;
+            cat.experience += 10;
+        }, 2500);
+    }, 2000);
 }
 
 // Update time indicator
