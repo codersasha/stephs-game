@@ -71,13 +71,65 @@
 
         <!-- Name Creation Screen -->
         <div id="name-screen" class="screen">
-            <h2>Name Your Kit</h2>
-            <p class="name-instruction">What would you like your cat to be called?</p>
-            <div class="name-creator">
-                <input type="text" id="cat-name-input" placeholder="Enter first part..." maxlength="12">
-                <span class="name-suffix" id="name-suffix">kit</span>
+            <h2>Create Your Cat</h2>
+            
+            <!-- Cat Preview -->
+            <div id="cat-preview" class="cat-preview">
+                <!-- SVG cat preview will be rendered here -->
             </div>
-            <p class="name-preview">Your name will be: <span id="full-name-preview">___kit</span></p>
+            
+            <!-- Name Input -->
+            <div class="name-section">
+                <p class="name-instruction">What's your cat's name?</p>
+                <div class="name-creator">
+                    <input type="text" id="cat-name-input" placeholder="Enter name..." maxlength="12">
+                    <span class="name-suffix" id="name-suffix">kit</span>
+                </div>
+                <p class="name-preview">Your name will be: <span id="full-name-preview">___kit</span></p>
+            </div>
+            
+            <!-- Customization Options -->
+            <div class="customization-section">
+                <!-- Fur Color -->
+                <div class="custom-option">
+                    <span class="option-label">Fur Color</span>
+                    <div class="color-picker" id="fur-colors">
+                        <button class="color-btn selected" data-color="#e67e22" data-name="orange" title="Orange"></button>
+                        <button class="color-btn" data-color="#8d6e63" data-name="brown" title="Brown"></button>
+                        <button class="color-btn" data-color="#2c2c2c" data-name="black" title="Black"></button>
+                        <button class="color-btn" data-color="#f5f5f5" data-name="white" title="White"></button>
+                        <button class="color-btn" data-color="#95a5a6" data-name="gray" title="Gray"></button>
+                        <button class="color-btn" data-color="#d4a574" data-name="cream" title="Cream"></button>
+                        <button class="color-btn" data-color="#a0522d" data-name="ginger" title="Ginger"></button>
+                        <button class="color-btn" data-color="#4a4a4a" data-name="darkgray" title="Dark Gray"></button>
+                    </div>
+                </div>
+                
+                <!-- Pattern -->
+                <div class="custom-option">
+                    <span class="option-label">Pattern</span>
+                    <div class="pattern-picker" id="patterns">
+                        <button class="pattern-btn selected" data-pattern="solid">Solid</button>
+                        <button class="pattern-btn" data-pattern="tabby">Tabby</button>
+                        <button class="pattern-btn" data-pattern="spotted">Spotted</button>
+                        <button class="pattern-btn" data-pattern="patched">Patched</button>
+                    </div>
+                </div>
+                
+                <!-- Eye Color -->
+                <div class="custom-option">
+                    <span class="option-label">Eye Color</span>
+                    <div class="color-picker" id="eye-colors">
+                        <button class="color-btn eye-color selected" data-color="#2ecc71" data-name="green" title="Green"></button>
+                        <button class="color-btn eye-color" data-color="#3498db" data-name="blue" title="Blue"></button>
+                        <button class="color-btn eye-color" data-color="#f1c40f" data-name="yellow" title="Yellow"></button>
+                        <button class="color-btn eye-color" data-color="#e67e22" data-name="amber" title="Amber"></button>
+                        <button class="color-btn eye-color" data-color="#9b59b6" data-name="purple" title="Purple"></button>
+                        <button class="color-btn eye-color" data-color="#1abc9c" data-name="aqua" title="Aqua"></button>
+                    </div>
+                </div>
+            </div>
+            
             <button class="start-game-btn" id="start-game-btn" disabled>Start Adventure!</button>
             <button class="back-btn" id="back-to-saves">← Back</button>
         </div>

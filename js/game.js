@@ -7,7 +7,15 @@ const GameState = {
     selectedSlot: null,
     catData: null,
     tutorialPage: 1,
-    isNewGame: false
+    isNewGame: false,
+    // Cat customization
+    customization: {
+        furColor: '#e67e22',
+        furColorName: 'orange',
+        pattern: 'solid',
+        eyeColor: '#2ecc71',
+        eyeColorName: 'green'
+    }
 };
 
 // Name suffixes for different ranks
@@ -154,6 +162,38 @@ function setupEventListeners() {
     // Start game button
     document.getElementById('start-game-btn').addEventListener('click', beginAdventure);
 
+    // Fur color selection
+    document.querySelectorAll('#fur-colors .color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#fur-colors .color-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            GameState.customization.furColor = btn.dataset.color;
+            GameState.customization.furColorName = btn.dataset.name;
+            updateCatPreview();
+        });
+    });
+
+    // Pattern selection
+    document.querySelectorAll('.pattern-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.pattern-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            GameState.customization.pattern = btn.dataset.pattern;
+            updateCatPreview();
+        });
+    });
+
+    // Eye color selection
+    document.querySelectorAll('#eye-colors .color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#eye-colors .color-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            GameState.customization.eyeColor = btn.dataset.color;
+            GameState.customization.eyeColorName = btn.dataset.name;
+            updateCatPreview();
+        });
+    });
+
     // Game action buttons
     document.getElementById('hunt-btn').addEventListener('click', () => performAction('hunt'));
     document.getElementById('drink-btn').addEventListener('click', () => performAction('drink'));
@@ -246,6 +286,7 @@ function selectSaveSlot(slot) {
         startGameplay();
     } else {
         // New game - go to name screen
+        initNameScreen();
         showScreen('name');
     }
 }
@@ -270,13 +311,123 @@ function updateNamePreview() {
     }
 }
 
+// Update cat preview in customization screen
+function updateCatPreview() {
+    const preview = document.getElementById('cat-preview');
+    const { furColor, pattern, eyeColor } = GameState.customization;
+    
+    // Calculate darker shade for shadows
+    const darkerFur = adjustColor(furColor, -30);
+    const patternColor = adjustColor(furColor, -50);
+    
+    let patternMarkings = '';
+    
+    if (pattern === 'tabby') {
+        patternMarkings = `
+            <path d="M35 25 Q40 35 35 45" stroke="${patternColor}" stroke-width="3" fill="none"/>
+            <path d="M50 20 Q55 35 50 50" stroke="${patternColor}" stroke-width="3" fill="none"/>
+            <path d="M65 25 Q60 35 65 45" stroke="${patternColor}" stroke-width="3" fill="none"/>
+        `;
+    } else if (pattern === 'spotted') {
+        patternMarkings = `
+            <circle cx="35" cy="32" r="4" fill="${patternColor}"/>
+            <circle cx="55" cy="28" r="5" fill="${patternColor}"/>
+            <circle cx="48" cy="42" r="4" fill="${patternColor}"/>
+            <circle cx="65" cy="38" r="3" fill="${patternColor}"/>
+        `;
+    } else if (pattern === 'patched') {
+        patternMarkings = `
+            <ellipse cx="40" cy="35" rx="12" ry="10" fill="${patternColor}"/>
+            <ellipse cx="62" cy="40" rx="8" ry="7" fill="${patternColor}"/>
+        `;
+    }
+    
+    preview.innerHTML = `
+        <svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Body -->
+            <ellipse cx="50" cy="55" rx="35" ry="25" fill="${darkerFur}"/>
+            <ellipse cx="50" cy="55" rx="32" ry="22" fill="${furColor}"/>
+            ${patternMarkings}
+            
+            <!-- Head -->
+            <circle cx="85" cy="40" r="22" fill="${furColor}"/>
+            
+            <!-- Ears -->
+            <polygon points="68,22 73,0 85,18" fill="${furColor}"/>
+            <polygon points="97,18 107,0 102,22" fill="${furColor}"/>
+            <polygon points="71,20 75,6 83,17" fill="#ffb6c1"/>
+            <polygon points="99,17 105,6 101,20" fill="#ffb6c1"/>
+            
+            <!-- Eyes -->
+            <ellipse cx="78" cy="38" rx="5" ry="6" fill="white"/>
+            <ellipse cx="92" cy="38" rx="5" ry="6" fill="white"/>
+            <ellipse cx="78" cy="38" rx="3" ry="5" fill="${eyeColor}"/>
+            <ellipse cx="92" cy="38" rx="3" ry="5" fill="${eyeColor}"/>
+            <ellipse cx="78" cy="38" rx="1.5" ry="4" fill="#1a1a2e"/>
+            <ellipse cx="92" cy="38" rx="1.5" ry="4" fill="#1a1a2e"/>
+            
+            <!-- Nose -->
+            <ellipse cx="85" cy="48" rx="4" ry="3" fill="#ffb6c1"/>
+            
+            <!-- Whiskers -->
+            <line x1="70" y1="46" x2="55" y2="44" stroke="#888" stroke-width="1"/>
+            <line x1="70" y1="50" x2="55" y2="52" stroke="#888" stroke-width="1"/>
+            <line x1="100" y1="46" x2="115" y2="44" stroke="#888" stroke-width="1"/>
+            <line x1="100" y1="50" x2="115" y2="52" stroke="#888" stroke-width="1"/>
+            
+            <!-- Tail -->
+            <path d="M15 55 Q0 35 5 15" stroke="${furColor}" stroke-width="10" fill="none" stroke-linecap="round"/>
+        </svg>
+    `;
+}
+
+// Helper function to adjust color brightness
+function adjustColor(hex, amount) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+    const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
+    const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+    return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+// Initialize cat preview when going to name screen
+function initNameScreen() {
+    // Reset customization to defaults
+    GameState.customization = {
+        furColor: '#e67e22',
+        furColorName: 'orange',
+        pattern: 'solid',
+        eyeColor: '#2ecc71',
+        eyeColorName: 'green'
+    };
+    
+    // Reset selection UI
+    document.querySelectorAll('#fur-colors .color-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.color === '#e67e22');
+    });
+    document.querySelectorAll('.pattern-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.pattern === 'solid');
+    });
+    document.querySelectorAll('#eye-colors .color-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.color === '#2ecc71');
+    });
+    
+    // Clear name input
+    document.getElementById('cat-name-input').value = '';
+    document.getElementById('full-name-preview').textContent = '___kit';
+    document.getElementById('start-game-btn').disabled = true;
+    
+    // Render preview
+    updateCatPreview();
+}
+
 // Begin the adventure (create new cat)
 function beginAdventure() {
     const nameInput = document.getElementById('cat-name-input');
     const firstName = nameInput.value.trim();
     const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
     
-    // Create new cat data
+    // Create new cat data with customization
     GameState.catData = {
         firstName: formattedName,
         name: formattedName + 'kit',
@@ -290,7 +441,13 @@ function beginAdventure() {
         isDeputy: false,
         isLeader: false,
         inStarClan: false,
-        hasSeenTutorial: false
+        hasSeenTutorial: false,
+        // Save customization
+        furColor: GameState.customization.furColor,
+        furColorName: GameState.customization.furColorName,
+        pattern: GameState.customization.pattern,
+        eyeColor: GameState.customization.eyeColor,
+        eyeColorName: GameState.customization.eyeColorName
     };
     
     saveGameData();
@@ -453,16 +610,64 @@ function renderGameWorld() {
         `;
     }
     
-    // Add player cat
+    // Add player cat with customization
+    const cat = GameState.catData;
+    const furColor = cat.furColor || '#8d6e63';
+    const eyeColor = cat.eyeColor || '#2ecc71';
+    const pattern = cat.pattern || 'solid';
+    const darkerFur = adjustColor(furColor, -30);
+    const patternColor = adjustColor(furColor, -50);
+    
+    let catPatternMarkings = '';
+    if (pattern === 'tabby') {
+        catPatternMarkings = `
+            <path d="M12 10 Q15 15 12 20" stroke="${patternColor}" stroke-width="2" fill="none"/>
+            <path d="M20 8 Q23 15 20 22" stroke="${patternColor}" stroke-width="2" fill="none"/>
+            <path d="M28 10 Q25 15 28 20" stroke="${patternColor}" stroke-width="2" fill="none"/>
+        `;
+    } else if (pattern === 'spotted') {
+        catPatternMarkings = `
+            <circle cx="12" cy="14" r="2" fill="${patternColor}"/>
+            <circle cx="22" cy="12" r="2.5" fill="${patternColor}"/>
+            <circle cx="18" cy="18" r="2" fill="${patternColor}"/>
+        `;
+    } else if (pattern === 'patched') {
+        catPatternMarkings = `
+            <ellipse cx="15" cy="14" rx="6" ry="5" fill="${patternColor}"/>
+            <ellipse cx="26" cy="16" rx="4" ry="4" fill="${patternColor}"/>
+        `;
+    }
+    
     worldHTML += `
         <!-- Player cat -->
         <g id="player-cat" transform="translate(180, 240)">
-            <ellipse cx="20" cy="15" rx="15" ry="10" fill="#8d6e63"/>
-            <circle cx="30" cy="8" r="8" fill="#8d6e63"/>
-            <polygon points="24,2 26,-6 30,0" fill="#8d6e63"/>
-            <polygon points="34,0 38,-6 36,2" fill="#8d6e63"/>
-            <circle cx="28" cy="7" r="2" fill="#2c3e50"/>
-            <circle cx="34" cy="7" r="2" fill="#2c3e50"/>
+            <!-- Body -->
+            <ellipse cx="20" cy="15" rx="18" ry="12" fill="${darkerFur}"/>
+            <ellipse cx="20" cy="15" rx="16" ry="10" fill="${furColor}"/>
+            ${catPatternMarkings}
+            
+            <!-- Head -->
+            <circle cx="38" cy="8" r="10" fill="${furColor}"/>
+            
+            <!-- Ears -->
+            <polygon points="30,2 32,-6 38,0" fill="${furColor}"/>
+            <polygon points="44,0 50,-6 46,2" fill="${furColor}"/>
+            <polygon points="32,1 33,-4 36,0" fill="#ffb6c1"/>
+            <polygon points="45,0 48,-4 46,1" fill="#ffb6c1"/>
+            
+            <!-- Eyes -->
+            <ellipse cx="34" cy="7" rx="2.5" ry="3" fill="white"/>
+            <ellipse cx="42" cy="7" rx="2.5" ry="3" fill="white"/>
+            <ellipse cx="34" cy="7" rx="1.5" ry="2.5" fill="${eyeColor}"/>
+            <ellipse cx="42" cy="7" rx="1.5" ry="2.5" fill="${eyeColor}"/>
+            <ellipse cx="34" cy="7" rx="0.8" ry="2" fill="#1a1a2e"/>
+            <ellipse cx="42" cy="7" rx="0.8" ry="2" fill="#1a1a2e"/>
+            
+            <!-- Nose -->
+            <ellipse cx="38" cy="12" rx="2" ry="1.5" fill="#ffb6c1"/>
+            
+            <!-- Tail -->
+            <path d="M2 15 Q-8 5 -5 -5" stroke="${furColor}" stroke-width="5" fill="none" stroke-linecap="round"/>
         </g>
     `;
     
