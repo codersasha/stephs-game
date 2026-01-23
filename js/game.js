@@ -2508,6 +2508,7 @@ function startRaid() {
         c !== CLANS[cat.clan]?.name
     );
     const enemyClan = enemyClans[Math.floor(Math.random() * enemyClans.length)];
+    const enemyClanKey = enemyClan.toLowerCase().replace('clan', '');
     
     showMessage(`RAID! ${enemyClan} cats are attacking the camp!`);
     
@@ -2521,14 +2522,16 @@ function startRaid() {
                 const defenders = ['Brambleclaw', 'Sandstorm', 'Graystripe', 'Dustpelt', 'Firestar'];
                 const defender = defenders[Math.floor(Math.random() * defenders.length)];
                 
-                if (Math.random() > 0.3) {
+                const roll = Math.random();
+                
+                if (roll > 0.4) {
                     // Clan wins!
                     showMessage(`${defender} leaps to your defense! "Leave our kit alone!"`);
                     setTimeout(() => {
                         showMessage(`The clan drives ${enemyClan} away! You are safe!`);
                         cat.experience += 5;
                     }, 3000);
-                } else {
+                } else if (roll > 0.15) {
                     // Close call!
                     showMessage(`${defender} fights fiercely! The enemy almost got you!`);
                     setTimeout(() => {
@@ -2536,6 +2539,15 @@ function startRaid() {
                         cat.health = Math.max(10, cat.health - 10);
                         cat.experience += 10;
                         updateGameUI();
+                    }, 3000);
+                } else {
+                    // YOU GET STOLEN!
+                    showMessage(`${defender} tries to help but... the ${enemyClan} warrior grabs you!`);
+                    setTimeout(() => {
+                        showMessage(`You are carried away to ${enemyClan}!`);
+                        setTimeout(() => {
+                            getStolenByClan(enemyClanKey, enemyClan);
+                        }, 3000);
                     }, 3000);
                 }
             }, 3000);
@@ -2564,6 +2576,37 @@ function startRaid() {
             }, 3000);
         }
     }, 2000);
+}
+
+// When you get stolen by another clan
+function getStolenByClan(clanKey, clanName) {
+    const cat = GameState.catData;
+    const oldClan = CLANS[cat.clan]?.name || 'your clan';
+    
+    // Change your clan!
+    cat.clan = clanKey;
+    GameState.selectedClan = clanKey;
+    
+    showMessage(`You wake up in ${clanName}'s camp... This is your new home now.`);
+    
+    setTimeout(() => {
+        showMessage(`The ${clanName} cats look at you. "You belong to us now, little one."`);
+        setTimeout(() => {
+            showMessage(`You miss ${oldClan}, but you must survive here...`);
+            setTimeout(() => {
+                showMessage(`Maybe one day you can escape back home!`);
+                
+                // Reset position to new camp
+                GameState.playerX = 200;
+                GameState.playerY = 200;
+                GameState.currentLocation = 'camp';
+                
+                renderGameWorld();
+                updateGameUI();
+                saveGameData();
+            }, 3000);
+        }, 3000);
+    }, 3000);
 }
 
 // Show a message
