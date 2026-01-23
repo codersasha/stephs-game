@@ -45,7 +45,13 @@ const CLAN_CATS = [
     { name: 'Leafpool', rank: 'Medicine Cat', furColor: '#D2B48C', pattern: 'tabby' },
     { name: 'Firestar', rank: 'Leader', furColor: '#FF4500', pattern: 'solid' },
     { name: 'Squirrelpaw', rank: 'Apprentice', furColor: '#CD853F', pattern: 'solid' },
-    { name: 'Spiderpaw', rank: 'Apprentice', furColor: '#2F2F2F', pattern: 'solid' }
+    { name: 'Spiderpaw', rank: 'Apprentice', furColor: '#2F2F2F', pattern: 'solid' },
+    // Kits in the nursery!
+    { name: 'Molekit', rank: 'Kit', furColor: '#8B7355', pattern: 'solid', eyeColor: '#f1c40f' },
+    { name: 'Cherrykit', rank: 'Kit', furColor: '#CD853F', pattern: 'patched', eyeColor: '#27ae60' },
+    { name: 'Lilykit', rank: 'Kit', furColor: '#D2B48C', pattern: 'tabby', eyeColor: '#3498db' },
+    { name: 'Seedkit', rank: 'Kit', furColor: '#F5DEB3', pattern: 'solid', eyeColor: '#f1c40f' },
+    { name: 'Honeykit', rank: 'Kit', furColor: '#FFD700', pattern: 'spotted', eyeColor: '#27ae60' }
 ];
 
 // Herb types (no emojis)
@@ -1013,6 +1019,12 @@ if (!window.npcPositions) {
         cloudtail: { x: 320, y: 140, targetX: 280, targetY: 180, speed: 0.4 },
         brightheart: { x: 60, y: 220, targetX: 100, targetY: 200, speed: 0.25 },
         ferncloud: { x: 180, y: 120, targetX: 220, targetY: 140, speed: 0.2 },
+        // Kits - they move faster and stay near nursery!
+        molekit: { x: 70, y: 295, targetX: 100, targetY: 290, speed: 0.6, isKit: true },
+        cherrykit: { x: 95, y: 300, targetX: 80, targetY: 310, speed: 0.7, isKit: true },
+        lilykit: { x: 110, y: 290, targetX: 90, targetY: 295, speed: 0.5, isKit: true },
+        seedkit: { x: 85, y: 310, targetX: 105, targetY: 300, speed: 0.55, isKit: true },
+        honeykit: { x: 100, y: 285, targetX: 75, targetY: 305, speed: 0.65, isKit: true },
     };
 }
 
@@ -1030,9 +1042,16 @@ function updateNPCPositions() {
             npc.x += (dx / dist) * npc.speed;
             npc.y += (dy / dist) * npc.speed;
         } else {
-            // Pick new random target within camp bounds
-            npc.targetX = 60 + Math.random() * 320;
-            npc.targetY = 100 + Math.random() * 200;
+            // Pick new random target
+            if (npc.isKit) {
+                // Kits stay near the nursery area (playing!)
+                npc.targetX = 50 + Math.random() * 100; // x: 50-150
+                npc.targetY = 275 + Math.random() * 50; // y: 275-325
+            } else {
+                // Adults can roam the whole camp
+                npc.targetX = 60 + Math.random() * 320;
+                npc.targetY = 100 + Math.random() * 200;
+            }
         }
     }
 }
@@ -1067,6 +1086,13 @@ function renderNPCCats() {
     npcHTML += renderDetailedNPCCat(npcs.cloudtail.x, npcs.cloudtail.y, '#FFFFFF', '#3498db', 'Cloudtail', 0.8);
     npcHTML += renderDetailedNPCCat(npcs.brightheart.x, npcs.brightheart.y, '#E67E22', '#27ae60', 'Brightheart', 0.8);
     npcHTML += renderDetailedNPCCat(npcs.ferncloud.x, npcs.ferncloud.y, '#95a5a6', '#27ae60', 'Ferncloud', 0.8);
+    
+    // KITS in the nursery area! (tiny and cute)
+    npcHTML += renderDetailedNPCCat(npcs.molekit.x, npcs.molekit.y, '#8B7355', '#f1c40f', 'Molekit', 0.4);
+    npcHTML += renderDetailedNPCCat(npcs.cherrykit.x, npcs.cherrykit.y, '#CD853F', '#27ae60', 'Cherrykit', 0.4);
+    npcHTML += renderDetailedNPCCat(npcs.lilykit.x, npcs.lilykit.y, '#D2B48C', '#3498db', 'Lilykit', 0.4);
+    npcHTML += renderDetailedNPCCat(npcs.seedkit.x, npcs.seedkit.y, '#F5DEB3', '#f1c40f', 'Seedkit', 0.4);
+    npcHTML += renderDetailedNPCCat(npcs.honeykit.x, npcs.honeykit.y, '#FFD700', '#27ae60', 'Honeykit', 0.4);
     
     return npcHTML;
 }
@@ -2375,19 +2401,16 @@ function renderSpeechBubbles() {
 
 function getNPCPosition(npcName) {
     const npcs = window.npcPositions;
+    const lowerName = npcName.toLowerCase();
     
-    // Check moving NPCs
-    if (npcName.toLowerCase() === 'dustpelt' && npcs.dustpelt) {
-        return { x: npcs.dustpelt.x, y: npcs.dustpelt.y };
-    }
-    if (npcName.toLowerCase() === 'cloudtail' && npcs.cloudtail) {
-        return { x: npcs.cloudtail.x, y: npcs.cloudtail.y };
-    }
-    if (npcName.toLowerCase() === 'brightheart' && npcs.brightheart) {
-        return { x: npcs.brightheart.x, y: npcs.brightheart.y };
-    }
-    if (npcName.toLowerCase() === 'ferncloud' && npcs.ferncloud) {
-        return { x: npcs.ferncloud.x, y: npcs.ferncloud.y };
+    // Check moving NPCs (adults and kits)
+    const movingNpcs = ['dustpelt', 'cloudtail', 'brightheart', 'ferncloud', 
+                        'molekit', 'cherrykit', 'lilykit', 'seedkit', 'honeykit'];
+    
+    for (const npc of movingNpcs) {
+        if (lowerName === npc && npcs[npc]) {
+            return { x: npcs[npc].x, y: npcs[npc].y };
+        }
     }
     
     // Static NPC positions
@@ -2410,7 +2433,13 @@ function triggerRandomNPCChat() {
     if (GameState.currentScreen !== 'game') return;
     if (GameState.currentLocation !== 'camp') return;
     if (GameState.isNight) return;
-    if (Math.random() > 0.01) return; // 1% chance per second
+    if (Math.random() > 0.015) return; // 1.5% chance per second
+    
+    // 40% chance it's a kit talking!
+    if (Math.random() < 0.4) {
+        triggerKitChatter();
+        return;
+    }
     
     const npcs = ['Brambleclaw', 'Sandstorm', 'Leafpool', 'Cloudtail', 'Squirrelpaw', 'Dustpelt'];
     const npc = npcs[Math.floor(Math.random() * npcs.length)];
@@ -2432,6 +2461,35 @@ function triggerRandomNPCChat() {
     
     const text = randomChat[Math.floor(Math.random() * randomChat.length)];
     showSpeechBubble(npc, text);
+}
+
+// Kit-specific chatter
+function triggerKitChatter() {
+    const kits = ['Molekit', 'Cherrykit', 'Lilykit', 'Seedkit', 'Honeykit'];
+    const kit = kits[Math.floor(Math.random() * kits.length)];
+    
+    const kitChat = [
+        'Let\'s play!',
+        'Chase me!',
+        'I wanna be a warrior!',
+        '*pounces on leaf*',
+        'Tag! You\'re it!',
+        '*tumbles*',
+        'I\'m gonna catch you!',
+        'When can we go outside?',
+        '*play fights*',
+        'I\'m hungry!',
+        'Catch me if you can!',
+        '*bounces around*',
+        'Wanna play moss-ball?',
+        'I had a scary dream!',
+        '*squeaks*',
+        'Watch me hunt!',
+        'I\'m a big warrior! Rawr!'
+    ];
+    
+    const text = kitChat[Math.floor(Math.random() * kitChat.length)];
+    showSpeechBubble(kit, text);
 }
 
 // Enemy Clan Raid System
