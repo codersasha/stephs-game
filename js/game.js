@@ -27,6 +27,7 @@ const GameState = {
     isNight: false,
     dayStartTime: null,
     mealsToday: 0,
+    drinksToday: 0,
     isGatheringNight: false,
     // Emotion/pose
     currentEmotion: 'normal',
@@ -1670,13 +1671,15 @@ function interactWithLocation(locationKey) {
             
         case 'water':
             title.textContent = 'Water';
-            desc.textContent = 'Fresh water for drinking.';
+            desc.textContent = `Fresh water for drinking. (Drinks today: ${GameState.drinksToday}/5)`;
             addAction(actions, 'Drink', () => {
                 cat.thirst = Math.min(100, cat.thirst + 40);
+                GameState.drinksToday++;
                 showMessage('Refreshing water!');
                 updateGameUI();
                 saveGameData();
                 closePopup();
+                checkMealsForNight();
             });
             break;
             
@@ -1763,19 +1766,23 @@ function restInDen() {
 function eatFromPile() {
     const cat = GameState.catData;
     
+    // Track meals for everyone
+    GameState.mealsToday++;
+    
     // Check meal limit for warriors and apprentices
     if (cat.rank === 'Warrior' || cat.rank === 'Apprentice' || cat.rank === 'Deputy') {
-        if (GameState.mealsToday >= 3) {
+        if (GameState.mealsToday > 3) {
             showMessage('You have already eaten 3 times today. Wait until tomorrow.');
+            GameState.mealsToday = 3; // Cap it
             return;
         }
-        GameState.mealsToday++;
     }
     
     cat.hunger = Math.min(100, cat.hunger + 35);
-    showMessage('Yummy! That was delicious!');
+    showMessage(`Yummy! That was delicious! (Meals: ${GameState.mealsToday}/3)`);
     updateGameUI();
     saveGameData();
+    checkMealsForNight();
 }
 
 function collectHerb(herbType, index) {
@@ -1942,6 +1949,18 @@ function checkDayNightCycle() {
     }
 }
 
+// Check if eaten 3 and drunk 5 = night time!
+function checkMealsForNight() {
+    if (GameState.isNight) return;
+    
+    if (GameState.mealsToday >= 3 && GameState.drinksToday >= 5) {
+        showMessage('You have eaten and drunk enough for the day. Night is falling...');
+        setTimeout(() => {
+            startNight();
+        }, 2000);
+    }
+}
+
 function startNight() {
     GameState.isNight = true;
     const cat = GameState.catData;
@@ -1980,6 +1999,7 @@ function endNight() {
     GameState.isNight = false;
     GameState.dayStartTime = Date.now();
     GameState.mealsToday = 0; // Reset meal count for new day
+    GameState.drinksToday = 0; // Reset drink count for new day
     GameState.isGatheringNight = false;
     
     const cat = GameState.catData;
