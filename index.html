@@ -53,18 +53,27 @@
         <div id="saves-screen" class="screen">
             <h2>Choose a Save Slot</h2>
             <div class="save-slots">
-                <button class="save-slot" data-slot="1">
-                    <span class="slot-number">1</span>
-                    <span class="slot-info">Empty</span>
-                </button>
-                <button class="save-slot" data-slot="2">
-                    <span class="slot-number">2</span>
-                    <span class="slot-info">Empty</span>
-                </button>
-                <button class="save-slot" data-slot="3">
-                    <span class="slot-number">3</span>
-                    <span class="slot-info">Empty</span>
-                </button>
+                <div class="save-slot-row">
+                    <button class="save-slot" data-slot="1">
+                        <span class="slot-number">1</span>
+                        <span class="slot-info">Empty</span>
+                    </button>
+                    <button class="delete-save-btn hidden" data-slot="1" title="Delete">🗑️</button>
+                </div>
+                <div class="save-slot-row">
+                    <button class="save-slot" data-slot="2">
+                        <span class="slot-number">2</span>
+                        <span class="slot-info">Empty</span>
+                    </button>
+                    <button class="delete-save-btn hidden" data-slot="2" title="Delete">🗑️</button>
+                </div>
+                <div class="save-slot-row">
+                    <button class="save-slot" data-slot="3">
+                        <span class="slot-number">3</span>
+                        <span class="slot-info">Empty</span>
+                    </button>
+                    <button class="delete-save-btn hidden" data-slot="3" title="Delete">🗑️</button>
+                </div>
             </div>
             <button class="back-btn" id="back-to-clan">← Back</button>
         </div>

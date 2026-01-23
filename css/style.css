@@ -213,6 +213,12 @@ body {
     max-width: 400px;
 }
 
+.save-slot-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .save-slot {
     display: flex;
     align-items: center;
@@ -225,11 +231,37 @@ body {
     transition: all 0.3s ease;
     font-family: inherit;
     color: white;
+    flex: 1;
 }
 
 .save-slot:hover {
     border-color: #ffd700;
-    transform: translateX(10px);
+    transform: translateX(5px);
+}
+
+.save-slot.has-save {
+    border-color: #4caf50;
+}
+
+.delete-save-btn {
+    width: 45px;
+    height: 45px;
+    background: rgba(244, 67, 54, 0.2);
+    border: 2px solid #f44336;
+    border-radius: 10px;
+    color: #f44336;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.delete-save-btn:hover {
+    background: rgba(244, 67, 54, 0.4);
+    transform: scale(1.1);
+}
+
+.delete-save-btn.hidden {
+    display: none;
 }
 
 .slot-number {

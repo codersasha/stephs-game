@@ -180,6 +180,14 @@ function setupEventListeners() {
     document.querySelectorAll('.save-slot').forEach(slot => {
         slot.addEventListener('click', () => selectSaveSlot(slot.dataset.slot));
     });
+    
+    // Delete save buttons
+    document.querySelectorAll('.delete-save-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteSaveSlot(btn.dataset.slot);
+        });
+    });
 
     // Back buttons
     document.getElementById('back-to-clan').addEventListener('click', () => showScreen('clan'));
@@ -286,14 +294,20 @@ function selectClan(clanId) {
 function updateSaveSlots() {
     for (let i = 1; i <= 3; i++) {
         const saveData = loadSaveData(i);
-        const slotElement = document.querySelector(`.save-slot[data-slot="${i}"] .slot-info`);
+        const slotElement = document.querySelector(`.save-slot[data-slot="${i}"]`);
+        const slotInfo = slotElement.querySelector('.slot-info');
+        const deleteBtn = document.querySelector(`.delete-save-btn[data-slot="${i}"]`);
         
-        if (saveData && saveData.clan === GameState.selectedClan) {
-            slotElement.textContent = `${saveData.name} - ${saveData.rank} (${saveData.age} moons)`;
-        } else if (saveData) {
-            slotElement.textContent = `${saveData.name} (${CLANS[saveData.clan].name})`;
+        if (saveData) {
+            // Show existing save with clan info
+            const clanName = CLANS[saveData.clan]?.name || 'Unknown Clan';
+            slotInfo.textContent = `${saveData.name} - ${saveData.rank} (${saveData.age} moons) - ${clanName}`;
+            slotElement.classList.add('has-save');
+            deleteBtn.classList.remove('hidden');
         } else {
-            slotElement.textContent = 'Empty - New Game';
+            slotInfo.textContent = `New Game - ${CLANS[GameState.selectedClan].name}`;
+            slotElement.classList.remove('has-save');
+            deleteBtn.classList.add('hidden');
         }
     }
 }
@@ -319,14 +333,27 @@ function selectSaveSlot(slot) {
     GameState.selectedSlot = slot;
     const saveData = loadSaveData(slot);
     
-    if (saveData && saveData.clan === GameState.selectedClan) {
-        // Load existing game
+    if (saveData) {
+        // Load existing game (use saved clan, not selected one)
         GameState.catData = saveData;
+        GameState.selectedClan = saveData.clan;
         startGameplay();
     } else {
         // New game - go to name screen
         initNameScreen();
         showScreen('name');
+    }
+}
+
+// Delete a save slot
+function deleteSaveSlot(slot) {
+    const saveData = loadSaveData(slot);
+    if (!saveData) return;
+    
+    if (confirm(`Are you sure you want to delete ${saveData.name}'s save?`)) {
+        localStorage.removeItem(`warriorcats_save_${slot}`);
+        updateSaveSlots();
+        showMessage('🗑️ Save deleted!');
     }
 }
 
