@@ -287,8 +287,10 @@ function setupEventListeners() {
     // Emotion/action buttons
     document.getElementById('emote-happy').addEventListener('click', () => setEmotion('happy'));
     document.getElementById('emote-mad').addEventListener('click', () => setEmotion('mad'));
+    document.getElementById('emote-purr').addEventListener('click', () => doPurr());
+    document.getElementById('emote-hiss').addEventListener('click', () => doHiss());
     document.getElementById('emote-sit').addEventListener('click', () => toggleSit());
-    document.getElementById('emote-sleep').addEventListener('click', () => toggleSleep());
+    document.getElementById('emote-sleep').addEventListener('click', () => toggleRest());
     document.getElementById('emote-meow').addEventListener('click', () => doMeow());
     document.getElementById('emote-talk').addEventListener('click', () => openSpeechPopup());
     
@@ -2156,12 +2158,7 @@ function toggleSit() {
     renderGameWorld();
 }
 
-function toggleSleep() {
-    if (!GameState.isNight) {
-        showMessage('It is daytime! You can only sleep at night.');
-        return;
-    }
-    
+function toggleRest() {
     GameState.isSleeping = !GameState.isSleeping;
     GameState.isSitting = false;
     GameState.currentEmotion = 'normal';
@@ -2169,11 +2166,77 @@ function toggleSleep() {
     document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
     if (GameState.isSleeping) {
         document.getElementById('emote-sleep').classList.add('active');
-        showMessage('You curl up and close your eyes...');
+        showMessage('You curl up for a rest... (+5 health)');
+        // Small health boost from resting - NO aging!
+        const cat = GameState.catData;
+        cat.health = Math.min(100, cat.health + 5);
+        updateGameUI();
+        saveGameData();
     } else {
-        showMessage('You wake up and stretch.');
+        showMessage('You wake up and stretch, feeling refreshed!');
     }
     renderGameWorld();
+}
+
+function doPurr() {
+    GameState.currentEmotion = 'happy';
+    showSpeechBubble('player', '*purrrrrr*');
+    showMessage('You purr happily! Your clanmates smile.');
+    
+    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('emote-purr').classList.add('active');
+    
+    renderGameWorld();
+    
+    // NPCs might respond
+    setTimeout(() => {
+        if (Math.random() > 0.5) {
+            const responses = [
+                { cat: 'Sandstorm', text: '*purrs back*' },
+                { cat: 'Leafpool', text: 'How sweet!' },
+                { cat: 'Cloudtail', text: '*purrs*' },
+                { cat: 'Ferncloud', text: 'Aww!' }
+            ];
+            const response = responses[Math.floor(Math.random() * responses.length)];
+            showSpeechBubble(response.cat, response.text);
+        }
+    }, 1500);
+    
+    setTimeout(() => {
+        GameState.currentEmotion = 'normal';
+        document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+        renderGameWorld();
+    }, 4000);
+}
+
+function doHiss() {
+    GameState.currentEmotion = 'mad';
+    showSpeechBubble('player', '*HISSSSS!*');
+    showMessage('You hiss! Your fur stands on end!');
+    
+    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('emote-hiss').classList.add('active');
+    
+    renderGameWorld();
+    
+    // NPCs react to hissing
+    setTimeout(() => {
+        const responses = [
+            { cat: 'Brambleclaw', text: 'What\'s wrong?!' },
+            { cat: 'Dustpelt', text: 'Easy there!' },
+            { cat: 'Squirrelpaw', text: 'Yikes!' },
+            { cat: 'Cloudtail', text: 'Whoa!' },
+            { cat: 'Sandstorm', text: 'Calm down!' }
+        ];
+        const response = responses[Math.floor(Math.random() * responses.length)];
+        showSpeechBubble(response.cat, response.text);
+    }, 1000);
+    
+    setTimeout(() => {
+        GameState.currentEmotion = 'normal';
+        document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+        renderGameWorld();
+    }, 4000);
 }
 
 function doMeow() {
