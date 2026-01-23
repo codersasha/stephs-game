@@ -27,7 +27,11 @@ const GameState = {
     isNight: false,
     dayStartTime: null,
     mealsToday: 0,
-    isGatheringNight: false
+    isGatheringNight: false,
+    // Emotion/pose
+    currentEmotion: 'normal',
+    isSitting: false,
+    isSleeping: false
 };
 
 // NPC Cats in the clan
@@ -279,6 +283,13 @@ function setupEventListeners() {
     document.querySelectorAll('.tutorial-dots .dot').forEach(dot => {
         dot.addEventListener('click', () => goToTutorialPage(parseInt(dot.dataset.page)));
     });
+    
+    // Emotion/action buttons
+    document.getElementById('emote-happy').addEventListener('click', () => setEmotion('happy'));
+    document.getElementById('emote-mad').addEventListener('click', () => setEmotion('mad'));
+    document.getElementById('emote-sit').addEventListener('click', () => toggleSit());
+    document.getElementById('emote-sleep').addEventListener('click', () => toggleSleep());
+    document.getElementById('emote-meow').addEventListener('click', () => doMeow());
 }
 
 // Initialize home screen
@@ -1134,12 +1145,14 @@ function renderPlayerCat() {
     const lighterFur = adjustColor(furColor, 20);
     const patternColor = adjustColor(furColor, -50);
     
-    // Scale based on rank - kits are smaller!
+    // Scale based on rank - kits are tiny!
     let scale = 1.0;
     if (cat.rank === 'Kit') {
-        scale = 0.5; // Kits are half size
+        scale = 0.35; // Kits are very small and cute!
     } else if (cat.rank === 'Apprentice') {
-        scale = 0.75; // Apprentices are a bit smaller
+        scale = 0.7; // Apprentices are smaller
+    } else if (cat.rank === 'Elder') {
+        scale = 0.9; // Elders are slightly smaller
     }
     
     let catPatternMarkings = '';
@@ -1166,16 +1179,112 @@ function renderPlayerCat() {
     const x = GameState.playerX;
     const y = GameState.playerY;
     
-    return `
-        <!-- Player cat with improved graphics -->
-        <g id="player-cat" transform="translate(${x}, ${y}) scale(${scale})" filter="url(#softShadow)">
-            <!-- Ground shadow -->
-            <ellipse cx="0" cy="22" rx="22" ry="6" fill="rgba(0,0,0,0.35)"/>
-            
-            <!-- Tail with gradient effect -->
+    // Get current emotion and pose
+    const emotion = GameState.currentEmotion || 'normal';
+    const isSitting = GameState.isSitting;
+    const isSleeping = GameState.isSleeping;
+    
+    // Emotion-based eye and mouth variations
+    let eyeStyle = '';
+    let mouthStyle = '';
+    let extraEffects = '';
+    
+    if (emotion === 'happy') {
+        // Happy - curved eyes (^_^)
+        eyeStyle = `
+            <path d="M12,-10 Q15,-6 18,-10" stroke="${eyeColor}" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M22,-10 Q25,-6 28,-10" stroke="${eyeColor}" stroke-width="3" fill="none" stroke-linecap="round"/>
+        `;
+        mouthStyle = `
+            <path d="M16,-2 Q20,2 24,-2" stroke="#e8a0a8" stroke-width="2" fill="none" stroke-linecap="round"/>
+        `;
+        // Little hearts
+        extraEffects = `
+            <text x="35" y="-20" fill="#ff6b6b" font-size="12">*</text>
+        `;
+    } else if (emotion === 'mad') {
+        // Mad - angry eyebrows, sharp eyes
+        eyeStyle = `
+            <ellipse cx="15" cy="-9" rx="4" ry="4" fill="white"/>
+            <ellipse cx="25" cy="-9" rx="4" ry="4" fill="white"/>
+            <ellipse cx="15" cy="-9" rx="3" ry="3.5" fill="${eyeColor}"/>
+            <ellipse cx="25" cy="-9" rx="3" ry="3.5" fill="${eyeColor}"/>
+            <ellipse cx="15" cy="-9" rx="2" ry="2.5" fill="#1a1a2e"/>
+            <ellipse cx="25" cy="-9" rx="2" ry="2.5" fill="#1a1a2e"/>
+            <!-- Angry eyebrows -->
+            <line x1="11" y1="-15" x2="18" y2="-13" stroke="${darkerFur}" stroke-width="3" stroke-linecap="round"/>
+            <line x1="29" y1="-15" x2="22" y2="-13" stroke="${darkerFur}" stroke-width="3" stroke-linecap="round"/>
+        `;
+        mouthStyle = `
+            <path d="M16,-1 L20,-3 L24,-1" stroke="#e8a0a8" stroke-width="2" fill="none" stroke-linecap="round"/>
+        `;
+        // Angry marks
+        extraEffects = `
+            <text x="35" y="-18" fill="#ff4444" font-size="10" font-weight="bold">#</text>
+        `;
+    } else if (isSleeping) {
+        // Sleeping - closed eyes
+        eyeStyle = `
+            <path d="M12,-10 Q15,-8 18,-10" stroke="#1a1a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M22,-10 Q25,-8 28,-10" stroke="#1a1a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+        `;
+        mouthStyle = `
+            <ellipse cx="20" cy="-3" rx="2" ry="1.5" fill="#e8a0a8"/>
+        `;
+        // Zzz
+        extraEffects = `
+            <text x="32" y="-20" fill="#aaa" font-size="10" font-weight="bold">z</text>
+            <text x="38" y="-26" fill="#888" font-size="8" font-weight="bold">z</text>
+            <text x="43" y="-30" fill="#666" font-size="6" font-weight="bold">z</text>
+        `;
+    } else {
+        // Normal eyes
+        eyeStyle = `
+            <ellipse cx="15" cy="-10" rx="4" ry="4.5" fill="white"/>
+            <ellipse cx="25" cy="-10" rx="4" ry="4.5" fill="white"/>
+            <ellipse cx="15" cy="-10" rx="3" ry="4" fill="${eyeColor}"/>
+            <ellipse cx="25" cy="-10" rx="3" ry="4" fill="${eyeColor}"/>
+            <ellipse cx="15" cy="-10" rx="1.5" ry="3" fill="#1a1a2e"/>
+            <ellipse cx="25" cy="-10" rx="1.5" ry="3" fill="#1a1a2e"/>
+            <circle cx="13.5" cy="-12" r="1" fill="white" opacity="0.9"/>
+            <circle cx="23.5" cy="-12" r="1" fill="white" opacity="0.9"/>
+        `;
+        mouthStyle = `
+            <ellipse cx="20" cy="-4" rx="5" ry="3" fill="${lighterFur}" opacity="0.5"/>
+            <path d="M18,-3 L20,-1 L22,-3" fill="#e8a0a8"/>
+            <ellipse cx="20" cy="-3" rx="2.5" ry="2" fill="#e8a0a8"/>
+        `;
+    }
+    
+    // Different pose based on sitting/sleeping
+    let bodyPose = '';
+    let tailPose = '';
+    let legsPose = '';
+    
+    if (isSitting || isSleeping) {
+        // Sitting/sleeping pose - curled up
+        tailPose = `
+            <path d="M-15 8 Q-25 15 -20 20 Q-10 22 0 18" stroke="${darkerFur}" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <path d="M-14 7 Q-23 14 -18 18 Q-8 20 0 16" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+        `;
+        legsPose = `
+            <!-- Tucked paws -->
+            <ellipse cx="-8" cy="12" rx="6" ry="4" fill="${furColor}"/>
+            <ellipse cx="8" cy="12" rx="6" ry="4" fill="${furColor}"/>
+        `;
+        bodyPose = `
+            <ellipse cx="0" cy="4" rx="18" ry="12" fill="${darkerFur}"/>
+            <ellipse cx="0" cy="2" rx="16" ry="10" fill="${furColor}"/>
+            <ellipse cx="0" cy="0" rx="12" ry="7" fill="${lighterFur}" opacity="0.3"/>
+            ${catPatternMarkings}
+        `;
+    } else {
+        // Standing pose
+        tailPose = `
             <path d="M-18 2 Q-32 -5 -30 -22 Q-28 -28 -24 -26" stroke="${darkerFur}" stroke-width="7" fill="none" stroke-linecap="round"/>
             <path d="M-17 1 Q-30 -5 -28 -21 Q-26 -26 -23 -25" stroke="${furColor}" stroke-width="5" fill="none" stroke-linecap="round"/>
-            
+        `;
+        legsPose = `
             <!-- Back legs with paws -->
             <rect x="-16" y="6" width="6" height="14" rx="3" fill="${darkerFur}"/>
             <ellipse cx="-13" cy="20" rx="4" ry="3" fill="${darkerFur}"/>
@@ -1187,8 +1296,8 @@ function renderPlayerCat() {
             <ellipse cx="9" cy="20" rx="4" ry="3" fill="${darkerFur}"/>
             <rect x="13" y="6" width="6" height="14" rx="3" fill="${furColor}"/>
             <ellipse cx="16" cy="20" rx="4" ry="3" fill="${furColor}"/>
-            
-            <!-- Body with fur texture -->
+        `;
+        bodyPose = `
             <ellipse cx="0" cy="0" rx="20" ry="14" fill="${darkerFur}"/>
             <ellipse cx="0" cy="-1" rx="18" ry="12" fill="${furColor}"/>
             <ellipse cx="0" cy="-3" rx="14" ry="8" fill="${lighterFur}" opacity="0.3"/>
@@ -1196,6 +1305,23 @@ function renderPlayerCat() {
             
             <!-- Chest fluff -->
             <ellipse cx="10" cy="2" rx="6" ry="5" fill="${lighterFur}" opacity="0.4"/>
+        `;
+    }
+    
+    return `
+        <!-- Player cat with improved graphics -->
+        <g id="player-cat" transform="translate(${x}, ${y}) scale(${scale})" filter="url(#softShadow)">
+            <!-- Ground shadow -->
+            <ellipse cx="0" cy="22" rx="22" ry="6" fill="rgba(0,0,0,0.35)"/>
+            
+            <!-- Tail -->
+            ${tailPose}
+            
+            <!-- Legs -->
+            ${legsPose}
+            
+            <!-- Body -->
+            ${bodyPose}
             
             <!-- Head -->
             <circle cx="20" cy="-8" r="14" fill="${darkerFur}"/>
@@ -1211,21 +1337,14 @@ function renderPlayerCat() {
             <polygon points="28,-19 33,-27 31,-17" fill="${darkerFur}" opacity="0.3"/>
             <polygon points="29,-18 32,-25 30,-18" fill="#e8b4b8"/>
             
-            <!-- Eyes with shine -->
-            <ellipse cx="15" cy="-10" rx="4" ry="4.5" fill="white"/>
-            <ellipse cx="25" cy="-10" rx="4" ry="4.5" fill="white"/>
-            <ellipse cx="15" cy="-10" rx="3" ry="4" fill="${eyeColor}"/>
-            <ellipse cx="25" cy="-10" rx="3" ry="4" fill="${eyeColor}"/>
-            <ellipse cx="15" cy="-10" rx="1.5" ry="3" fill="#1a1a2e"/>
-            <ellipse cx="25" cy="-10" rx="1.5" ry="3" fill="#1a1a2e"/>
-            <!-- Eye shine -->
-            <circle cx="13.5" cy="-12" r="1" fill="white" opacity="0.9"/>
-            <circle cx="23.5" cy="-12" r="1" fill="white" opacity="0.9"/>
+            <!-- Eyes (emotion-based) -->
+            ${eyeStyle}
             
-            <!-- Nose and muzzle -->
-            <ellipse cx="20" cy="-4" rx="5" ry="3" fill="${lighterFur}" opacity="0.5"/>
-            <path d="M18,-3 L20,-1 L22,-3" fill="#e8a0a8"/>
-            <ellipse cx="20" cy="-3" rx="2.5" ry="2" fill="#e8a0a8"/>
+            <!-- Mouth (emotion-based) -->
+            ${mouthStyle}
+            
+            <!-- Extra effects -->
+            ${extraEffects}
             
             <!-- Whiskers -->
             <g stroke="#d0d0d0" stroke-width="0.5" opacity="0.7">
@@ -1750,6 +1869,9 @@ function startGameLoop() {
         // Save herbs to cat data
         cat.herbs = GameState.herbs;
         
+        // Check for enemy raid
+        checkForRaid();
+        
         updateGameUI();
         saveGameData();
     }, 1000);
@@ -1962,6 +2084,161 @@ function holdClanMeeting(ceremonyType, catName) {
     
     updateGameUI();
     renderGameWorld();
+}
+
+// Emotion/Action functions
+function setEmotion(emotion) {
+    GameState.currentEmotion = emotion;
+    GameState.isSitting = false;
+    GameState.isSleeping = false;
+    
+    // Update button states
+    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+    if (emotion === 'happy') {
+        document.getElementById('emote-happy').classList.add('active');
+        showMessage('You purr happily!');
+    } else if (emotion === 'mad') {
+        document.getElementById('emote-mad').classList.add('active');
+        showMessage('You hiss angrily! Your fur stands on end!');
+    }
+    
+    renderGameWorld();
+    
+    // Reset emotion after a bit
+    setTimeout(() => {
+        if (GameState.currentEmotion === emotion) {
+            GameState.currentEmotion = 'normal';
+            document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+            renderGameWorld();
+        }
+    }, 5000);
+}
+
+function toggleSit() {
+    GameState.isSitting = !GameState.isSitting;
+    GameState.isSleeping = false;
+    GameState.currentEmotion = 'normal';
+    
+    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+    if (GameState.isSitting) {
+        document.getElementById('emote-sit').classList.add('active');
+        showMessage('You sit down and wrap your tail around your paws.');
+    } else {
+        showMessage('You stand up, ready to move.');
+    }
+    renderGameWorld();
+}
+
+function toggleSleep() {
+    if (!GameState.isNight) {
+        showMessage('It is daytime! You can only sleep at night.');
+        return;
+    }
+    
+    GameState.isSleeping = !GameState.isSleeping;
+    GameState.isSitting = false;
+    GameState.currentEmotion = 'normal';
+    
+    document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+    if (GameState.isSleeping) {
+        document.getElementById('emote-sleep').classList.add('active');
+        showMessage('You curl up and close your eyes...');
+    } else {
+        showMessage('You wake up and stretch.');
+    }
+    renderGameWorld();
+}
+
+function doMeow() {
+    showMessage('MEOW! Your clanmates look at you.');
+    
+    // Random clanmate responds
+    const responses = [
+        'Brambleclaw nods at you.',
+        'Sandstorm purrs warmly.',
+        'Firestar looks down from the High Rock.',
+        'Leafpool waves her tail in greeting.',
+        'Cloudtail meows back!',
+        'Squirrelpaw bounces over excitedly!'
+    ];
+    
+    setTimeout(() => {
+        showMessage(responses[Math.floor(Math.random() * responses.length)]);
+    }, 2000);
+}
+
+// Enemy Clan Raid System
+function checkForRaid() {
+    // Small chance of raid each game tick (only when in camp)
+    if (GameState.currentLocation !== 'camp') return;
+    if (GameState.isNight) return;
+    if (Math.random() > 0.002) return; // 0.2% chance per second
+    
+    startRaid();
+}
+
+function startRaid() {
+    const cat = GameState.catData;
+    const enemyClans = ['ShadowClan', 'RiverClan', 'WindClan'].filter(c => 
+        c !== CLANS[cat.clan]?.name
+    );
+    const enemyClan = enemyClans[Math.floor(Math.random() * enemyClans.length)];
+    
+    showMessage(`RAID! ${enemyClan} cats are attacking the camp!`);
+    
+    setTimeout(() => {
+        // If player is a kit, they might try to steal you!
+        if (cat.rank === 'Kit') {
+            showMessage(`A ${enemyClan} warrior is trying to steal you!`);
+            
+            setTimeout(() => {
+                // Clan fights back!
+                const defenders = ['Brambleclaw', 'Sandstorm', 'Graystripe', 'Dustpelt', 'Firestar'];
+                const defender = defenders[Math.floor(Math.random() * defenders.length)];
+                
+                if (Math.random() > 0.3) {
+                    // Clan wins!
+                    showMessage(`${defender} leaps to your defense! "Leave our kit alone!"`);
+                    setTimeout(() => {
+                        showMessage(`The clan drives ${enemyClan} away! You are safe!`);
+                        cat.experience += 5;
+                    }, 3000);
+                } else {
+                    // Close call!
+                    showMessage(`${defender} fights fiercely! The enemy almost got you!`);
+                    setTimeout(() => {
+                        showMessage(`After a tough battle, ${enemyClan} retreats! That was close!`);
+                        cat.health = Math.max(10, cat.health - 10);
+                        cat.experience += 10;
+                        updateGameUI();
+                    }, 3000);
+                }
+            }, 3000);
+        } else {
+            // Player can fight!
+            showMessage('Your clanmates rush to defend the camp!');
+            
+            setTimeout(() => {
+                // Fight!
+                if (cat.rank === 'Apprentice' || cat.rank === 'Warrior' || cat.rank === 'Deputy' || cat.rank === 'Leader') {
+                    const success = Math.random() > 0.4;
+                    if (success) {
+                        showMessage('You fight bravely! The enemy flees!');
+                        cat.experience += 20;
+                    } else {
+                        showMessage('You fight hard but get scratched!');
+                        cat.health = Math.max(10, cat.health - 15);
+                        cat.experience += 15;
+                    }
+                } else {
+                    showMessage('The warriors protect the camp. The enemy retreats!');
+                    cat.experience += 5;
+                }
+                updateGameUI();
+                saveGameData();
+            }, 3000);
+        }
+    }, 2000);
 }
 
 // Show a message

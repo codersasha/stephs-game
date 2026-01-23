@@ -642,6 +642,46 @@ body {
     border-color: #ffd700;
 }
 
+/* Emotion/Action Buttons */
+.emotion-buttons {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 15;
+}
+
+.emotion-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6a5a8a, #4a3a6a);
+    border: 2px solid #8a7aaa;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.emotion-btn:hover, .emotion-btn:active {
+    background: linear-gradient(135deg, #8a7aaa, #6a5a8a);
+    border-color: #ffd700;
+    transform: scale(1.1);
+}
+
+.emotion-btn.active {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    border-color: #fff;
+    color: #333;
+}
+
 .game-message {
     position: absolute;
     top: 50%;
