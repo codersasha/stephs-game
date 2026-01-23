@@ -668,94 +668,169 @@ function renderCamp() {
     const gameWorld = document.getElementById('game-world');
     const clan = GameState.selectedClan;
     
-    // Clan-specific colors
+    // Clan-specific colors with richer palettes
     const clanColors = {
-        thunder: { ground: '#3d5a3d', accent: '#5d7a3d' },
-        river: { ground: '#2d4a5a', accent: '#3d6a7a' },
-        wind: { ground: '#5a5a4d', accent: '#7a7a5d' },
-        shadow: { ground: '#2d2d3d', accent: '#3d3d4d' }
+        thunder: { ground: '#2a4a2a', accent: '#4d7a3d', light: '#6d9a5d', dark: '#1a3a1a' },
+        river: { ground: '#1a3a4a', accent: '#2d5a7a', light: '#4d8aaa', dark: '#0a2a3a' },
+        wind: { ground: '#4a4a3d', accent: '#6a6a5d', light: '#8a8a7d', dark: '#3a3a2d' },
+        shadow: { ground: '#1a1a2a', accent: '#2d2d4d', light: '#4d4d6d', dark: '#0a0a1a' }
     };
     const colors = clanColors[clan] || clanColors.thunder;
     
     // Night overlay
     const nightOverlay = GameState.isNight ? 
-        `<rect x="0" y="0" width="450" height="400" fill="rgba(0,0,50,0.4)"/>` : '';
+        `<rect x="0" y="0" width="450" height="400" fill="rgba(10,10,40,0.5)"/>` : '';
     
     let worldHTML = `
         <svg id="camp-svg" viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-            <!-- Camp ground -->
-            <rect x="0" y="0" width="450" height="400" fill="${colors.ground}"/>
-            <ellipse cx="225" cy="200" rx="200" ry="180" fill="${colors.accent}" opacity="0.3"/>
+            <defs>
+                <!-- Gradients for better visuals -->
+                <radialGradient id="campGround" cx="50%" cy="50%" r="60%">
+                    <stop offset="0%" style="stop-color:${colors.accent};stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:${colors.ground};stop-opacity:1" />
+                </radialGradient>
+                <radialGradient id="denGradient" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" style="stop-color:#8B7355;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#5D4037;stop-opacity:1" />
+                </radialGradient>
+                <radialGradient id="waterGradient" cx="40%" cy="40%" r="60%">
+                    <stop offset="0%" style="stop-color:#5dade2;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#2874a6;stop-opacity:1" />
+                </radialGradient>
+                <radialGradient id="rockGradient" cx="30%" cy="20%" r="80%">
+                    <stop offset="0%" style="stop-color:#95a5a6;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#566573;stop-opacity:1" />
+                </radialGradient>
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.4"/>
+                </filter>
+                <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+                    <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+                </filter>
+            </defs>
             
-            <!-- Dens (no emojis) -->
-            <!-- Nursery -->
-            <g class="camp-den" data-location="nursery">
-                <ellipse cx="90" cy="310" rx="50" ry="35" fill="#5d4037"/>
-                <ellipse cx="90" cy="300" rx="45" ry="30" fill="#6d5047"/>
-                <text x="90" y="315" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Nursery</text>
+            <!-- Camp ground with gradient -->
+            <rect x="0" y="0" width="450" height="400" fill="url(#campGround)"/>
+            
+            <!-- Ground texture - scattered leaves and grass -->
+            <g opacity="0.3">
+                <circle cx="50" cy="180" r="3" fill="#2d5a2d"/>
+                <circle cx="380" cy="250" r="2" fill="#2d5a2d"/>
+                <circle cx="120" cy="350" r="4" fill="#3d6a3d"/>
+                <circle cx="300" cy="120" r="2" fill="#2d5a2d"/>
+                <circle cx="180" cy="280" r="3" fill="#3d6a3d"/>
+                <ellipse cx="350" cy="180" rx="5" ry="2" fill="#4a7a4a"/>
+                <ellipse cx="100" cy="250" rx="4" ry="2" fill="#3d6a3d"/>
+            </g>
+            
+            <!-- Bushes around camp edge -->
+            <g filter="url(#softShadow)">
+                <ellipse cx="20" cy="100" rx="25" ry="20" fill="#2d6a2d"/>
+                <ellipse cx="430" cy="280" rx="30" ry="22" fill="#2d6a2d"/>
+                <ellipse cx="15" cy="350" rx="22" ry="18" fill="#3d7a3d"/>
+                <ellipse cx="440" cy="100" rx="20" ry="16" fill="#3d7a3d"/>
+            </g>
+            
+            <!-- Dens with improved graphics -->
+            
+            <!-- Nursery - cozy with bramble covering -->
+            <g class="camp-den" data-location="nursery" filter="url(#shadow)">
+                <ellipse cx="90" cy="320" rx="55" ry="40" fill="#4a3527"/>
+                <ellipse cx="90" cy="308" rx="50" ry="35" fill="url(#denGradient)"/>
+                <ellipse cx="90" cy="302" rx="42" ry="28" fill="#7d6550" opacity="0.5"/>
+                <!-- Entrance shadow -->
+                <ellipse cx="90" cy="318" rx="18" ry="12" fill="#2a1a10"/>
+                <text x="90" y="350" text-anchor="middle" fill="#f0e6d2" font-size="11" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8)">Nursery</text>
             </g>
             
             <!-- Elders Den -->
-            <g class="camp-den" data-location="elders">
-                <ellipse cx="360" cy="310" rx="50" ry="35" fill="#4a3a2a"/>
-                <ellipse cx="360" cy="300" rx="45" ry="30" fill="#5a4a3a"/>
-                <text x="360" y="315" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Elders Den</text>
+            <g class="camp-den" data-location="elders" filter="url(#shadow)">
+                <ellipse cx="360" cy="320" rx="55" ry="40" fill="#3a2a1a"/>
+                <ellipse cx="360" cy="308" rx="50" ry="35" fill="#5a4a3a"/>
+                <ellipse cx="360" cy="302" rx="42" ry="28" fill="#7a6a5a" opacity="0.5"/>
+                <ellipse cx="360" cy="318" rx="16" ry="10" fill="#1a1510"/>
+                <text x="360" y="350" text-anchor="middle" fill="#f0e6d2" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8)">Elders Den</text>
             </g>
             
-            <!-- Warriors Den -->
-            <g class="camp-den" data-location="warriors">
-                <ellipse cx="70" cy="150" rx="55" ry="40" fill="#3d4a3d"/>
-                <ellipse cx="70" cy="140" rx="50" ry="35" fill="#4d5a4d"/>
-                <text x="70" y="155" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Warriors Den</text>
+            <!-- Warriors Den - large and sturdy -->
+            <g class="camp-den" data-location="warriors" filter="url(#shadow)">
+                <ellipse cx="70" cy="160" rx="60" ry="45" fill="#2d3a2d"/>
+                <ellipse cx="70" cy="148" rx="55" ry="40" fill="#3d5a3d"/>
+                <ellipse cx="70" cy="142" rx="46" ry="32" fill="#4d6a4d" opacity="0.6"/>
+                <ellipse cx="70" cy="156" rx="20" ry="12" fill="#1a2a1a"/>
+                <text x="70" y="190" text-anchor="middle" fill="#f0e6d2" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8)">Warriors Den</text>
             </g>
             
             <!-- Apprentices Den -->
-            <g class="camp-den" data-location="apprentices">
-                <ellipse cx="380" cy="150" rx="50" ry="35" fill="#3a4a5a"/>
-                <ellipse cx="380" cy="140" rx="45" ry="30" fill="#4a5a6a"/>
-                <text x="380" y="155" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Apprentices</text>
+            <g class="camp-den" data-location="apprentices" filter="url(#shadow)">
+                <ellipse cx="380" cy="160" rx="55" ry="40" fill="#2a3a4a"/>
+                <ellipse cx="380" cy="148" rx="50" ry="35" fill="#3a5a6a"/>
+                <ellipse cx="380" cy="142" rx="42" ry="28" fill="#4a6a7a" opacity="0.6"/>
+                <ellipse cx="380" cy="156" rx="16" ry="10" fill="#1a2a3a"/>
+                <text x="380" y="188" text-anchor="middle" fill="#f0e6d2" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8)">Apprentices</text>
             </g>
             
-            <!-- Medicine Den -->
-            <g class="camp-den" data-location="medicine">
-                <ellipse cx="225" cy="80" rx="55" ry="40" fill="#4a5a4a"/>
-                <ellipse cx="225" cy="70" rx="50" ry="35" fill="#5a6a5a"/>
-                <text x="225" y="85" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Medicine Den</text>
+            <!-- Medicine Den - with fern cover -->
+            <g class="camp-den" data-location="medicine" filter="url(#shadow)">
+                <ellipse cx="225" cy="90" rx="60" ry="45" fill="#3a4a3a"/>
+                <ellipse cx="225" cy="78" rx="55" ry="40" fill="#4a6a4a"/>
+                <ellipse cx="225" cy="72" rx="46" ry="32" fill="#5a7a5a" opacity="0.6"/>
+                <ellipse cx="225" cy="86" rx="18" ry="11" fill="#2a3a2a"/>
+                <!-- Herb symbols -->
+                <circle cx="200" cy="60" r="4" fill="#27ae60" opacity="0.7"/>
+                <circle cx="250" cy="65" r="3" fill="#2ecc71" opacity="0.7"/>
+                <text x="225" y="120" text-anchor="middle" fill="#f0e6d2" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8)">Medicine Den</text>
             </g>
             
-            <!-- High Rock -->
-            <g class="camp-den" data-location="highrock">
-                <polygon points="225,160 180,220 270,220" fill="#5a5a6a"/>
-                <polygon points="225,170 190,215 260,215" fill="#6a6a7a"/>
-                <text x="225" y="200" text-anchor="middle" fill="white" font-size="10" font-weight="bold">High Rock</text>
+            <!-- High Rock - imposing stone -->
+            <g class="camp-den" data-location="highrock" filter="url(#shadow)">
+                <polygon points="225,150 170,230 280,230" fill="#4a4a5a"/>
+                <polygon points="225,155 180,225 270,225" fill="url(#rockGradient)"/>
+                <polygon points="225,162 192,220 258,220" fill="#a0a0b0" opacity="0.3"/>
+                <!-- Rock texture -->
+                <line x1="200" y1="200" x2="210" y2="195" stroke="#6a6a7a" stroke-width="1" opacity="0.5"/>
+                <line x1="240" y1="190" x2="255" y2="200" stroke="#6a6a7a" stroke-width="1" opacity="0.5"/>
+                <text x="225" y="218" text-anchor="middle" fill="#f0e6d2" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8)">High Rock</text>
             </g>
             
-            <!-- Leader's Den -->
-            <g class="camp-den" data-location="leader">
-                <ellipse cx="225" cy="320" rx="45" ry="35" fill="#6a5a3a"/>
-                <ellipse cx="225" cy="310" rx="40" ry="30" fill="#7a6a4a"/>
-                <text x="225" y="320" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Leader's Den</text>
+            <!-- Leader's Den - beneath High Rock -->
+            <g class="camp-den" data-location="leader" filter="url(#shadow)">
+                <ellipse cx="225" cy="330" rx="50" ry="38" fill="#5a4a2a"/>
+                <ellipse cx="225" cy="318" rx="45" ry="33" fill="#7a6a4a"/>
+                <ellipse cx="225" cy="312" rx="38" ry="26" fill="#9a8a6a" opacity="0.4"/>
+                <ellipse cx="225" cy="326" rx="15" ry="10" fill="#3a2a1a"/>
+                <text x="225" y="358" text-anchor="middle" fill="#f0e6d2" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8)">Leader's Den</text>
             </g>
             
-            <!-- Fresh-kill Pile -->
-            <g class="camp-den" data-location="freshkill">
-                <ellipse cx="140" cy="230" rx="30" ry="20" fill="#5a4a3a"/>
-                <ellipse cx="140" cy="225" rx="20" ry="12" fill="#6a3a2a"/>
-                <text x="140" y="255" text-anchor="middle" fill="white" font-size="9">Fresh-kill</text>
+            <!-- Fresh-kill Pile - with prey shapes -->
+            <g class="camp-den" data-location="freshkill" filter="url(#softShadow)">
+                <ellipse cx="140" cy="238" rx="35" ry="22" fill="#4a3a2a"/>
+                <ellipse cx="140" cy="232" rx="28" ry="16" fill="#6a4a3a"/>
+                <!-- Prey shapes -->
+                <ellipse cx="132" cy="228" rx="8" ry="4" fill="#8B7355"/>
+                <ellipse cx="148" cy="232" rx="6" ry="3" fill="#9a8a7a"/>
+                <ellipse cx="140" cy="225" rx="5" ry="3" fill="#7a6a5a"/>
+                <text x="140" y="262" text-anchor="middle" fill="#f0e6d2" font-size="9" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8)">Fresh-kill</text>
             </g>
             
-            <!-- Water -->
-            <g class="camp-den" data-location="water">
-                <ellipse cx="310" cy="230" rx="30" ry="20" fill="#2a4a6a"/>
-                <ellipse cx="310" cy="228" rx="22" ry="14" fill="#3a6a9a"/>
-                <text x="310" y="255" text-anchor="middle" fill="white" font-size="9">Water</text>
+            <!-- Water - pool with reflection -->
+            <g class="camp-den" data-location="water" filter="url(#softShadow)">
+                <ellipse cx="310" cy="238" rx="35" ry="22" fill="#1a3a5a"/>
+                <ellipse cx="310" cy="233" rx="28" ry="17" fill="url(#waterGradient)"/>
+                <!-- Water ripples -->
+                <ellipse cx="310" cy="230" rx="18" ry="10" fill="none" stroke="#7dbbe8" stroke-width="1" opacity="0.5"/>
+                <ellipse cx="310" cy="233" rx="10" ry="6" fill="none" stroke="#aad4f0" stroke-width="0.5" opacity="0.4"/>
+                <text x="310" y="262" text-anchor="middle" fill="#f0e6d2" font-size="9" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8)">Water</text>
             </g>
             
-            <!-- Camp Exit -->
-            <g class="camp-den" data-location="exit">
-                <rect x="400" y="20" width="40" height="60" fill="#2d4a2d" rx="5"/>
-                <polygon points="420,25 410,50 430,50" fill="#1a3a1a"/>
-                <text x="420" y="75" text-anchor="middle" fill="white" font-size="8">Exit</text>
+            <!-- Camp Exit - tunnel through brambles -->
+            <g class="camp-den" data-location="exit" filter="url(#shadow)">
+                <ellipse cx="420" cy="45" rx="30" ry="35" fill="#2d5a2d"/>
+                <ellipse cx="420" cy="50" rx="22" ry="28" fill="#1a3a1a"/>
+                <ellipse cx="420" cy="55" rx="14" ry="20" fill="#0a2a0a"/>
+                <!-- Arrow indicating exit -->
+                <polygon points="420,35 412,45 428,45" fill="#7dbb7d"/>
+                <text x="420" y="85" text-anchor="middle" fill="#f0e6d2" font-size="9" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8)">Exit</text>
             </g>
             
             ${nightOverlay}
@@ -782,20 +857,117 @@ function renderCamp() {
     });
 }
 
+// Helper function to render a detailed NPC cat
+function renderDetailedNPCCat(x, y, furColor, eyeColor, name, scale = 1) {
+    const darkerFur = adjustColor(furColor, -25);
+    const lighterFur = adjustColor(furColor, 15);
+    
+    return `
+        <g class="npc-cat" transform="translate(${x}, ${y}) scale(${scale})">
+            <!-- Shadow -->
+            <ellipse cx="0" cy="12" rx="14" ry="4" fill="rgba(0,0,0,0.25)"/>
+            
+            <!-- Tail -->
+            <path d="M-12 2 Q-20 -2 -18 -12" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+            
+            <!-- Body -->
+            <ellipse cx="0" cy="2" rx="14" ry="9" fill="${darkerFur}"/>
+            <ellipse cx="0" cy="1" rx="12" ry="7" fill="${furColor}"/>
+            <ellipse cx="0" cy="-1" rx="8" ry="4" fill="${lighterFur}" opacity="0.25"/>
+            
+            <!-- Legs -->
+            <rect x="-10" y="6" width="4" height="8" rx="2" fill="${darkerFur}"/>
+            <rect x="6" y="6" width="4" height="8" rx="2" fill="${furColor}"/>
+            
+            <!-- Head -->
+            <circle cx="12" cy="-4" r="9" fill="${furColor}"/>
+            <circle cx="12" cy="-5" r="7" fill="${lighterFur}" opacity="0.2"/>
+            
+            <!-- Ears -->
+            <polygon points="5,-9 6,-17 11,-11" fill="${furColor}"/>
+            <polygon points="6,-10 7,-15 10,-11" fill="#e8b4b8" opacity="0.7"/>
+            <polygon points="17,-11 22,-17 19,-9" fill="${furColor}"/>
+            <polygon points="18,-10 20,-15 18,-10" fill="#e8b4b8" opacity="0.7"/>
+            
+            <!-- Eyes -->
+            <ellipse cx="9" cy="-5" rx="2.5" ry="3" fill="white"/>
+            <ellipse cx="15" cy="-5" rx="2.5" ry="3" fill="white"/>
+            <ellipse cx="9" cy="-5" rx="1.5" ry="2.5" fill="${eyeColor}"/>
+            <ellipse cx="15" cy="-5" rx="1.5" ry="2.5" fill="${eyeColor}"/>
+            <ellipse cx="9" cy="-5" rx="0.8" ry="2" fill="#1a1a2e"/>
+            <ellipse cx="15" cy="-5" rx="0.8" ry="2" fill="#1a1a2e"/>
+            <circle cx="8" cy="-6.5" r="0.6" fill="white" opacity="0.8"/>
+            <circle cx="14" cy="-6.5" r="0.6" fill="white" opacity="0.8"/>
+            
+            <!-- Nose -->
+            <ellipse cx="12" cy="-1" rx="1.5" ry="1" fill="#e8a0a8"/>
+            
+            <!-- Name -->
+            <text x="3" y="24" text-anchor="middle" fill="#e8e0d0" font-size="7" style="text-shadow: 1px 1px 1px rgba(0,0,0,0.8)">${name}</text>
+        </g>
+    `;
+}
+
 // Render the leader sitting on High Rock
 function renderLeaderOnHighRock() {
     const leader = CLAN_CATS.find(c => c.rank === 'Leader');
     if (!leader) return '';
     
+    const furColor = leader.furColor;
+    const darkerFur = adjustColor(furColor, -25);
+    const lighterFur = adjustColor(furColor, 15);
+    
     return `
-        <g id="leader-cat" transform="translate(225, 175)">
-            <!-- Leader sitting on high rock -->
-            <ellipse cx="0" cy="10" rx="12" ry="8" fill="${leader.furColor}"/>
-            <circle cx="8" cy="0" r="8" fill="${leader.furColor}"/>
-            <polygon points="2,-5 4,-12 8,-3" fill="${leader.furColor}"/>
-            <polygon points="12,-3 16,-12 14,-5" fill="${leader.furColor}"/>
-            <circle cx="5" cy="-1" r="1.5" fill="#2c3e50"/>
-            <circle cx="11" cy="-1" r="1.5" fill="#2c3e50"/>
+        <g id="leader-cat" transform="translate(218, 168)">
+            <!-- Leader sitting proudly on high rock -->
+            <!-- Shadow on rock -->
+            <ellipse cx="8" cy="18" rx="12" ry="4" fill="rgba(0,0,0,0.3)"/>
+            
+            <!-- Tail curled around -->
+            <path d="M-8 8 Q-15 5 -12 -5 Q-8 -10 -3 -8" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+            
+            <!-- Body (sitting pose) -->
+            <ellipse cx="5" cy="10" rx="12" ry="10" fill="${darkerFur}"/>
+            <ellipse cx="5" cy="8" rx="10" ry="8" fill="${furColor}"/>
+            <ellipse cx="5" cy="5" rx="6" ry="5" fill="${lighterFur}" opacity="0.2"/>
+            
+            <!-- Front paws -->
+            <ellipse cx="-2" cy="16" rx="4" ry="3" fill="${furColor}"/>
+            <ellipse cx="8" cy="16" rx="4" ry="3" fill="${furColor}"/>
+            
+            <!-- Head (looking out over camp) -->
+            <circle cx="12" cy="-2" r="10" fill="${furColor}"/>
+            <circle cx="12" cy="-4" r="8" fill="${lighterFur}" opacity="0.15"/>
+            
+            <!-- Ears -->
+            <polygon points="4,-8 4,-18 11,-10" fill="${furColor}"/>
+            <polygon points="5,-9 5,-15 10,-10" fill="#e8b4b8" opacity="0.6"/>
+            <polygon points="18,-10 24,-18 21,-8" fill="${furColor}"/>
+            <polygon points="19,-9 22,-15 20,-9" fill="#e8b4b8" opacity="0.6"/>
+            
+            <!-- Eyes (wise leader eyes) -->
+            <ellipse cx="8" cy="-3" rx="3" ry="3.5" fill="white"/>
+            <ellipse cx="16" cy="-3" rx="3" ry="3.5" fill="white"/>
+            <ellipse cx="8" cy="-3" rx="2" ry="3" fill="#27ae60"/>
+            <ellipse cx="16" cy="-3" rx="2" ry="3" fill="#27ae60"/>
+            <ellipse cx="8" cy="-3" rx="1" ry="2.5" fill="#1a1a2e"/>
+            <ellipse cx="16" cy="-3" rx="1" ry="2.5" fill="#1a1a2e"/>
+            <circle cx="7" cy="-5" r="0.8" fill="white" opacity="0.9"/>
+            <circle cx="15" cy="-5" r="0.8" fill="white" opacity="0.9"/>
+            
+            <!-- Nose -->
+            <ellipse cx="12" cy="2" rx="2" ry="1.5" fill="#e8a0a8"/>
+            
+            <!-- Whiskers -->
+            <g stroke="#d0d0d0" stroke-width="0.4" opacity="0.6">
+                <line x1="5" y1="1" x2="-4" y2="-1"/>
+                <line x1="5" y1="3" x2="-4" y2="3"/>
+                <line x1="19" y1="1" x2="28" y2="-1"/>
+                <line x1="19" y1="3" x2="28" y2="3"/>
+            </g>
+            
+            <!-- Firestar label -->
+            <text x="10" y="30" text-anchor="middle" fill="#ffd700" font-size="8" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.9)">Firestar</text>
         </g>
     `;
 }
@@ -839,146 +1011,29 @@ function renderNPCCats() {
     
     // Show warriors returning with prey for kits/elders
     if (cat && (cat.rank === 'Kit' || cat.rank === 'Elder')) {
-        // Warrior bringing prey to fresh-kill pile
-        npcHTML += `
-            <g class="npc-cat returning-warrior" transform="translate(160, 240)">
-                <ellipse cx="0" cy="8" rx="10" ry="6" fill="#808080"/>
-                <circle cx="8" cy="2" r="6" fill="#808080"/>
-                <polygon points="4,-2 5,-7 8,0" fill="#808080"/>
-                <polygon points="11,0 14,-7 12,-2" fill="#808080"/>
-                <circle cx="6" cy="1" r="1" fill="#2c3e50"/>
-                <circle cx="10" cy="1" r="1" fill="#2c3e50"/>
-                <!-- Carrying prey -->
-                <ellipse cx="12" cy="5" rx="4" ry="2" fill="#8B7355"/>
-                <text x="0" y="22" text-anchor="middle" fill="#aaa" font-size="7">Graystripe</text>
-            </g>
-        `;
+        // Graystripe bringing prey
+        npcHTML += renderDetailedNPCCat(160, 245, '#808080', '#f1c40f', 'Graystripe', 0.85);
+        // Add prey in mouth
+        npcHTML += `<ellipse cx="175" cy="240" rx="5" ry="3" fill="#8B7355"/>`;
         
-        // Warrior bringing water in moss
-        npcHTML += `
-            <g class="npc-cat water-carrier" transform="translate(290, 240)">
-                <ellipse cx="0" cy="8" rx="10" ry="6" fill="#F4A460"/>
-                <circle cx="8" cy="2" r="6" fill="#F4A460"/>
-                <polygon points="4,-2 5,-7 8,0" fill="#F4A460"/>
-                <polygon points="11,0 14,-7 12,-2" fill="#F4A460"/>
-                <circle cx="6" cy="1" r="1" fill="#2c3e50"/>
-                <circle cx="10" cy="1" r="1" fill="#2c3e50"/>
-                <!-- Carrying moss with water -->
-                <ellipse cx="12" cy="5" rx="3" ry="2" fill="#4a7a4a"/>
-                <text x="0" y="22" text-anchor="middle" fill="#aaa" font-size="7">Sandstorm</text>
-            </g>
-        `;
+        // Sandstorm bringing water in moss
+        npcHTML += renderDetailedNPCCat(290, 245, '#F4A460', '#27ae60', 'Sandstorm', 0.85);
+        // Add moss with water
+        npcHTML += `<ellipse cx="305" cy="240" rx="4" ry="3" fill="#4a7a4a"/>`;
     }
     
-    // Brambleclaw near warriors den (stationary)
-    npcHTML += `
-        <g class="npc-cat" transform="translate(90, 160)">
-            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#8B4513"/>
-            <circle cx="6" cy="1" r="5" fill="#8B4513"/>
-            <circle cx="4" cy="0" r="1" fill="#2c3e50"/>
-            <circle cx="8" cy="0" r="1" fill="#2c3e50"/>
-            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Brambleclaw</text>
-        </g>
-    `;
+    // Stationary cats with detailed graphics
+    npcHTML += renderDetailedNPCCat(85, 175, '#8B4513', '#f1c40f', 'Brambleclaw', 0.8);
+    npcHTML += renderDetailedNPCCat(355, 175, '#CD853F', '#27ae60', 'Squirrelpaw', 0.7);
+    npcHTML += renderDetailedNPCCat(258, 105, '#D2B48C', '#f1c40f', 'Leafpool', 0.8);
+    npcHTML += renderDetailedNPCCat(150, 275, '#2c2c2c', '#f1c40f', 'Spiderleg', 0.75);
+    npcHTML += renderDetailedNPCCat(330, 95, '#ecf0f1', '#27ae60', 'Whitewing', 0.8);
     
-    // Squirrelpaw near apprentice den (stationary)
-    npcHTML += `
-        <g class="npc-cat" transform="translate(360, 160)">
-            <ellipse cx="0" cy="5" rx="7" ry="4" fill="#CD853F"/>
-            <circle cx="5" cy="0" r="4" fill="#CD853F"/>
-            <circle cx="3" cy="-1" r="1" fill="#2c3e50"/>
-            <circle cx="7" cy="-1" r="1" fill="#2c3e50"/>
-            <text x="0" y="15" text-anchor="middle" fill="#aaa" font-size="6">Squirrelpaw</text>
-        </g>
-    `;
-    
-    // Leafpool near medicine den (stationary)
-    npcHTML += `
-        <g class="npc-cat" transform="translate(250, 90)">
-            <ellipse cx="0" cy="5" rx="8" ry="5" fill="#D2B48C"/>
-            <circle cx="6" cy="0" r="5" fill="#D2B48C"/>
-            <circle cx="4" cy="-1" r="1" fill="#2c3e50"/>
-            <circle cx="8" cy="-1" r="1" fill="#2c3e50"/>
-            <text x="0" y="16" text-anchor="middle" fill="#aaa" font-size="6">Leafpool</text>
-        </g>
-    `;
-    
-    // Dustpelt - MOVING cat (dark brown)
-    npcHTML += `
-        <g class="npc-cat moving-cat" transform="translate(${npcs.dustpelt.x}, ${npcs.dustpelt.y})">
-            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#5D4037"/>
-            <circle cx="6" cy="1" r="5" fill="#5D4037"/>
-            <circle cx="4" cy="0" r="1" fill="#2c3e50"/>
-            <circle cx="8" cy="0" r="1" fill="#2c3e50"/>
-            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Dustpelt</text>
-        </g>
-    `;
-    
-    // Cloudtail - MOVING cat (white)
-    npcHTML += `
-        <g class="npc-cat moving-cat" transform="translate(${npcs.cloudtail.x}, ${npcs.cloudtail.y})">
-            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#FFFFFF"/>
-            <circle cx="6" cy="1" r="5" fill="#FFFFFF"/>
-            <circle cx="4" cy="0" r="1" fill="#3498db"/>
-            <circle cx="8" cy="0" r="1" fill="#3498db"/>
-            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Cloudtail</text>
-        </g>
-    `;
-    
-    // Brightheart - MOVING cat (ginger and white)
-    npcHTML += `
-        <g class="npc-cat moving-cat" transform="translate(${npcs.brightheart.x}, ${npcs.brightheart.y})">
-            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#E67E22"/>
-            <circle cx="6" cy="1" r="5" fill="#FFFFFF"/>
-            <circle cx="4" cy="0" r="1" fill="#2c3e50"/>
-            <circle cx="8" cy="0" r="1" fill="#2c3e50"/>
-            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Brightheart</text>
-        </g>
-    `;
-    
-    // Ferncloud - MOVING cat (gray tabby, near nursery)
-    npcHTML += `
-        <g class="npc-cat moving-cat" transform="translate(${npcs.ferncloud.x}, ${npcs.ferncloud.y})">
-            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#95a5a6"/>
-            <circle cx="6" cy="1" r="5" fill="#95a5a6"/>
-            <circle cx="4" cy="0" r="1" fill="#27ae60"/>
-            <circle cx="8" cy="0" r="1" fill="#27ae60"/>
-            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Ferncloud</text>
-        </g>
-    `;
-    
-    // Spiderleg near fresh-kill pile (stationary)
-    npcHTML += `
-        <g class="npc-cat" transform="translate(150, 270)">
-            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#2c2c2c"/>
-            <circle cx="6" cy="1" r="5" fill="#2c2c2c"/>
-            <circle cx="4" cy="0" r="1" fill="#f1c40f"/>
-            <circle cx="8" cy="0" r="1" fill="#f1c40f"/>
-            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Spiderleg</text>
-        </g>
-    `;
-    
-    // Whitewing near elders den (stationary)
-    npcHTML += `
-        <g class="npc-cat" transform="translate(330, 90)">
-            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#ecf0f1"/>
-            <circle cx="6" cy="1" r="5" fill="#ecf0f1"/>
-            <circle cx="4" cy="0" r="1" fill="#27ae60"/>
-            <circle cx="8" cy="0" r="1" fill="#27ae60"/>
-            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Whitewing</text>
-        </g>
-    `;
-    
-    // Birchfall patrolling (stationary but near exit)
-    npcHTML += `
-        <g class="npc-cat" transform="translate(225, 340)">
-            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#D2691E"/>
-            <circle cx="6" cy="1" r="5" fill="#D2691E"/>
-            <circle cx="4" cy="0" r="1" fill="#2c3e50"/>
-            <circle cx="8" cy="0" r="1" fill="#2c3e50"/>
-            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Birchfall</text>
-        </g>
-    `;
+    // Moving cats
+    npcHTML += renderDetailedNPCCat(npcs.dustpelt.x, npcs.dustpelt.y, '#5D4037', '#f1c40f', 'Dustpelt', 0.8);
+    npcHTML += renderDetailedNPCCat(npcs.cloudtail.x, npcs.cloudtail.y, '#FFFFFF', '#3498db', 'Cloudtail', 0.8);
+    npcHTML += renderDetailedNPCCat(npcs.brightheart.x, npcs.brightheart.y, '#E67E22', '#27ae60', 'Brightheart', 0.8);
+    npcHTML += renderDetailedNPCCat(npcs.ferncloud.x, npcs.ferncloud.y, '#95a5a6', '#27ae60', 'Ferncloud', 0.8);
     
     return npcHTML;
 }
@@ -1076,6 +1131,7 @@ function renderPlayerCat() {
     const eyeColor = cat.eyeColor || '#2ecc71';
     const pattern = cat.pattern || 'solid';
     const darkerFur = adjustColor(furColor, -30);
+    const lighterFur = adjustColor(furColor, 20);
     const patternColor = adjustColor(furColor, -50);
     
     // Scale based on rank - kits are smaller!
@@ -1089,17 +1145,21 @@ function renderPlayerCat() {
     let catPatternMarkings = '';
     if (pattern === 'tabby') {
         catPatternMarkings = `
-            <path d="M-8 -5 Q-5 0 -8 5" stroke="${patternColor}" stroke-width="2" fill="none"/>
-            <path d="M0 -7 Q3 0 0 7" stroke="${patternColor}" stroke-width="2" fill="none"/>
+            <path d="M-10 -6 Q-7 0 -10 6" stroke="${patternColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M-3 -8 Q0 0 -3 8" stroke="${patternColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M5 -6 Q8 0 5 6" stroke="${patternColor}" stroke-width="2" fill="none" stroke-linecap="round"/>
         `;
     } else if (pattern === 'spotted') {
         catPatternMarkings = `
-            <circle cx="-5" cy="0" r="2" fill="${patternColor}"/>
-            <circle cx="5" cy="-2" r="2" fill="${patternColor}"/>
+            <circle cx="-8" cy="-2" r="3" fill="${patternColor}"/>
+            <circle cx="0" cy="3" r="2.5" fill="${patternColor}"/>
+            <circle cx="6" cy="-3" r="2" fill="${patternColor}"/>
+            <circle cx="-3" cy="-5" r="2" fill="${patternColor}"/>
         `;
     } else if (pattern === 'patched') {
         catPatternMarkings = `
-            <ellipse cx="0" cy="0" rx="6" ry="5" fill="${patternColor}"/>
+            <ellipse cx="-5" cy="-2" rx="8" ry="6" fill="${patternColor}"/>
+            <ellipse cx="8" cy="2" rx="5" ry="4" fill="${patternColor}" opacity="0.8"/>
         `;
     }
     
@@ -1107,46 +1167,75 @@ function renderPlayerCat() {
     const y = GameState.playerY;
     
     return `
-        <!-- Player cat -->
-        <g id="player-cat" transform="translate(${x}, ${y}) scale(${scale})">
-            <!-- Shadow -->
-            <ellipse cx="0" cy="20" rx="18" ry="5" fill="rgba(0,0,0,0.3)"/>
+        <!-- Player cat with improved graphics -->
+        <g id="player-cat" transform="translate(${x}, ${y}) scale(${scale})" filter="url(#softShadow)">
+            <!-- Ground shadow -->
+            <ellipse cx="0" cy="22" rx="22" ry="6" fill="rgba(0,0,0,0.35)"/>
             
-            <!-- Tail -->
-            <path d="M-18 0 Q-28 -10 -25 -25" stroke="${furColor}" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <!-- Tail with gradient effect -->
+            <path d="M-18 2 Q-32 -5 -30 -22 Q-28 -28 -24 -26" stroke="${darkerFur}" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <path d="M-17 1 Q-30 -5 -28 -21 Q-26 -26 -23 -25" stroke="${furColor}" stroke-width="5" fill="none" stroke-linecap="round"/>
             
-            <!-- Back legs -->
-            <rect x="-15" y="8" width="5" height="12" rx="2" fill="${darkerFur}"/>
-            <rect x="-8" y="8" width="5" height="12" rx="2" fill="${furColor}"/>
+            <!-- Back legs with paws -->
+            <rect x="-16" y="6" width="6" height="14" rx="3" fill="${darkerFur}"/>
+            <ellipse cx="-13" cy="20" rx="4" ry="3" fill="${darkerFur}"/>
+            <rect x="-8" y="6" width="6" height="14" rx="3" fill="${furColor}"/>
+            <ellipse cx="-5" cy="20" rx="4" ry="3" fill="${furColor}"/>
             
-            <!-- Front legs -->
-            <rect x="5" y="8" width="5" height="12" rx="2" fill="${darkerFur}"/>
-            <rect x="12" y="8" width="5" height="12" rx="2" fill="${furColor}"/>
+            <!-- Front legs with paws -->
+            <rect x="6" y="6" width="6" height="14" rx="3" fill="${darkerFur}"/>
+            <ellipse cx="9" cy="20" rx="4" ry="3" fill="${darkerFur}"/>
+            <rect x="13" y="6" width="6" height="14" rx="3" fill="${furColor}"/>
+            <ellipse cx="16" cy="20" rx="4" ry="3" fill="${furColor}"/>
             
-            <!-- Body -->
-            <ellipse cx="0" cy="0" rx="18" ry="12" fill="${darkerFur}"/>
-            <ellipse cx="0" cy="0" rx="16" ry="10" fill="${furColor}"/>
+            <!-- Body with fur texture -->
+            <ellipse cx="0" cy="0" rx="20" ry="14" fill="${darkerFur}"/>
+            <ellipse cx="0" cy="-1" rx="18" ry="12" fill="${furColor}"/>
+            <ellipse cx="0" cy="-3" rx="14" ry="8" fill="${lighterFur}" opacity="0.3"/>
             ${catPatternMarkings}
             
+            <!-- Chest fluff -->
+            <ellipse cx="10" cy="2" rx="6" ry="5" fill="${lighterFur}" opacity="0.4"/>
+            
             <!-- Head -->
-            <circle cx="18" cy="-8" r="12" fill="${furColor}"/>
+            <circle cx="20" cy="-8" r="14" fill="${darkerFur}"/>
+            <circle cx="20" cy="-9" r="13" fill="${furColor}"/>
+            <circle cx="20" cy="-11" r="10" fill="${lighterFur}" opacity="0.2"/>
             
-            <!-- Ears -->
-            <polygon points="10,-15 12,-25 18,-18" fill="${furColor}"/>
-            <polygon points="24,-18 30,-25 26,-15" fill="${furColor}"/>
-            <polygon points="12,-16 13,-22 17,-18" fill="#ffb6c1"/>
-            <polygon points="25,-18 28,-22 26,-16" fill="#ffb6c1"/>
+            <!-- Ears with detail -->
+            <polygon points="9,-16 10,-30 19,-20" fill="${furColor}"/>
+            <polygon points="10,-17 11,-27 18,-20" fill="${darkerFur}" opacity="0.3"/>
+            <polygon points="11,-18 12,-25 17,-20" fill="#e8b4b8"/>
             
-            <!-- Eyes -->
-            <ellipse cx="14" cy="-9" rx="2.5" ry="3" fill="white"/>
-            <ellipse cx="22" cy="-9" rx="2.5" ry="3" fill="white"/>
-            <ellipse cx="14" cy="-9" rx="1.5" ry="2.5" fill="${eyeColor}"/>
-            <ellipse cx="22" cy="-9" rx="1.5" ry="2.5" fill="${eyeColor}"/>
-            <ellipse cx="14" cy="-9" rx="0.8" ry="2" fill="#1a1a2e"/>
-            <ellipse cx="22" cy="-9" rx="0.8" ry="2" fill="#1a1a2e"/>
+            <polygon points="27,-20 34,-30 32,-16" fill="${furColor}"/>
+            <polygon points="28,-19 33,-27 31,-17" fill="${darkerFur}" opacity="0.3"/>
+            <polygon points="29,-18 32,-25 30,-18" fill="#e8b4b8"/>
             
-            <!-- Nose -->
-            <ellipse cx="18" cy="-4" rx="2" ry="1.5" fill="#ffb6c1"/>
+            <!-- Eyes with shine -->
+            <ellipse cx="15" cy="-10" rx="4" ry="4.5" fill="white"/>
+            <ellipse cx="25" cy="-10" rx="4" ry="4.5" fill="white"/>
+            <ellipse cx="15" cy="-10" rx="3" ry="4" fill="${eyeColor}"/>
+            <ellipse cx="25" cy="-10" rx="3" ry="4" fill="${eyeColor}"/>
+            <ellipse cx="15" cy="-10" rx="1.5" ry="3" fill="#1a1a2e"/>
+            <ellipse cx="25" cy="-10" rx="1.5" ry="3" fill="#1a1a2e"/>
+            <!-- Eye shine -->
+            <circle cx="13.5" cy="-12" r="1" fill="white" opacity="0.9"/>
+            <circle cx="23.5" cy="-12" r="1" fill="white" opacity="0.9"/>
+            
+            <!-- Nose and muzzle -->
+            <ellipse cx="20" cy="-4" rx="5" ry="3" fill="${lighterFur}" opacity="0.5"/>
+            <path d="M18,-3 L20,-1 L22,-3" fill="#e8a0a8"/>
+            <ellipse cx="20" cy="-3" rx="2.5" ry="2" fill="#e8a0a8"/>
+            
+            <!-- Whiskers -->
+            <g stroke="#d0d0d0" stroke-width="0.5" opacity="0.7">
+                <line x1="10" y1="-4" x2="-2" y2="-6"/>
+                <line x1="10" y1="-2" x2="-2" y2="-2"/>
+                <line x1="10" y1="0" x2="-2" y2="2"/>
+                <line x1="30" y1="-4" x2="42" y2="-6"/>
+                <line x1="30" y1="-2" x2="42" y2="-2"/>
+                <line x1="30" y1="0" x2="42" y2="2"/>
+            </g>
         </g>
     `;
 }
