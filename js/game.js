@@ -1263,6 +1263,26 @@ function startGameLoop() {
             // Auto-water when thirsty
             if (cat.thirst < 30) {
                 cat.thirst = Math.min(100, cat.thirst + 20);
+                showMessage('💧 A warrior brought you water in moss!');
+            }
+        }
+        
+        // If very thirsty, a cat brings you water in moss
+        if (cat.thirst < 20 && cat.rank !== 'Kit' && cat.rank !== 'Elder') {
+            cat.thirst = Math.min(100, cat.thirst + 25);
+            showMessage('💧 A clanmate noticed you were thirsty and brought water in moss!');
+        }
+        
+        // If sick (low health), cats come to help
+        if (cat.health < 40) {
+            // Medicine cat or helper brings food and water
+            if (cat.hunger < 50) {
+                cat.hunger = Math.min(100, cat.hunger + 20);
+                showMessage('🍖 A kind clanmate brought you fresh-kill while you rest.');
+            }
+            if (cat.thirst < 50) {
+                cat.thirst = Math.min(100, cat.thirst + 20);
+                showMessage('💧 The medicine cat brought you water soaked in moss.');
             }
         }
         

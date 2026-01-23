@@ -55,7 +55,7 @@ This is an HTML5 Warrior Cats-style game designed for children (ages 8+). The ga
 ## Git Workflow
 - Commit and push changes after each significant update - DO NOT ask, just do it
 - All pushes to main auto-deploy to GitHub Pages
-- Open previews inside Cursor, not external browser
+- Open previews using `cursor` command, not `code` or external browser
 
 ## Remember
 - Keep it simple for 8-year-olds
