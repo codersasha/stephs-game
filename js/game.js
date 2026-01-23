@@ -966,8 +966,8 @@ function renderLeaderOnHighRock() {
                 <line x1="19" y1="3" x2="28" y2="3"/>
             </g>
             
-            <!-- Firestar label -->
-            <text x="10" y="30" text-anchor="middle" fill="#ffd700" font-size="8" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.9)">Firestar</text>
+            <!-- Leader name label -->
+            <text x="10" y="30" text-anchor="middle" fill="#ffd700" font-size="8" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.9)">${leader.name}</text>
         </g>
     `;
 }
