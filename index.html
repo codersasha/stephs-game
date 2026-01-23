@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Warrior Cats - The Clan Game</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen active">
+            <div class="stars-bg"></div>
+            <div class="home-content">
+                <h1 class="game-title">Warrior Cats</h1>
+                <h2 class="game-subtitle">The Clan Game</h2>
+                <div id="cats-scene" class="cats-scene">
+                    <!-- SVG cats will be inserted here -->
+                </div>
+                <p class="press-start blink">Press any button to start</p>
+            </div>
+        </div>
+
+        <!-- Clan Selection Screen -->
+        <div id="clan-screen" class="screen">
+            <h2>Choose Your Clan</h2>
+            <div class="clan-buttons">
+                <button class="clan-btn thunderclan" data-clan="thunder">
+                    <span class="clan-icon">⚡</span>
+                    <span class="clan-name">ThunderClan</span>
+                    <span class="clan-desc">Brave forest cats</span>
+                </button>
+                <button class="clan-btn riverclan" data-clan="river">
+                    <span class="clan-icon">🌊</span>
+                    <span class="clan-name">RiverClan</span>
+                    <span class="clan-desc">Skilled swimmers</span>
+                </button>
+                <button class="clan-btn windclan" data-clan="wind">
+                    <span class="clan-icon">💨</span>
+                    <span class="clan-name">WindClan</span>
+                    <span class="clan-desc">Swift runners</span>
+                </button>
+                <button class="clan-btn shadowclan" data-clan="shadow">
+                    <span class="clan-icon">🌑</span>
+                    <span class="clan-name">ShadowClan</span>
+                    <span class="clan-desc">Stealthy hunters</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Save Slots Screen -->
+        <div id="saves-screen" class="screen">
+            <h2>Choose a Save Slot</h2>
+            <div class="save-slots">
+                <button class="save-slot" data-slot="1">
+                    <span class="slot-number">1</span>
+                    <span class="slot-info">Empty</span>
+                </button>
+                <button class="save-slot" data-slot="2">
+                    <span class="slot-number">2</span>
+                    <span class="slot-info">Empty</span>
+                </button>
+                <button class="save-slot" data-slot="3">
+                    <span class="slot-number">3</span>
+                    <span class="slot-info">Empty</span>
+                </button>
+            </div>
+            <button class="back-btn" id="back-to-clan">← Back</button>
+        </div>
+
+        <!-- Name Creation Screen -->
+        <div id="name-screen" class="screen">
+            <h2>Name Your Kit</h2>
+            <p class="name-instruction">What would you like your cat to be called?</p>
+            <div class="name-creator">
+                <input type="text" id="cat-name-input" placeholder="Enter first part..." maxlength="12">
+                <span class="name-suffix" id="name-suffix">kit</span>
+            </div>
+            <p class="name-preview">Your name will be: <span id="full-name-preview">___kit</span></p>
+            <button class="start-game-btn" id="start-game-btn" disabled>Start Adventure!</button>
+            <button class="back-btn" id="back-to-saves">← Back</button>
+        </div>
+
+        <!-- Main Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-hud">
+                <div class="cat-info">
+                    <span id="cat-name-display">Stormkit</span>
+                    <span id="cat-rank">Kit</span>
+                    <span id="cat-age">0 moons</span>
+                </div>
+                <div class="status-bars">
+                    <div class="status-bar health-bar">
+                        <span class="bar-label">❤️</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" id="health-fill" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="status-bar hunger-bar">
+                        <span class="bar-label">🍖</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" id="hunger-fill" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="status-bar thirst-bar">
+                        <span class="bar-label">💧</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" id="thirst-fill" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="game-world" class="game-world">
+                <!-- Game world rendered here -->
+            </div>
+
+            <div class="game-actions">
+                <button class="action-btn" id="hunt-btn">🎯 Hunt</button>
+                <button class="action-btn" id="drink-btn">💧 Drink</button>
+                <button class="action-btn" id="patrol-btn">👁️ Patrol</button>
+                <button class="action-btn" id="rest-btn">😴 Rest</button>
+            </div>
+
+            <div id="game-message" class="game-message"></div>
+        </div>
+
+        <!-- StarClan Screen -->
+        <div id="starclan-screen" class="screen">
+            <div class="starclan-bg"></div>
+            <h2>Welcome to StarClan</h2>
+            <p class="starclan-message">You have joined your warrior ancestors among the stars.</p>
+            <div class="starclan-options">
+                <button class="starclan-btn" id="stay-starclan">✨ Stay in StarClan</button>
+                <button class="starclan-btn" id="visit-dreams">🌙 Visit a Cat's Dream</button>
+                <button class="starclan-btn portal-btn" id="restart-portal">🌀 Portal to New Life</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game.js"></script>
+</body>
+</html>

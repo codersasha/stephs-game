@@ -1,0 +1,626 @@
+/* Warrior Cats Game - Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --thunder-color: #ff9800;
+    --river-color: #2196f3;
+    --wind-color: #8bc34a;
+    --shadow-color: #673ab7;
+    --starclan-color: #e1bee7;
+    --health-color: #f44336;
+    --hunger-color: #ff9800;
+    --thirst-color: #2196f3;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    touch-action: manipulation;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Screens */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: white;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* Home Screen */
+#home-screen {
+    background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%);
+}
+
+.stars-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(2px 2px at 20px 30px, white, transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 90px 40px, white, transparent),
+        radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 160px 120px, white, transparent);
+    background-size: 200px 200px;
+    animation: twinkle 4s infinite;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.home-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.game-title {
+    font-size: clamp(2.5rem, 10vw, 5rem);
+    text-shadow: 0 0 20px rgba(255, 165, 0, 0.8), 0 0 40px rgba(255, 165, 0, 0.4);
+    color: #ffd700;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.game-subtitle {
+    font-size: clamp(1rem, 4vw, 1.5rem);
+    color: #aaa;
+    margin-bottom: 2rem;
+}
+
+.cats-scene {
+    width: 100%;
+    max-width: 600px;
+    height: 200px;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.press-start {
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    color: #ffd700;
+    margin-top: 2rem;
+}
+
+.blink {
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.3; }
+}
+
+/* Clan Selection */
+#clan-screen {
+    background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+}
+
+#clan-screen h2 {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    margin-bottom: 2rem;
+    color: #ffd700;
+}
+
+.clan-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    max-width: 500px;
+    width: 100%;
+}
+
+.clan-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 15px;
+    border: 3px solid transparent;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.clan-btn:hover, .clan-btn:focus {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.thunderclan {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    border-color: #ffb74d;
+}
+
+.riverclan {
+    background: linear-gradient(135deg, #2196f3, #1565c0);
+    border-color: #64b5f6;
+}
+
+.windclan {
+    background: linear-gradient(135deg, #8bc34a, #558b2f);
+    border-color: #aed581;
+}
+
+.shadowclan {
+    background: linear-gradient(135deg, #673ab7, #4527a0);
+    border-color: #9575cd;
+}
+
+.clan-icon {
+    font-size: 2.5rem;
+    margin-bottom: 5px;
+}
+
+.clan-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+}
+
+.clan-desc {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 5px;
+}
+
+/* Save Slots */
+#saves-screen {
+    background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+}
+
+#saves-screen h2 {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    margin-bottom: 2rem;
+    color: #ffd700;
+}
+
+.save-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.save-slot {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #3d3d5c, #2d2d44);
+    border: 2px solid #5d5d7c;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    color: white;
+}
+
+.save-slot:hover {
+    border-color: #ffd700;
+    transform: translateX(10px);
+}
+
+.slot-number {
+    width: 40px;
+    height: 40px;
+    background: #ffd700;
+    color: #1a1a2e;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.slot-info {
+    font-size: 1.1rem;
+}
+
+.back-btn {
+    margin-top: 2rem;
+    padding: 10px 30px;
+    background: transparent;
+    border: 2px solid #888;
+    color: #888;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.back-btn:hover {
+    border-color: white;
+    color: white;
+}
+
+/* Name Creation */
+#name-screen {
+    background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+}
+
+#name-screen h2 {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    color: #ffd700;
+    margin-bottom: 1rem;
+}
+
+.name-instruction {
+    color: #aaa;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.name-creator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px 20px;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+}
+
+#cat-name-input {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    width: 150px;
+    outline: none;
+    text-align: right;
+    font-family: inherit;
+}
+
+#cat-name-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.name-suffix {
+    font-size: 1.5rem;
+    color: #ffd700;
+}
+
+.name-preview {
+    color: #888;
+    margin-bottom: 2rem;
+}
+
+#full-name-preview {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.start-game-btn {
+    padding: 15px 40px;
+    background: linear-gradient(135deg, #ffd700, #ff9800);
+    border: none;
+    border-radius: 30px;
+    color: #1a1a2e;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.start-game-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.start-game-btn:not(:disabled):hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+/* Main Game Screen */
+#game-screen {
+    padding: 0;
+    background: #2d4a3e;
+}
+
+.game-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+}
+
+.cat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#cat-name-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+#cat-rank {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+#cat-age {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.status-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 150px;
+}
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.bar-label {
+    font-size: 0.9rem;
+    width: 25px;
+}
+
+.bar-container {
+    flex: 1;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.health-bar .bar-fill {
+    background: linear-gradient(90deg, #f44336, #e91e63);
+}
+
+.hunger-bar .bar-fill {
+    background: linear-gradient(90deg, #ff9800, #ffc107);
+}
+
+.thirst-bar .bar-fill {
+    background: linear-gradient(90deg, #2196f3, #03a9f4);
+}
+
+.game-world {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #4a4a6a, #3a3a5a);
+    border: 2px solid #6a6a8a;
+    border-radius: 10px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.action-btn:hover, .action-btn:active {
+    background: linear-gradient(135deg, #5a5a7a, #4a4a6a);
+    border-color: #ffd700;
+}
+
+.game-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px 30px;
+    border-radius: 15px;
+    color: white;
+    font-size: 1.2rem;
+    text-align: center;
+    display: none;
+    z-index: 20;
+    max-width: 90%;
+}
+
+.game-message.show {
+    display: block;
+    animation: fadeInOut 2s ease;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    20%, 80% { opacity: 1; }
+}
+
+/* StarClan Screen */
+#starclan-screen {
+    background: linear-gradient(180deg, #1a0a2e 0%, #2d1b4e 50%, #4a2c7a 100%);
+}
+
+.starclan-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(3px 3px at 10% 20%, #fff, transparent),
+        radial-gradient(2px 2px at 30% 40%, rgba(255,255,255,0.9), transparent),
+        radial-gradient(3px 3px at 50% 10%, #ffd700, transparent),
+        radial-gradient(2px 2px at 70% 60%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(3px 3px at 90% 30%, #e1bee7, transparent),
+        radial-gradient(2px 2px at 20% 80%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(3px 3px at 60% 90%, #ffd700, transparent),
+        radial-gradient(2px 2px at 80% 70%, rgba(255,255,255,0.9), transparent);
+    background-size: 100% 100%;
+    animation: starMove 10s infinite linear;
+}
+
+@keyframes starMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 50px 100px; }
+}
+
+#starclan-screen h2 {
+    font-size: clamp(2rem, 6vw, 3rem);
+    color: #ffd700;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+    margin-bottom: 1rem;
+    z-index: 1;
+}
+
+.starclan-message {
+    color: #e1bee7;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    z-index: 1;
+}
+
+.starclan-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 1;
+}
+
+.starclan-btn {
+    padding: 15px 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #e1bee7;
+    border-radius: 30px;
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.starclan-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.portal-btn {
+    border-color: #ffd700;
+    animation: portalGlow 2s infinite;
+}
+
+@keyframes portalGlow {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .clan-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .clan-btn {
+        flex-direction: row;
+        gap: 15px;
+        justify-content: flex-start;
+    }
+    
+    .clan-icon {
+        font-size: 2rem;
+        margin-bottom: 0;
+    }
+    
+    .game-hud {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .status-bars {
+        min-width: 100%;
+    }
+    
+    .action-btn {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Clan-specific game world backgrounds */
+.game-world.thunder {
+    background: linear-gradient(180deg, #2d4a3e 0%, #1a3a2e 50%, #0d2a1e 100%);
+}
+
+.game-world.river {
+    background: linear-gradient(180deg, #1a3a4a 0%, #0d2a3a 50%, #002a3a 100%);
+}
+
+.game-world.wind {
+    background: linear-gradient(180deg, #4a5a3e 0%, #3a4a2e 50%, #2a3a1e 100%);
+}
+
+.game-world.shadow {
+    background: linear-gradient(180deg, #2a2a3e 0%, #1a1a2e 50%, #0a0a1e 100%);
+}
