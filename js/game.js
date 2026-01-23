@@ -761,6 +761,12 @@ function renderCamp() {
             ${nightOverlay}
     `;
     
+    // Add the leader on high rock (always there)
+    worldHTML += renderLeaderOnHighRock();
+    
+    // Add some NPC cats around camp
+    worldHTML += renderNPCCats();
+    
     // Add player cat
     worldHTML += renderPlayerCat();
     worldHTML += `</svg>`;
@@ -774,6 +780,98 @@ function renderCamp() {
             interactWithLocation(location);
         });
     });
+}
+
+// Render the leader sitting on High Rock
+function renderLeaderOnHighRock() {
+    const leader = CLAN_CATS.find(c => c.rank === 'Leader');
+    if (!leader) return '';
+    
+    return `
+        <g id="leader-cat" transform="translate(225, 175)">
+            <!-- Leader sitting on high rock -->
+            <ellipse cx="0" cy="10" rx="12" ry="8" fill="${leader.furColor}"/>
+            <circle cx="8" cy="0" r="8" fill="${leader.furColor}"/>
+            <polygon points="2,-5 4,-12 8,-3" fill="${leader.furColor}"/>
+            <polygon points="12,-3 16,-12 14,-5" fill="${leader.furColor}"/>
+            <circle cx="5" cy="-1" r="1.5" fill="#2c3e50"/>
+            <circle cx="11" cy="-1" r="1.5" fill="#2c3e50"/>
+        </g>
+    `;
+}
+
+// Render NPC cats around camp
+function renderNPCCats() {
+    let npcHTML = '';
+    const cat = GameState.catData;
+    
+    // Show warriors returning with prey for kits/elders
+    if (cat && (cat.rank === 'Kit' || cat.rank === 'Elder')) {
+        // Warrior bringing prey to fresh-kill pile
+        npcHTML += `
+            <g class="npc-cat returning-warrior" transform="translate(160, 240)">
+                <ellipse cx="0" cy="8" rx="10" ry="6" fill="#808080"/>
+                <circle cx="8" cy="2" r="6" fill="#808080"/>
+                <polygon points="4,-2 5,-7 8,0" fill="#808080"/>
+                <polygon points="11,0 14,-7 12,-2" fill="#808080"/>
+                <circle cx="6" cy="1" r="1" fill="#2c3e50"/>
+                <circle cx="10" cy="1" r="1" fill="#2c3e50"/>
+                <!-- Carrying prey -->
+                <ellipse cx="12" cy="5" rx="4" ry="2" fill="#8B7355"/>
+                <text x="0" y="22" text-anchor="middle" fill="#aaa" font-size="7">Graystripe</text>
+            </g>
+        `;
+        
+        // Warrior bringing water in moss
+        npcHTML += `
+            <g class="npc-cat water-carrier" transform="translate(290, 240)">
+                <ellipse cx="0" cy="8" rx="10" ry="6" fill="#F4A460"/>
+                <circle cx="8" cy="2" r="6" fill="#F4A460"/>
+                <polygon points="4,-2 5,-7 8,0" fill="#F4A460"/>
+                <polygon points="11,0 14,-7 12,-2" fill="#F4A460"/>
+                <circle cx="6" cy="1" r="1" fill="#2c3e50"/>
+                <circle cx="10" cy="1" r="1" fill="#2c3e50"/>
+                <!-- Carrying moss with water -->
+                <ellipse cx="12" cy="5" rx="3" ry="2" fill="#4a7a4a"/>
+                <text x="0" y="22" text-anchor="middle" fill="#aaa" font-size="7">Sandstorm</text>
+            </g>
+        `;
+    }
+    
+    // Some cats near warriors den
+    npcHTML += `
+        <g class="npc-cat" transform="translate(90, 160)">
+            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#8B4513"/>
+            <circle cx="6" cy="1" r="5" fill="#8B4513"/>
+            <circle cx="4" cy="0" r="1" fill="#2c3e50"/>
+            <circle cx="8" cy="0" r="1" fill="#2c3e50"/>
+            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Brambleclaw</text>
+        </g>
+    `;
+    
+    // Apprentice near apprentice den
+    npcHTML += `
+        <g class="npc-cat" transform="translate(360, 160)">
+            <ellipse cx="0" cy="5" rx="7" ry="4" fill="#CD853F"/>
+            <circle cx="5" cy="0" r="4" fill="#CD853F"/>
+            <circle cx="3" cy="-1" r="1" fill="#2c3e50"/>
+            <circle cx="7" cy="-1" r="1" fill="#2c3e50"/>
+            <text x="0" y="15" text-anchor="middle" fill="#aaa" font-size="6">Squirrelpaw</text>
+        </g>
+    `;
+    
+    // Medicine cat near medicine den
+    npcHTML += `
+        <g class="npc-cat" transform="translate(250, 90)">
+            <ellipse cx="0" cy="5" rx="8" ry="5" fill="#D2B48C"/>
+            <circle cx="6" cy="0" r="5" fill="#D2B48C"/>
+            <circle cx="4" cy="-1" r="1" fill="#2c3e50"/>
+            <circle cx="8" cy="-1" r="1" fill="#2c3e50"/>
+            <text x="0" y="16" text-anchor="middle" fill="#aaa" font-size="6">Leafpool</text>
+        </g>
+    `;
+    
+    return npcHTML;
 }
 
 // Render the forest (outside camp) for hunting/herb gathering
@@ -1545,35 +1643,101 @@ function performAction(action) {
 // Check if cat should rank up
 function checkRankUp() {
     const cat = GameState.catData;
+    const clanName = CLANS[cat.clan]?.name || 'the clan';
     
     // Kit to Apprentice at 6 moons
     if (cat.rank === 'Kit' && cat.age >= 6) {
         cat.rank = 'Apprentice';
         cat.name = cat.firstName + 'paw';
-        showMessage('🎉 You are now an Apprentice! Your name is ' + cat.name);
+        holdClanMeeting('apprentice', cat.name);
     }
     // Apprentice to Warrior with enough experience
     else if (cat.rank === 'Apprentice' && cat.experience >= 100) {
         const suffix = NAME_SUFFIXES.warrior[Math.floor(Math.random() * NAME_SUFFIXES.warrior.length)];
         cat.rank = 'Warrior';
         cat.name = cat.firstName + suffix;
-        showMessage('🎉 You are now a Warrior! Your name is ' + cat.name);
+        holdClanMeeting('warrior', cat.name);
     }
     // Warrior to Deputy (luck + experience)
     else if (cat.rank === 'Warrior' && cat.experience >= 200 && Math.random() > 0.95) {
         cat.rank = 'Deputy';
         cat.isDeputy = true;
-        showMessage('🎉 The deputy has retired! You are now Deputy!');
+        holdClanMeeting('deputy', cat.name);
     }
     // Deputy to Leader (luck)
     else if (cat.rank === 'Deputy' && Math.random() > 0.98) {
         cat.rank = 'Leader';
         cat.isLeader = true;
         cat.name = cat.firstName + 'star';
-        showMessage('🎉 You are now Leader! Your name is ' + cat.name + '!');
+        holdClanMeeting('leader', cat.name);
     }
     
     saveGameData();
+}
+
+// Hold a clan meeting for ceremonies
+function holdClanMeeting(ceremonyType, catName) {
+    const cat = GameState.catData;
+    const clanName = CLANS[cat.clan]?.name || 'the clan';
+    
+    // Leader calls from High Rock
+    showMessage('Firestar calls from the High Rock: "Let all cats old enough to catch their own prey gather!"');
+    
+    setTimeout(() => {
+        switch (ceremonyType) {
+            case 'apprentice':
+                showMessage(`"${catName}, you have reached six moons. From this day forward, you will be known as ${catName}!"`);
+                setTimeout(() => {
+                    showMessage(`The clan chants: "${catName}! ${catName}!"`);
+                }, 3000);
+                break;
+            case 'warrior':
+                showMessage(`"I, Firestar, leader of ${clanName}, call upon StarClan to look down on this apprentice..."`);
+                setTimeout(() => {
+                    showMessage(`"${catName}, do you promise to uphold the warrior code?" You nod solemnly.`);
+                    setTimeout(() => {
+                        showMessage(`"Then by the powers of StarClan, I give you your warrior name: ${catName}!"`);
+                        setTimeout(() => {
+                            showMessage(`The clan chants: "${catName}! ${catName}!" You are now a warrior!`);
+                        }, 3000);
+                    }, 3000);
+                }, 3000);
+                break;
+            case 'deputy':
+                showMessage(`"The time has come to appoint a new deputy. I say these words before StarClan..."`);
+                setTimeout(() => {
+                    showMessage(`"${catName} will be the new deputy of ${clanName}!"`);
+                    setTimeout(() => {
+                        showMessage(`The clan chants: "${catName}! ${catName}!" You are now deputy!`);
+                    }, 3000);
+                }, 3000);
+                break;
+            case 'leader':
+                showMessage(`You travel to the Moonstone to receive your nine lives from StarClan...`);
+                setTimeout(() => {
+                    showMessage(`StarClan grants you nine lives. You are now ${catName}, leader of ${clanName}!`);
+                    setTimeout(() => {
+                        showMessage(`The clan chants: "${catName}! ${catName}!" You are the leader!`);
+                    }, 3000);
+                }, 3000);
+                break;
+            case 'elder':
+                showMessage(`"${catName} has served the clan well. It is time to join the elders."`);
+                setTimeout(() => {
+                    showMessage(`The clan thanks you for your service. You are now an elder.`);
+                }, 3000);
+                break;
+            case 'medicine':
+                showMessage(`"${catName} has been chosen to walk the path of a medicine cat."`);
+                setTimeout(() => {
+                    showMessage(`You will heal and guide your clanmates. You are now a medicine cat!`);
+                }, 3000);
+                break;
+        }
+    }, 3000);
+    
+    updateGameUI();
+    renderGameWorld();
 }
 
 // Show a message
