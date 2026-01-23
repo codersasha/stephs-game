@@ -801,9 +801,41 @@ function renderLeaderOnHighRock() {
 }
 
 // Render NPC cats around camp
+// NPC cat positions for animation
+if (!window.npcPositions) {
+    window.npcPositions = {
+        dustpelt: { x: 120, y: 280, targetX: 180, targetY: 280, speed: 0.3 },
+        cloudtail: { x: 320, y: 140, targetX: 280, targetY: 180, speed: 0.4 },
+        brightheart: { x: 60, y: 220, targetX: 100, targetY: 200, speed: 0.25 },
+        ferncloud: { x: 180, y: 120, targetX: 220, targetY: 140, speed: 0.2 },
+    };
+}
+
+// Update NPC positions (called in game loop)
+function updateNPCPositions() {
+    const npcs = window.npcPositions;
+    for (const name in npcs) {
+        const npc = npcs[name];
+        // Move towards target
+        const dx = npc.targetX - npc.x;
+        const dy = npc.targetY - npc.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 2) {
+            npc.x += (dx / dist) * npc.speed;
+            npc.y += (dy / dist) * npc.speed;
+        } else {
+            // Pick new random target within camp bounds
+            npc.targetX = 60 + Math.random() * 320;
+            npc.targetY = 100 + Math.random() * 200;
+        }
+    }
+}
+
 function renderNPCCats() {
     let npcHTML = '';
     const cat = GameState.catData;
+    const npcs = window.npcPositions;
     
     // Show warriors returning with prey for kits/elders
     if (cat && (cat.rank === 'Kit' || cat.rank === 'Elder')) {
@@ -838,7 +870,7 @@ function renderNPCCats() {
         `;
     }
     
-    // Some cats near warriors den
+    // Brambleclaw near warriors den (stationary)
     npcHTML += `
         <g class="npc-cat" transform="translate(90, 160)">
             <ellipse cx="0" cy="6" rx="8" ry="5" fill="#8B4513"/>
@@ -849,7 +881,7 @@ function renderNPCCats() {
         </g>
     `;
     
-    // Apprentice near apprentice den
+    // Squirrelpaw near apprentice den (stationary)
     npcHTML += `
         <g class="npc-cat" transform="translate(360, 160)">
             <ellipse cx="0" cy="5" rx="7" ry="4" fill="#CD853F"/>
@@ -860,7 +892,7 @@ function renderNPCCats() {
         </g>
     `;
     
-    // Medicine cat near medicine den
+    // Leafpool near medicine den (stationary)
     npcHTML += `
         <g class="npc-cat" transform="translate(250, 90)">
             <ellipse cx="0" cy="5" rx="8" ry="5" fill="#D2B48C"/>
@@ -868,6 +900,83 @@ function renderNPCCats() {
             <circle cx="4" cy="-1" r="1" fill="#2c3e50"/>
             <circle cx="8" cy="-1" r="1" fill="#2c3e50"/>
             <text x="0" y="16" text-anchor="middle" fill="#aaa" font-size="6">Leafpool</text>
+        </g>
+    `;
+    
+    // Dustpelt - MOVING cat (dark brown)
+    npcHTML += `
+        <g class="npc-cat moving-cat" transform="translate(${npcs.dustpelt.x}, ${npcs.dustpelt.y})">
+            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#5D4037"/>
+            <circle cx="6" cy="1" r="5" fill="#5D4037"/>
+            <circle cx="4" cy="0" r="1" fill="#2c3e50"/>
+            <circle cx="8" cy="0" r="1" fill="#2c3e50"/>
+            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Dustpelt</text>
+        </g>
+    `;
+    
+    // Cloudtail - MOVING cat (white)
+    npcHTML += `
+        <g class="npc-cat moving-cat" transform="translate(${npcs.cloudtail.x}, ${npcs.cloudtail.y})">
+            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#FFFFFF"/>
+            <circle cx="6" cy="1" r="5" fill="#FFFFFF"/>
+            <circle cx="4" cy="0" r="1" fill="#3498db"/>
+            <circle cx="8" cy="0" r="1" fill="#3498db"/>
+            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Cloudtail</text>
+        </g>
+    `;
+    
+    // Brightheart - MOVING cat (ginger and white)
+    npcHTML += `
+        <g class="npc-cat moving-cat" transform="translate(${npcs.brightheart.x}, ${npcs.brightheart.y})">
+            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#E67E22"/>
+            <circle cx="6" cy="1" r="5" fill="#FFFFFF"/>
+            <circle cx="4" cy="0" r="1" fill="#2c3e50"/>
+            <circle cx="8" cy="0" r="1" fill="#2c3e50"/>
+            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Brightheart</text>
+        </g>
+    `;
+    
+    // Ferncloud - MOVING cat (gray tabby, near nursery)
+    npcHTML += `
+        <g class="npc-cat moving-cat" transform="translate(${npcs.ferncloud.x}, ${npcs.ferncloud.y})">
+            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#95a5a6"/>
+            <circle cx="6" cy="1" r="5" fill="#95a5a6"/>
+            <circle cx="4" cy="0" r="1" fill="#27ae60"/>
+            <circle cx="8" cy="0" r="1" fill="#27ae60"/>
+            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Ferncloud</text>
+        </g>
+    `;
+    
+    // Spiderleg near fresh-kill pile (stationary)
+    npcHTML += `
+        <g class="npc-cat" transform="translate(150, 270)">
+            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#2c2c2c"/>
+            <circle cx="6" cy="1" r="5" fill="#2c2c2c"/>
+            <circle cx="4" cy="0" r="1" fill="#f1c40f"/>
+            <circle cx="8" cy="0" r="1" fill="#f1c40f"/>
+            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Spiderleg</text>
+        </g>
+    `;
+    
+    // Whitewing near elders den (stationary)
+    npcHTML += `
+        <g class="npc-cat" transform="translate(330, 90)">
+            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#ecf0f1"/>
+            <circle cx="6" cy="1" r="5" fill="#ecf0f1"/>
+            <circle cx="4" cy="0" r="1" fill="#27ae60"/>
+            <circle cx="8" cy="0" r="1" fill="#27ae60"/>
+            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Whitewing</text>
+        </g>
+    `;
+    
+    // Birchfall patrolling (stationary but near exit)
+    npcHTML += `
+        <g class="npc-cat" transform="translate(225, 340)">
+            <ellipse cx="0" cy="6" rx="8" ry="5" fill="#D2691E"/>
+            <circle cx="6" cy="1" r="5" fill="#D2691E"/>
+            <circle cx="4" cy="0" r="1" fill="#2c3e50"/>
+            <circle cx="8" cy="0" r="1" fill="#2c3e50"/>
+            <text x="0" y="18" text-anchor="middle" fill="#aaa" font-size="6">Birchfall</text>
         </g>
     `;
     
@@ -969,6 +1078,14 @@ function renderPlayerCat() {
     const darkerFur = adjustColor(furColor, -30);
     const patternColor = adjustColor(furColor, -50);
     
+    // Scale based on rank - kits are smaller!
+    let scale = 1.0;
+    if (cat.rank === 'Kit') {
+        scale = 0.5; // Kits are half size
+    } else if (cat.rank === 'Apprentice') {
+        scale = 0.75; // Apprentices are a bit smaller
+    }
+    
     let catPatternMarkings = '';
     if (pattern === 'tabby') {
         catPatternMarkings = `
@@ -991,7 +1108,7 @@ function renderPlayerCat() {
     
     return `
         <!-- Player cat -->
-        <g id="player-cat" transform="translate(${x}, ${y})">
+        <g id="player-cat" transform="translate(${x}, ${y}) scale(${scale})">
             <!-- Shadow -->
             <ellipse cx="0" cy="20" rx="18" ry="5" fill="rgba(0,0,0,0.3)"/>
             
@@ -1460,9 +1577,12 @@ let dayNightInterval;
 // Day/Night cycle constants
 const DAY_LENGTH_MS = 20 * 60 * 1000; // 20 minutes per day
 
+let npcAnimationInterval = null;
+
 function startGameLoop() {
     if (gameLoopInterval) clearInterval(gameLoopInterval);
     if (dayNightInterval) clearInterval(dayNightInterval);
+    if (npcAnimationInterval) clearInterval(npcAnimationInterval);
     
     // Initialize day start time if not set
     if (!GameState.dayStartTime) {
@@ -1475,6 +1595,14 @@ function startGameLoop() {
     dayNightInterval = setInterval(() => {
         checkDayNightCycle();
     }, 10000);
+    
+    // NPC animation - update positions and re-render every 100ms
+    npcAnimationInterval = setInterval(() => {
+        if (GameState.currentScreen !== 'game') return;
+        if (GameState.currentLocation !== 'camp') return;
+        updateNPCPositions();
+        renderGameWorld();
+    }, 100);
     
     gameLoopInterval = setInterval(() => {
         if (GameState.catData.inStarClan) return;
