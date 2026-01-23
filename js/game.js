@@ -344,6 +344,23 @@ function updateCatPreview() {
     
     preview.innerHTML = `
         <svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Tail -->
+            <path d="M15 55 Q0 35 5 15" stroke="${furColor}" stroke-width="10" fill="none" stroke-linecap="round"/>
+            
+            <!-- Back legs -->
+            <rect x="25" y="68" width="10" height="22" rx="4" fill="${darkerFur}"/>
+            <rect x="40" y="68" width="10" height="22" rx="4" fill="${furColor}"/>
+            
+            <!-- Front legs -->
+            <rect x="65" y="68" width="10" height="22" rx="4" fill="${darkerFur}"/>
+            <rect x="78" y="68" width="10" height="22" rx="4" fill="${furColor}"/>
+            
+            <!-- Paws -->
+            <ellipse cx="30" cy="90" rx="6" ry="4" fill="${darkerFur}"/>
+            <ellipse cx="45" cy="90" rx="6" ry="4" fill="${furColor}"/>
+            <ellipse cx="70" cy="90" rx="6" ry="4" fill="${darkerFur}"/>
+            <ellipse cx="83" cy="90" rx="6" ry="4" fill="${furColor}"/>
+            
             <!-- Body -->
             <ellipse cx="50" cy="55" rx="35" ry="25" fill="${darkerFur}"/>
             <ellipse cx="50" cy="55" rx="32" ry="22" fill="${furColor}"/>
@@ -374,9 +391,6 @@ function updateCatPreview() {
             <line x1="70" y1="50" x2="55" y2="52" stroke="#888" stroke-width="1"/>
             <line x1="100" y1="46" x2="115" y2="44" stroke="#888" stroke-width="1"/>
             <line x1="100" y1="50" x2="115" y2="52" stroke="#888" stroke-width="1"/>
-            
-            <!-- Tail -->
-            <path d="M15 55 Q0 35 5 15" stroke="${furColor}" stroke-width="10" fill="none" stroke-linecap="round"/>
         </svg>
     `;
 }
@@ -640,34 +654,54 @@ function renderGameWorld() {
     
     worldHTML += `
         <!-- Player cat -->
-        <g id="player-cat" transform="translate(180, 240)">
+        <g id="player-cat" transform="translate(180, 230)">
+            <!-- Tail -->
+            <path d="M2 20 Q-10 10 -8 -5" stroke="${furColor}" stroke-width="6" fill="none" stroke-linecap="round"/>
+            
+            <!-- Back legs -->
+            <rect x="5" y="22" width="6" height="14" rx="2" fill="${darkerFur}"/>
+            <rect x="14" y="22" width="6" height="14" rx="2" fill="${furColor}"/>
+            
+            <!-- Front legs -->
+            <rect x="30" y="22" width="6" height="14" rx="2" fill="${darkerFur}"/>
+            <rect x="38" y="22" width="6" height="14" rx="2" fill="${furColor}"/>
+            
+            <!-- Paws -->
+            <ellipse cx="8" cy="36" rx="4" ry="3" fill="${darkerFur}"/>
+            <ellipse cx="17" cy="36" rx="4" ry="3" fill="${furColor}"/>
+            <ellipse cx="33" cy="36" rx="4" ry="3" fill="${darkerFur}"/>
+            <ellipse cx="41" cy="36" rx="4" ry="3" fill="${furColor}"/>
+            
             <!-- Body -->
-            <ellipse cx="20" cy="15" rx="18" ry="12" fill="${darkerFur}"/>
-            <ellipse cx="20" cy="15" rx="16" ry="10" fill="${furColor}"/>
+            <ellipse cx="22" cy="15" rx="20" ry="14" fill="${darkerFur}"/>
+            <ellipse cx="22" cy="15" rx="18" ry="12" fill="${furColor}"/>
             ${catPatternMarkings}
             
             <!-- Head -->
-            <circle cx="38" cy="8" r="10" fill="${furColor}"/>
+            <circle cx="42" cy="6" r="12" fill="${furColor}"/>
             
             <!-- Ears -->
-            <polygon points="30,2 32,-6 38,0" fill="${furColor}"/>
-            <polygon points="44,0 50,-6 46,2" fill="${furColor}"/>
-            <polygon points="32,1 33,-4 36,0" fill="#ffb6c1"/>
-            <polygon points="45,0 48,-4 46,1" fill="#ffb6c1"/>
+            <polygon points="33,0 35,-8 42,-2" fill="${furColor}"/>
+            <polygon points="49,-2 56,-8 52,0" fill="${furColor}"/>
+            <polygon points="35,-1 36,-6 40,-2" fill="#ffb6c1"/>
+            <polygon points="50,-2 53,-6 51,-1" fill="#ffb6c1"/>
             
             <!-- Eyes -->
-            <ellipse cx="34" cy="7" rx="2.5" ry="3" fill="white"/>
-            <ellipse cx="42" cy="7" rx="2.5" ry="3" fill="white"/>
-            <ellipse cx="34" cy="7" rx="1.5" ry="2.5" fill="${eyeColor}"/>
-            <ellipse cx="42" cy="7" rx="1.5" ry="2.5" fill="${eyeColor}"/>
-            <ellipse cx="34" cy="7" rx="0.8" ry="2" fill="#1a1a2e"/>
-            <ellipse cx="42" cy="7" rx="0.8" ry="2" fill="#1a1a2e"/>
+            <ellipse cx="37" cy="5" rx="3" ry="3.5" fill="white"/>
+            <ellipse cx="47" cy="5" rx="3" ry="3.5" fill="white"/>
+            <ellipse cx="37" cy="5" rx="2" ry="3" fill="${eyeColor}"/>
+            <ellipse cx="47" cy="5" rx="2" ry="3" fill="${eyeColor}"/>
+            <ellipse cx="37" cy="5" rx="1" ry="2.5" fill="#1a1a2e"/>
+            <ellipse cx="47" cy="5" rx="1" ry="2.5" fill="#1a1a2e"/>
             
             <!-- Nose -->
-            <ellipse cx="38" cy="12" rx="2" ry="1.5" fill="#ffb6c1"/>
+            <ellipse cx="42" cy="11" rx="2.5" ry="2" fill="#ffb6c1"/>
             
-            <!-- Tail -->
-            <path d="M2 15 Q-8 5 -5 -5" stroke="${furColor}" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <!-- Whiskers -->
+            <line x1="32" y1="10" x2="22" y2="8" stroke="#888" stroke-width="0.5"/>
+            <line x1="32" y1="12" x2="22" y2="14" stroke="#888" stroke-width="0.5"/>
+            <line x1="52" y1="10" x2="62" y2="8" stroke="#888" stroke-width="0.5"/>
+            <line x1="52" y1="12" x2="62" y2="14" stroke="#888" stroke-width="0.5"/>
         </g>
     `;
     
