@@ -915,6 +915,9 @@ function updateGameUI() {
 function renderGameWorld() {
     const gameWorld = document.getElementById('game-world');
     
+    // Update chat visibility
+    updateMultiplayerChatVisibility();
+    
     if (GameState.currentLocation === 'camp') {
         renderCamp();
     } else if (GameState.currentLocation.startsWith('den_')) {
@@ -8888,8 +8891,14 @@ function addChatMessage(sender, message, isSystem = false) {
 function updateMultiplayerChatVisibility() {
     const chatBox = document.getElementById('multiplayer-chat');
     if (chatBox) {
-        if (GameState.isMultiplayer && GameState.currentScreen === 'gameplay') {
+        // Show chat in multiplayer mode when playing
+        if (GameState.isMultiplayer && (GameState.currentScreen === 'gameplay' || GameState.currentScreen === 'game')) {
             chatBox.classList.remove('hidden');
+            // Add welcome message if first time
+            if (!GameState.chatWelcomed) {
+                addChatMessage('', 'Chat with your friends here!', true);
+                GameState.chatWelcomed = true;
+            }
         } else {
             chatBox.classList.add('hidden');
         }

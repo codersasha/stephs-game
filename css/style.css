@@ -1659,14 +1659,14 @@ svg * {
 /* Multiplayer Chat */
 .multiplayer-chat {
     position: fixed;
-    bottom: 180px;
+    top: 80px;
     right: 10px;
-    width: 250px;
-    max-height: 200px;
-    background: rgba(0, 0, 0, 0.8);
+    width: 220px;
+    max-height: 180px;
+    background: rgba(0, 0, 0, 0.85);
     border: 2px solid #ffd700;
     border-radius: 10px;
-    padding: 10px;
+    padding: 8px;
     z-index: 100;
 }
 
@@ -1675,17 +1675,17 @@ svg * {
 }
 
 .chat-messages {
-    height: 120px;
+    height: 100px;
     overflow-y: auto;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     padding: 5px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 5px;
 }
 
 .chat-message {
-    margin-bottom: 5px;
-    font-size: 12px;
+    margin-bottom: 4px;
+    font-size: 11px;
     color: #fff;
     word-wrap: break-word;
 }
@@ -1707,7 +1707,7 @@ svg * {
 
 #chat-input {
     flex: 1;
-    padding: 8px;
+    padding: 6px;
     border: 1px solid #ffd700;
     border-radius: 5px;
     background: rgba(255, 255, 255, 0.2);
@@ -1720,13 +1720,14 @@ svg * {
 }
 
 #chat-send-btn {
-    padding: 8px 12px;
+    padding: 6px 10px;
     background: linear-gradient(135deg, #ffd700, #ff9800);
     border: none;
     border-radius: 5px;
     color: #1a1a2e;
     font-weight: bold;
     cursor: pointer;
+    font-size: 11px;
 }
 
 #chat-send-btn:hover {
@@ -1744,12 +1745,25 @@ svg * {
 
 @media (max-width: 768px) {
     .multiplayer-chat {
-        width: 200px;
-        bottom: 220px;
+        width: 160px;
+        top: 70px;
         right: 5px;
+        max-height: 140px;
+        padding: 6px;
     }
     
     .chat-messages {
-        height: 80px;
+        height: 70px;
+        font-size: 10px;
+    }
+    
+    #chat-input {
+        padding: 5px;
+        font-size: 11px;
+    }
+    
+    #chat-send-btn {
+        padding: 5px 8px;
+        font-size: 10px;
     }
 }
