@@ -3646,17 +3646,25 @@ function renderBackyard() {
         showMessage('You slip back inside through the cat flap.');
     });
     
-    document.querySelector('.fence-hole')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        showFenceHolePopup();
+    // Use event delegation for fence hole - more reliable for SVG
+    gameWorld.addEventListener('click', (e) => {
+        const fenceHole = e.target.closest('.fence-hole');
+        if (fenceHole) {
+            e.preventDefault();
+            e.stopPropagation();
+            showFenceHolePopup();
+        }
     });
     
-    // Touch support for mobile
-    document.querySelector('.fence-hole')?.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        showFenceHolePopup();
-    });
+    // Also add direct listener as backup
+    const fenceHoleEl = document.querySelector('.fence-hole');
+    if (fenceHoleEl) {
+        fenceHoleEl.style.cursor = 'pointer';
+        fenceHoleEl.onclick = function(e) {
+            e.preventDefault();
+            showFenceHolePopup();
+        };
+    }
     
     document.querySelector('.yard-water')?.addEventListener('click', () => {
         const cat = GameState.catData;
@@ -3679,11 +3687,18 @@ function renderBackyard() {
 
 // Show popup when going through fence hole
 function showFenceHolePopup() {
+    alert('Fence hole clicked!'); // Debug
+    
     const cat = GameState.catData;
     const popup = document.getElementById('location-popup');
     const title = document.getElementById('location-title');
     const desc = document.getElementById('location-desc');
     const actions = document.getElementById('location-actions');
+    
+    if (!popup) {
+        alert('ERROR: popup element not found!');
+        return;
+    }
     
     title.textContent = 'The Fence Hole';
     desc.textContent = 'Through this hole in the fence, you can see the wild forest! It looks exciting... but maybe dangerous too.';
