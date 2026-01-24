@@ -1110,7 +1110,7 @@ body {
 /* Movement Controls */
 .movement-controls {
     position: absolute;
-    bottom: 80px;
+    top: 60px;
     left: 15px;
     display: flex;
     flex-direction: column;
