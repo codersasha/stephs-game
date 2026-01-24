@@ -2510,6 +2510,41 @@ function renderForest() {
         </g>
     `;
     
+    // Twoleg House - for KittyPets or cats who want to become one!
+    worldHTML += `
+        <g class="twoleg-house clickable" data-location="twoleg" style="cursor: pointer;">
+            <!-- House structure -->
+            <rect x="750" y="40" width="120" height="80" fill="#d4c4a8" stroke="#8a7a6a" stroke-width="3"/>
+            <!-- Roof -->
+            <polygon points="740,40 810,5 880,40" fill="#8B4513" stroke="#5D3A1A" stroke-width="2"/>
+            <!-- Chimney -->
+            <rect x="840" y="10" width="15" height="25" fill="#a52a2a"/>
+            <!-- Door -->
+            <rect x="795" y="70" width="30" height="50" fill="#5D3A1A"/>
+            <circle cx="820" cy="95" r="3" fill="#ffd700"/>
+            <!-- Windows -->
+            <rect x="760" y="55" width="25" height="25" fill="#87CEEB" stroke="#5D3A1A" stroke-width="2"/>
+            <line x1="772" y1="55" x2="772" y2="80" stroke="#5D3A1A" stroke-width="1"/>
+            <line x1="760" y1="67" x2="785" y2="67" stroke="#5D3A1A" stroke-width="1"/>
+            <rect x="835" y="55" width="25" height="25" fill="#87CEEB" stroke="#5D3A1A" stroke-width="2"/>
+            <line x1="847" y1="55" x2="847" y2="80" stroke="#5D3A1A" stroke-width="1"/>
+            <line x1="835" y1="67" x2="860" y2="67" stroke="#5D3A1A" stroke-width="1"/>
+            <!-- Garden -->
+            <ellipse cx="770" cy="115" rx="20" ry="8" fill="#228B22"/>
+            <ellipse cx="850" cy="115" rx="15" ry="6" fill="#228B22"/>
+            <!-- Flowers -->
+            <circle cx="765" cy="110" r="3" fill="#ff69b4"/>
+            <circle cx="775" cy="112" r="3" fill="#ffd700"/>
+            <circle cx="845" cy="110" r="3" fill="#ff4757"/>
+            <circle cx="855" cy="112" r="3" fill="#ff69b4"/>
+            <!-- Cat flap -->
+            <rect x="805" y="110" width="10" height="8" fill="#3a3a3a"/>
+            <!-- Text -->
+            <text x="810" y="135" text-anchor="middle" fill="#ff6b9d" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Twoleg House</text>
+            <text x="810" y="147" text-anchor="middle" fill="#aa9988" font-size="7" style="text-shadow: 1px 1px 2px black;">(KittyPet Home)</text>
+        </g>
+    `;
+    
     // Add warrior companion if with one
     if (GameState.withWarrior) {
         worldHTML += renderWarriorCompanion();
@@ -2601,6 +2636,11 @@ function renderForest() {
     // Barn click handler
     document.querySelector('.barn')?.addEventListener('click', () => {
         showBarnPopup();
+    });
+    
+    // Twoleg house click handler
+    document.querySelector('.twoleg-house')?.addEventListener('click', () => {
+        showTwolegHousePopup();
     });
     
     // Check for random forest events
@@ -3065,8 +3105,14 @@ function renderTwolegHouse() {
     const cat = GameState.catData;
     const isNight = GameState.isNight;
     
+    // KittyPets have collars!
+    if (cat.isKittypet && cat.hasCollar === undefined) {
+        cat.hasCollar = true;
+        cat.collarColor = cat.collarColor || '#ff6b6b'; // Default red collar
+    }
+    
     let houseHTML = `
-        <svg viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+        <svg viewBox="0 0 500 420" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
             <defs>
                 <radialGradient id="houseLight" cx="50%" cy="30%" r="70%">
                     <stop offset="0%" stop-color="${isNight ? '#2a2a3a' : '#f5f0e8'}"/>
@@ -3075,120 +3121,187 @@ function renderTwolegHouse() {
                 <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
                     <feDropShadow dx="2" dy="3" stdDeviation="2" flood-color="rgba(0,0,0,0.2)"/>
                 </filter>
+                <linearGradient id="tvScreen" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#2a4a6a"/>
+                    <stop offset="100%" stop-color="#1a3a5a"/>
+                </linearGradient>
             </defs>
             
             <!-- Room background -->
-            <rect x="0" y="0" width="450" height="400" fill="url(#houseLight)"/>
+            <rect x="0" y="0" width="500" height="420" fill="url(#houseLight)"/>
             
-            <!-- Walls -->
-            <rect x="0" y="0" width="450" height="50" fill="#d4c4a8"/>
-            <rect x="0" y="0" width="20" height="400" fill="#d4c4a8"/>
-            <rect x="430" y="0" width="20" height="400" fill="#d4c4a8"/>
+            <!-- Walls with wallpaper pattern -->
+            <rect x="0" y="0" width="500" height="55" fill="#d4c4a8"/>
+            <rect x="0" y="0" width="20" height="420" fill="#d4c4a8"/>
+            <rect x="480" y="0" width="20" height="420" fill="#d4c4a8"/>
+            
+            <!-- Picture frame on wall -->
+            <rect x="40" y="15" width="40" height="30" fill="#8B4513" rx="2"/>
+            <rect x="43" y="18" width="34" height="24" fill="#87CEEB"/>
+            <circle cx="60" cy="35" r="6" fill="#228B22"/>
             
             <!-- Wooden floor -->
-            <rect x="20" y="340" width="410" height="60" fill="#8B7355"/>
-            <line x1="20" y1="360" x2="430" y2="360" stroke="#7a6345" stroke-width="1"/>
-            <line x1="20" y1="380" x2="430" y2="380" stroke="#7a6345" stroke-width="1"/>
+            <rect x="20" y="360" width="460" height="60" fill="#8B7355"/>
+            <line x1="20" y1="380" x2="480" y2="380" stroke="#7a6345" stroke-width="1"/>
+            <line x1="20" y1="400" x2="480" y2="400" stroke="#7a6345" stroke-width="1"/>
             
-            <!-- Window with view outside -->
+            <!-- Window with curtains -->
             <g class="window">
-                <rect x="180" y="20" width="90" height="70" fill="#4a3a2a" rx="3"/>
-                <rect x="185" y="25" width="80" height="60" fill="${isNight ? '#1a2a4a' : '#87CEEB'}"/>
+                <rect x="200" y="15" width="100" height="80" fill="#4a3a2a" rx="3"/>
+                <rect x="205" y="20" width="90" height="70" fill="${isNight ? '#1a2a4a' : '#87CEEB'}"/>
                 ${isNight ? `
-                    <circle cx="240" cy="40" r="8" fill="#ffd700" opacity="0.8"/>
-                    <circle cx="200" cy="35" r="1" fill="#fff"/>
-                    <circle cx="215" cy="50" r="1" fill="#fff"/>
-                    <circle cx="250" cy="45" r="1" fill="#fff"/>
+                    <circle cx="260" cy="40" r="10" fill="#ffd700" opacity="0.8"/>
+                    <circle cx="220" cy="35" r="1" fill="#fff"/>
+                    <circle cx="235" cy="55" r="1" fill="#fff"/>
+                    <circle cx="275" cy="50" r="1" fill="#fff"/>
                 ` : `
-                    <circle cx="220" cy="45" r="12" fill="#fff" opacity="0.8"/>
-                    <ellipse cx="225" cy="75" rx="30" ry="5" fill="#228B22" opacity="0.8"/>
+                    <circle cx="245" cy="45" r="15" fill="#fff" opacity="0.8"/>
+                    <ellipse cx="250" cy="80" rx="35" ry="6" fill="#228B22" opacity="0.8"/>
                 `}
-                <line x1="225" y1="25" x2="225" y2="85" stroke="#5a4a3a" stroke-width="3"/>
-                <line x1="185" y1="55" x2="265" y2="55" stroke="#5a4a3a" stroke-width="3"/>
+                <line x1="250" y1="20" x2="250" y2="90" stroke="#5a4a3a" stroke-width="3"/>
+                <line x1="205" y1="55" x2="295" y2="55" stroke="#5a4a3a" stroke-width="3"/>
+                <!-- Curtains -->
+                <path d="M200,15 Q190,50 200,95" fill="#c44" opacity="0.7"/>
+                <path d="M300,15 Q310,50 300,95" fill="#c44" opacity="0.7"/>
             </g>
             
-            <!-- Cozy cat bed -->
+            <!-- Human Bed (big!) -->
+            <g class="human-bed clickable" data-action="sleep-human-bed" style="cursor: pointer;" filter="url(#softShadow)">
+                <rect x="320" y="240" width="150" height="100" rx="5" fill="#5a4a3a"/>
+                <rect x="325" y="245" width="140" height="50" rx="3" fill="#f5f5f5"/>
+                <rect x="325" y="295" width="140" height="40" rx="3" fill="#e8d4c4"/>
+                <rect x="330" y="250" width="40" height="30" rx="5" fill="#fff"/>
+                <rect x="420" y="250" width="40" height="30" rx="5" fill="#fff"/>
+                <text x="395" y="355" text-anchor="middle" fill="#5a4a3a" font-size="9" style="text-shadow: 1px 1px 2px white;">Human Bed</text>
+            </g>
+            
+            <!-- TV on stand -->
+            <g class="tv" style="pointer-events: none;">
+                <rect x="100" y="100" width="80" height="10" fill="#2a2a2a"/>
+                <rect x="130" y="110" width="20" height="30" fill="#2a2a2a"/>
+                <rect x="110" y="140" width="60" height="8" fill="#3a3a3a"/>
+                <rect x="105" y="55" width="70" height="50" rx="3" fill="#1a1a1a"/>
+                <rect x="108" y="58" width="64" height="44" rx="2" fill="url(#tvScreen)"/>
+                ${isNight ? '' : `<rect x="115" y="65" width="50" height="30" fill="#4a7a9a" opacity="0.5"/>`}
+            </g>
+            
+            <!-- Bookshelf -->
+            <g class="bookshelf" style="pointer-events: none;">
+                <rect x="400" y="55" width="70" height="120" fill="#6B4423"/>
+                <rect x="405" y="60" width="60" height="25" fill="#5a3a1a"/>
+                <rect x="405" y="90" width="60" height="25" fill="#5a3a1a"/>
+                <rect x="405" y="120" width="60" height="25" fill="#5a3a1a"/>
+                <!-- Books -->
+                <rect x="410" y="62" width="8" height="20" fill="#c44"/>
+                <rect x="420" y="65" width="6" height="17" fill="#4a7cb0"/>
+                <rect x="428" y="63" width="10" height="19" fill="#4a4"/>
+                <rect x="440" y="64" width="7" height="18" fill="#ffd700"/>
+                <rect x="410" y="92" width="12" height="20" fill="#9b59b6"/>
+                <rect x="424" y="95" width="8" height="17" fill="#e74c3c"/>
+                <rect x="435" y="93" width="10" height="19" fill="#3498db"/>
+            </g>
+            
+            <!-- Couch with Twoleg -->
+            <g class="twoleg-area">
+                <rect x="30" y="160" width="130" height="80" rx="10" fill="#6B4423"/>
+                <rect x="25" y="150" width="12" height="100" rx="5" fill="#5a3a1a"/>
+                <rect x="153" y="150" width="12" height="100" rx="5" fill="#5a3a1a"/>
+                <!-- Cushions -->
+                <ellipse cx="60" cy="190" rx="25" ry="20" fill="#7a5a3a"/>
+                <ellipse cx="130" cy="190" rx="25" ry="20" fill="#7a5a3a"/>
+                <!-- Twoleg (human) -->
+                <ellipse cx="95" cy="185" rx="28" ry="22" fill="#f5d0b8"/>
+                <ellipse cx="95" cy="215" rx="35" ry="18" fill="#4a7cb0"/>
+                <circle cx="95" cy="165" r="18" fill="#f5d0b8"/>
+                <ellipse cx="95" cy="155" rx="12" ry="10" fill="#4a3a2a"/>
+                <circle cx="89" cy="163" r="2.5" fill="#2a2a2a"/>
+                <circle cx="101" cy="163" r="2.5" fill="#2a2a2a"/>
+                <path d="M91,172 Q95,176 99,172" stroke="#c4a090" stroke-width="2" fill="none"/>
+            </g>
+            
+            <!-- Talk to Human button -->
+            <g class="talk-human clickable" data-action="talk-human" style="cursor: pointer;">
+                <rect x="45" y="250" width="100" height="28" rx="5" fill="#ff9ff3" opacity="0.9"/>
+                <text x="95" y="269" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold" style="text-shadow: 1px 1px 2px #c44;">Talk to Human</text>
+            </g>
+            
+            <!-- Cat bed -->
             <g class="cat-bed clickable" data-action="rest" style="cursor: pointer;" filter="url(#softShadow)">
-                <ellipse cx="80" cy="300" rx="50" ry="25" fill="#8B4513"/>
-                <ellipse cx="80" cy="295" rx="42" ry="20" fill="#DEB887"/>
-                <ellipse cx="80" cy="292" rx="35" ry="16" fill="#F5DEB3"/>
-                <text x="80" y="340" text-anchor="middle" fill="#8B4513" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px white;">Cat Bed</text>
+                <ellipse cx="250" cy="320" rx="45" ry="22" fill="#ff6b9d"/>
+                <ellipse cx="250" cy="316" rx="38" ry="18" fill="#ffb6c1"/>
+                <ellipse cx="250" cy="313" rx="32" ry="14" fill="#ffc0cb"/>
+                <text x="250" y="355" text-anchor="middle" fill="#ff6b9d" font-size="9" font-weight="bold" style="text-shadow: 1px 1px 2px white;">Your Bed</text>
             </g>
             
-            <!-- Food bowl -->
+            <!-- Food and Water bowls -->
             <g class="food-bowl clickable" data-action="eat" style="cursor: pointer;" filter="url(#softShadow)">
-                <ellipse cx="350" cy="320" rx="28" ry="14" fill="#ff6b6b"/>
-                <ellipse cx="350" cy="317" rx="22" ry="10" fill="#d4a76a"/>
-                <ellipse cx="355" cy="315" rx="6" ry="3" fill="#8B4513"/>
-                <ellipse cx="345" cy="316" rx="5" ry="3" fill="#8B4513"/>
-                <ellipse cx="350" cy="319" rx="4" ry="2" fill="#8B4513"/>
-                <text x="350" y="345" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold" style="text-shadow: 1px 1px 2px white;">Food</text>
+                <ellipse cx="180" cy="380" rx="22" ry="11" fill="#ff6b6b"/>
+                <ellipse cx="180" cy="377" rx="17" ry="8" fill="#d4a76a"/>
+                <ellipse cx="183" cy="375" rx="5" ry="3" fill="#8B4513"/>
+                <ellipse cx="177" cy="376" rx="4" ry="2" fill="#8B4513"/>
+                <text x="180" y="400" text-anchor="middle" fill="#ff6b6b" font-size="8" style="text-shadow: 1px 1px 2px white;">Food</text>
             </g>
             
-            <!-- Water bowl -->
             <g class="water-bowl clickable" data-action="drink" style="cursor: pointer;" filter="url(#softShadow)">
-                <ellipse cx="390" cy="320" rx="22" ry="11" fill="#4a9ac7"/>
-                <ellipse cx="390" cy="318" rx="17" ry="8" fill="#7ac4e8"/>
-                <ellipse cx="385" cy="316" rx="5" ry="3" fill="#b8e4ff" opacity="0.6"/>
-                <text x="390" y="345" text-anchor="middle" fill="#4a9ac7" font-size="9" font-weight="bold" style="text-shadow: 1px 1px 2px white;">Water</text>
+                <ellipse cx="220" cy="380" rx="18" ry="9" fill="#4a9ac7"/>
+                <ellipse cx="220" cy="378" rx="14" ry="7" fill="#7ac4e8"/>
+                <ellipse cx="217" cy="376" rx="4" ry="2" fill="#b8e4ff" opacity="0.6"/>
+                <text x="220" y="400" text-anchor="middle" fill="#4a9ac7" font-size="8" style="text-shadow: 1px 1px 2px white;">Water</text>
             </g>
             
-            <!-- Cat toys -->
+            <!-- Cat toys scattered around -->
             <g class="cat-toy clickable" data-action="play-ball" style="cursor: pointer;">
-                <circle cx="150" cy="330" r="12" fill="#ff4757"/>
-                <circle cx="147" cy="327" r="3" fill="#ff6b7a" opacity="0.6"/>
-                <text x="150" y="355" text-anchor="middle" fill="#ff4757" font-size="8" style="text-shadow: 1px 1px 2px white;">Ball</text>
+                <circle cx="300" cy="370" r="10" fill="#ff4757"/>
+                <circle cx="297" cy="367" r="3" fill="#ff6b7a" opacity="0.6"/>
             </g>
             
             <g class="cat-toy clickable" data-action="play-mouse" style="cursor: pointer;">
-                <ellipse cx="280" cy="335" rx="12" ry="8" fill="#808080"/>
-                <circle cx="290" cy="332" r="4" fill="#696969"/>
-                <circle cx="293" cy="330" r="1.5" fill="#1a1a1a"/>
-                <path d="M265,335 Q255,330 250,335" stroke="#666" stroke-width="2" fill="none"/>
-                <text x="270" y="355" text-anchor="middle" fill="#666" font-size="8" style="text-shadow: 1px 1px 2px white;">Toy Mouse</text>
+                <ellipse cx="350" cy="375" rx="10" ry="6" fill="#808080"/>
+                <circle cx="358" cy="373" r="3" fill="#696969"/>
+                <path d="M338,375 Q330,370 325,375" stroke="#666" stroke-width="2" fill="none"/>
+            </g>
+            
+            <g class="cat-toy clickable" data-action="play-feather" style="cursor: pointer;">
+                <line x1="420" y1="350" x2="420" y2="375" stroke="#8B4513" stroke-width="3"/>
+                <ellipse cx="420" cy="345" rx="3" ry="12" fill="#ff69b4"/>
+                <ellipse cx="425" cy="348" rx="2" ry="8" fill="#9b59b6"/>
             </g>
             
             <!-- Scratching post -->
             <g class="scratching-post clickable" data-action="scratch" style="cursor: pointer;" filter="url(#softShadow)">
-                <rect x="40" y="150" width="30" height="120" fill="#8B7355"/>
-                <rect x="35" y="140" width="40" height="15" rx="5" fill="#DEB887"/>
-                <line x1="45" y1="160" x2="45" y2="260" stroke="#a08060" stroke-width="2"/>
-                <line x1="55" y1="160" x2="55" y2="260" stroke="#a08060" stroke-width="2"/>
-                <line x1="65" y1="160" x2="65" y2="260" stroke="#a08060" stroke-width="2"/>
-                <text x="55" y="285" text-anchor="middle" fill="#8B7355" font-size="8" style="text-shadow: 1px 1px 2px white;">Scratch</text>
+                <rect x="440" y="200" width="25" height="100" fill="#8B7355"/>
+                <rect x="435" y="190" width="35" height="15" rx="5" fill="#DEB887"/>
+                <line x1="447" y1="210" x2="447" y2="290" stroke="#a08060" stroke-width="2"/>
+                <line x1="455" y1="210" x2="455" y2="290" stroke="#a08060" stroke-width="2"/>
+                <text x="452" y="315" text-anchor="middle" fill="#8B7355" font-size="7" style="text-shadow: 1px 1px 2px white;">Scratch</text>
             </g>
             
-            <!-- Couch with Twoleg -->
-            <g class="twoleg" style="pointer-events: none;">
-                <rect x="300" y="120" width="120" height="70" rx="10" fill="#6B4423"/>
-                <rect x="295" y="110" width="10" height="90" rx="5" fill="#5a3a1a"/>
-                <rect x="415" y="110" width="10" height="90" rx="5" fill="#5a3a1a"/>
-                <!-- Twoleg (simplified human shape) -->
-                <ellipse cx="360" cy="150" rx="25" ry="20" fill="#f5d0b8"/>
-                <ellipse cx="360" cy="175" rx="30" ry="15" fill="#4a7cb0"/>
-                <circle cx="360" cy="135" r="15" fill="#f5d0b8"/>
-                <ellipse cx="360" cy="128" rx="10" ry="8" fill="#4a3a2a"/>
-                <circle cx="355" cy="133" r="2" fill="#2a2a2a"/>
-                <circle cx="365" cy="133" r="2" fill="#2a2a2a"/>
-                <path d="M357,140 Q360,143 363,140" stroke="#c4a090" stroke-width="1.5" fill="none"/>
-            </g>
-            
-            <!-- Ask for pets button -->
-            <g class="twoleg-pet clickable" data-action="pet" style="cursor: pointer;">
-                <rect x="320" y="200" width="80" height="25" rx="5" fill="#ff9ff3" opacity="0.8"/>
-                <text x="360" y="217" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px #c44;">Ask for Pets</text>
+            <!-- Litter box (important for kittypets!) -->
+            <g class="litter-box" style="pointer-events: none;">
+                <rect x="440" y="360" width="40" height="25" rx="3" fill="#a0a0a0"/>
+                <rect x="443" y="363" width="34" height="19" rx="2" fill="#d4c4a8"/>
+                <text x="460" y="398" text-anchor="middle" fill="#888" font-size="7">Litter Box</text>
             </g>
             
             <!-- Cat flap (exit) -->
             <g class="cat-flap clickable" data-action="exit" style="cursor: pointer;">
-                <rect x="20" y="300" width="5" height="60" fill="#4a3a2a"/>
-                <rect x="0" y="310" width="25" height="40" fill="#5a4a3a"/>
-                <rect x="3" y="315" width="18" height="30" fill="#2a1a0a"/>
-                <text x="12" y="365" text-anchor="middle" fill="#aaffaa" font-size="8" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Outside</text>
+                <rect x="0" y="300" width="22" height="50" fill="#5a4a3a"/>
+                <rect x="3" y="305" width="16" height="40" fill="#2a1a0a"/>
+                <text x="11" y="365" text-anchor="middle" fill="#aaffaa" font-size="8" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Outside</text>
             </g>
+            
+            <!-- Collar status indicator -->
+            ${cat.hasCollar ? `
+            <g class="collar-status" style="pointer-events: none;">
+                <rect x="400" y="10" width="80" height="20" rx="3" fill="rgba(0,0,0,0.3)"/>
+                <circle cx="415" cy="20" r="6" fill="${cat.collarColor || '#ff6b6b'}"/>
+                <circle cx="415" cy="20" r="3" fill="#ffd700"/>
+                <text x="455" y="25" text-anchor="middle" fill="#fff" font-size="9">Collar On</text>
+            </g>
+            ` : ''}
     `;
     
-    // Add player cat
+    // Add player cat (with collar if kittypet)
     houseHTML += renderPlayerCat();
     
     // Add speech bubbles
@@ -3201,7 +3314,14 @@ function renderTwolegHouse() {
     // Add event listeners
     document.querySelector('.cat-bed')?.addEventListener('click', () => {
         cat.health = Math.min(100, cat.health + 20);
-        showMessage('You curl up in your cozy bed. So soft and warm! (+20 health)');
+        showMessage('You curl up in your cozy pink bed. So soft and warm! (+20 health)');
+        updateGameUI();
+        saveGameData();
+    });
+    
+    document.querySelector('.human-bed')?.addEventListener('click', () => {
+        cat.health = Math.min(100, cat.health + 25);
+        showMessage('You jump on the big human bed! It\'s SO comfy and smells nice! (+25 health)');
         updateGameUI();
         saveGameData();
     });
@@ -3232,12 +3352,13 @@ function renderTwolegHouse() {
         toy.addEventListener('click', () => {
             const action = toy.dataset.action;
             if (action === 'play-ball') {
-                showMessage('You bat the ball around! It rolls across the floor. So fun!');
-                cat.experience = (cat.experience || 0) + 2;
+                showMessage('You bat the red ball around! It rolls across the floor. Wheee!');
             } else if (action === 'play-mouse') {
-                showMessage('You pounce on the toy mouse! Got it! You\'re such a good hunter!');
-                cat.experience = (cat.experience || 0) + 2;
+                showMessage('You pounce on the toy mouse! Gotcha! You\'re such a good hunter!');
+            } else if (action === 'play-feather') {
+                showMessage('You jump and swat at the feather toy! So fun!');
             }
+            cat.experience = (cat.experience || 0) + 2;
             updateGameUI();
             saveGameData();
         });
@@ -3250,12 +3371,8 @@ function renderTwolegHouse() {
         saveGameData();
     });
     
-    document.querySelector('.twoleg-pet')?.addEventListener('click', () => {
-        showMessage('You rub against the Twoleg\'s legs. They reach down and pet you. Purrrr!');
-        cat.health = Math.min(100, cat.health + 10);
-        cat.experience = (cat.experience || 0) + 3;
-        updateGameUI();
-        saveGameData();
+    document.querySelector('.talk-human')?.addEventListener('click', () => {
+        showTalkToHumanPopup();
     });
     
     document.querySelector('.cat-flap')?.addEventListener('click', () => {
@@ -3263,32 +3380,288 @@ function renderTwolegHouse() {
     });
 }
 
+// Show popup to talk to human
+function showTalkToHumanPopup() {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Talk to Your Human';
+    desc.textContent = 'Your human looks at you lovingly. What do you want to tell them?';
+    
+    actions.innerHTML = '';
+    
+    addAction(actions, 'Meow! (I want food!)', () => {
+        closePopup();
+        if (cat.hunger >= 100) {
+            showMessage('Your human checks your bowl. "You already have food, silly kitty!"');
+        } else {
+            cat.hunger = Math.min(100, cat.hunger + 40);
+            showMessage('Your human fills your bowl with yummy food! "Here you go, sweetie!" (+40 hunger)');
+            updateGameUI();
+            saveGameData();
+        }
+    });
+    
+    addAction(actions, 'Mrrrow! (I want water!)', () => {
+        closePopup();
+        if (cat.thirst >= 100) {
+            showMessage('Your human checks your water. "Your water bowl is full!"');
+        } else {
+            cat.thirst = Math.min(100, cat.thirst + 40);
+            showMessage('Your human gives you fresh water! "There you go!" (+40 thirst)');
+            updateGameUI();
+            saveGameData();
+        }
+    });
+    
+    addAction(actions, 'Purrrr! (Pet me please!)', () => {
+        closePopup();
+        cat.health = Math.min(100, cat.health + 15);
+        showMessage('Your human picks you up and gives you lots of pets and cuddles! "Who\'s a good kitty?" Purrrrrr! (+15 health)');
+        updateGameUI();
+        saveGameData();
+    });
+    
+    addAction(actions, 'Mew mew! (Play with me!)', () => {
+        closePopup();
+        showMessage('Your human grabs the feather toy and plays with you! You jump and pounce! So much fun!');
+        cat.experience = (cat.experience || 0) + 5;
+        cat.health = Math.min(100, cat.health + 5);
+        updateGameUI();
+        saveGameData();
+    });
+    
+    addAction(actions, 'Never mind', () => {
+        closePopup();
+    });
+    
+    popup.classList.add('active');
+}
+
 // Show popup when exiting twoleg house
 function showTwolegHouseExitPopup() {
+    const cat = GameState.catData;
     const popup = document.getElementById('location-popup');
     const title = document.getElementById('location-title');
     const desc = document.getElementById('location-desc');
     const actions = document.getElementById('location-actions');
     
     title.textContent = 'Go Outside?';
-    desc.textContent = 'The cat flap leads to the big world outside. There are forests, other cats, and adventures waiting... but also dangers!';
+    desc.textContent = cat.hasCollar ? 
+        'The cat flap leads to the wild forest. You could explore, or even leave your kittypet life forever...' :
+        'The cat flap leads outside. You could go back to the forest.';
     
     actions.innerHTML = '';
     
-    addAction(actions, 'Go to the Forest', () => {
+    addAction(actions, 'Just Explore (Keep Collar)', () => {
         closePopup();
         GameState.currentLocation = 'forest';
         GameState.playerX = 100;
         GameState.playerY = 100;
-        GameState.forestThreats = []; // Reset threats
+        GameState.forestThreats = [];
         renderGameWorld();
-        showMessage('You push through the cat flap and step into the wild forest!');
+        showMessage('You push through the cat flap to explore. Your collar jingles as you go!');
     });
+    
+    if (cat.hasCollar) {
+        addAction(actions, 'Leave Forever (Remove Collar)', () => {
+            closePopup();
+            showLeaveKittypetPopup();
+        });
+    }
     
     addAction(actions, 'Stay Inside', () => {
         closePopup();
         showMessage('You decide to stay in your cozy home.');
     });
+    
+    popup.classList.add('active');
+}
+
+// Show popup to leave kittypet life
+function showLeaveKittypetPopup() {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Leave Your Home?';
+    desc.textContent = 'You could slip off your collar and leave your Twoleg forever. The wild calls to you... but it\'s dangerous out there!';
+    
+    actions.innerHTML = '';
+    
+    addAction(actions, 'Become a Loner', () => {
+        closePopup();
+        cat.hasCollar = false;
+        cat.isKittypet = false;
+        cat.isLoner = true;
+        cat.previousHome = 'kittypet';
+        cat.rank = 'Loner';
+        cat.clan = 'Loner';
+        GameState.currentLocation = 'forest';
+        GameState.playerX = 100;
+        GameState.playerY = 100;
+        GameState.forestThreats = [];
+        renderGameWorld();
+        showMessage('You slip off your collar and leave it behind. You are free! You are now a loner.');
+        updateGameUI();
+        saveGameData();
+    });
+    
+    addAction(actions, 'Try to Join a Clan', () => {
+        closePopup();
+        cat.hasCollar = false;
+        cat.isKittypet = false;
+        cat.isLoner = true;
+        cat.previousHome = 'kittypet';
+        cat.rank = 'Loner';
+        cat.clan = 'Loner';
+        GameState.currentLocation = 'forest';
+        GameState.playerX = 100;
+        GameState.playerY = 100;
+        GameState.forestThreats = [];
+        renderGameWorld();
+        showMessage('You slip off your collar. Time to find a Clan! Go to a Clan\'s territory and ask to join.');
+        updateGameUI();
+        saveGameData();
+    });
+    
+    addAction(actions, 'No, stay as a KittyPet', () => {
+        closePopup();
+        showMessage('You decide to stay with your loving Twoleg. Home sweet home!');
+    });
+    
+    popup.classList.add('active');
+}
+
+// Become a KittyPet (for loners or clan cats)
+function becomeKittypet() {
+    const cat = GameState.catData;
+    
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Become a KittyPet?';
+    desc.textContent = 'A friendly Twoleg home is nearby. They seem nice and have food and a warm bed. Would you like to become their pet?';
+    
+    actions.innerHTML = '';
+    
+    addAction(actions, 'Yes, become a KittyPet!', () => {
+        closePopup();
+        const previousLife = cat.isLoner ? 'loner' : cat.clan;
+        cat.isKittypet = true;
+        cat.isLoner = false;
+        cat.hasCollar = true;
+        cat.collarColor = '#ff6b6b'; // Red collar
+        cat.previousLife = previousLife;
+        cat.rank = 'KittyPet';
+        cat.clan = 'KittyPet';
+        
+        GameState.currentLocation = 'twoleg_house';
+        GameState.playerX = 200;
+        GameState.playerY = 200;
+        renderGameWorld();
+        showMessage('The Twoleg puts a pretty collar on you. You have a new home! You are now a KittyPet!');
+        updateGameUI();
+        saveGameData();
+    });
+    
+    addAction(actions, 'No, stay wild', () => {
+        closePopup();
+        showMessage('You decide the wild life is for you. Freedom!');
+    });
+    
+    popup.classList.add('active');
+}
+
+// Show popup when clicking on twoleg house in forest
+function showTwolegHousePopup() {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Twoleg House';
+    
+    if (cat.isKittypet && cat.previousHome !== 'kittypet') {
+        // This was a kittypet who left - they can return!
+        desc.textContent = 'It\'s your old home! The Twoleg would be so happy to see you again...';
+        
+        actions.innerHTML = '';
+        
+        addAction(actions, 'Go Back Home', () => {
+            closePopup();
+            cat.isKittypet = true;
+            cat.isLoner = false;
+            cat.hasCollar = true;
+            cat.rank = 'KittyPet';
+            cat.clan = 'KittyPet';
+            GameState.currentLocation = 'twoleg_house';
+            GameState.playerX = 200;
+            GameState.playerY = 200;
+            renderGameWorld();
+            showMessage('Your Twoleg sees you and runs over! "You came back!" They put your collar back on. You\'re home!');
+            updateGameUI();
+            saveGameData();
+        });
+        
+        addAction(actions, 'Just Visit', () => {
+            closePopup();
+            GameState.currentLocation = 'twoleg_house';
+            GameState.playerX = 200;
+            GameState.playerY = 200;
+            renderGameWorld();
+            showMessage('You slip through the cat flap to visit.');
+        });
+        
+        addAction(actions, 'Leave', () => {
+            closePopup();
+        });
+    } else if (cat.isKittypet) {
+        // Already a kittypet - just go home
+        desc.textContent = 'Your cozy home! Time to go inside.';
+        
+        actions.innerHTML = '';
+        
+        addAction(actions, 'Go Inside', () => {
+            closePopup();
+            GameState.currentLocation = 'twoleg_house';
+            GameState.playerX = 200;
+            GameState.playerY = 200;
+            renderGameWorld();
+            showMessage('You push through the cat flap and go inside. Home sweet home!');
+        });
+        
+        addAction(actions, 'Stay Outside', () => {
+            closePopup();
+        });
+    } else {
+        // Not a kittypet - can become one!
+        desc.textContent = 'A cozy Twoleg house with a garden. You can see a warm glow from inside, and smell delicious food...';
+        
+        actions.innerHTML = '';
+        
+        addAction(actions, 'Become a KittyPet', () => {
+            closePopup();
+            becomeKittypet();
+        });
+        
+        addAction(actions, 'Just Peek Inside', () => {
+            closePopup();
+            showMessage('You peek through the window. There\'s a soft bed, food bowls, and toys. It looks nice...');
+        });
+        
+        addAction(actions, 'Leave', () => {
+            closePopup();
+        });
+    }
     
     popup.classList.add('active');
 }
@@ -3960,6 +4333,12 @@ function renderPlayerCat() {
             <!-- Ear tufts -->
             <ellipse cx="8" cy="-30" rx="2" ry="3" fill="${lighterFur}" opacity="0.6"/>
             <ellipse cx="32" cy="-30" rx="2" ry="3" fill="${lighterFur}" opacity="0.6"/>
+            
+            <!-- Collar (if KittyPet with collar) -->
+            ${cat.hasCollar ? `
+                <ellipse cx="20" cy="2" rx="12" ry="5" fill="${cat.collarColor || '#ff6b6b'}" stroke="${adjustColor(cat.collarColor || '#ff6b6b', -40)}" stroke-width="1"/>
+                <circle cx="20" cy="6" r="3" fill="#ffd700" stroke="#b8860b" stroke-width="0.5"/>
+            ` : ''}
             
             <!-- Eyes (emotion-based) -->
             ${eyeStyle}
