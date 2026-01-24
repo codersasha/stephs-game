@@ -1890,18 +1890,16 @@ function interactWithLocation(locationKey) {
                         sneakOutOfCamp('forest');
                         closePopup();
                     });
-                    addAction(actions, 'Sneak to ShadowClan', () => {
-                        sneakOutOfCamp('shadow');
-                        closePopup();
-                    });
-                    addAction(actions, 'Sneak to RiverClan', () => {
-                        sneakOutOfCamp('river');
-                        closePopup();
-                    });
-                    addAction(actions, 'Sneak to WindClan', () => {
-                        sneakOutOfCamp('wind');
-                        closePopup();
-                    });
+                    // Show all clans EXCEPT your current clan
+                    const allClans = ['thunder', 'shadow', 'river', 'wind'];
+                    for (const clanKey of allClans) {
+                        if (clanKey !== cat.clan) {
+                            addAction(actions, `Sneak to ${CLANS[clanKey].name}`, () => {
+                                sneakOutOfCamp(clanKey);
+                                closePopup();
+                            });
+                        }
+                    }
                 }
                 addAction(actions, 'Go back', closePopup);
             } else {
