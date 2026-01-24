@@ -1028,11 +1028,11 @@ function renderDenInterior(denType) {
             break;
     }
     
-    // Exit to camp
+    // Exit button in top left corner
     denHTML += `
         <g class="den-exit clickable" style="cursor: pointer;">
-            <ellipse cx="225" cy="385" rx="50" ry="25" fill="#3a5a3a" stroke="#5a7a5a" stroke-width="2"/>
-            <text x="225" y="390" text-anchor="middle" fill="#aaffaa" font-size="12" font-weight="bold">EXIT</text>
+            <rect x="10" y="10" width="70" height="30" rx="5" fill="#3a5a3a" stroke="#5a7a5a" stroke-width="2"/>
+            <text x="45" y="30" text-anchor="middle" fill="#aaffaa" font-size="12" font-weight="bold">← Leave</text>
         </g>
     `;
     
@@ -3053,12 +3053,10 @@ function renderBarnInterior() {
                 <text x="280" y="228" text-anchor="middle" fill="#f0e6d2" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Ravenpaw</text>
             </g>
             
-            <!-- Barn door (exit) -->
+            <!-- Barn door (exit) - top left -->
             <g class="barn-exit clickable" data-action="exit" style="cursor: pointer;">
-                <rect x="180" y="0" width="90" height="50" fill="#4D2A1A"/>
-                <rect x="190" y="5" width="70" height="40" fill="#2a1a0a"/>
-                <ellipse cx="225" cy="25" rx="25" ry="18" fill="#5a8a5a" opacity="0.6"/>
-                <text x="225" y="60" text-anchor="middle" fill="#aaffaa" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Exit Barn</text>
+                <rect x="10" y="10" width="80" height="30" rx="5" fill="#3a5a3a" stroke="#5a7a5a" stroke-width="2"/>
+                <text x="50" y="30" text-anchor="middle" fill="#aaffaa" font-size="11" font-weight="bold">← Leave</text>
             </g>
             
             <!-- Light from door -->
@@ -3304,11 +3302,10 @@ function renderTwolegHouse() {
                 <text x="460" y="398" text-anchor="middle" fill="#888" font-size="7">Litter Box</text>
             </g>
             
-            <!-- Cat flap (exit) -->
+            <!-- Exit button - top left -->
             <g class="cat-flap clickable" data-action="exit" style="cursor: pointer;">
-                <rect x="0" y="300" width="22" height="50" fill="#5a4a3a"/>
-                <rect x="3" y="305" width="16" height="40" fill="#2a1a0a"/>
-                <text x="11" y="365" text-anchor="middle" fill="#aaffaa" font-size="8" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Outside</text>
+                <rect x="10" y="10" width="80" height="30" rx="5" fill="#3a5a3a" stroke="#5a7a5a" stroke-width="2"/>
+                <text x="50" y="30" text-anchor="middle" fill="#aaffaa" font-size="11" font-weight="bold">← Outside</text>
             </g>
             
             <!-- Collar status indicator -->
