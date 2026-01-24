@@ -1382,7 +1382,9 @@ function renderPlayerCat() {
     const eyeColor = cat.eyeColor || '#2ecc71';
     const pattern = cat.pattern || 'solid';
     const darkerFur = adjustColor(furColor, -30);
+    const veryDarkFur = adjustColor(furColor, -60);
     const lighterFur = adjustColor(furColor, 20);
+    const chestFur = adjustColor(furColor, 40);
     const patternColor = adjustColor(furColor, -50);
     
     // Scale based on rank - kits are tiny!
@@ -1395,24 +1397,27 @@ function renderPlayerCat() {
         scale = 0.9; // Elders are slightly smaller
     }
     
+    // Better pattern markings
     let catPatternMarkings = '';
     if (pattern === 'tabby') {
         catPatternMarkings = `
-            <path d="M-10 -6 Q-7 0 -10 6" stroke="${patternColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <path d="M-3 -8 Q0 0 -3 8" stroke="${patternColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <path d="M5 -6 Q8 0 5 6" stroke="${patternColor}" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M-12 -4 Q-9 0 -12 4" stroke="${patternColor}" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M-6 -6 Q-3 0 -6 6" stroke="${patternColor}" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M0 -5 Q3 0 0 5" stroke="${patternColor}" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M6 -4 Q9 0 6 4" stroke="${patternColor}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
         `;
     } else if (pattern === 'spotted') {
         catPatternMarkings = `
-            <circle cx="-8" cy="-2" r="3" fill="${patternColor}"/>
-            <circle cx="0" cy="3" r="2.5" fill="${patternColor}"/>
-            <circle cx="6" cy="-3" r="2" fill="${patternColor}"/>
-            <circle cx="-3" cy="-5" r="2" fill="${patternColor}"/>
+            <circle cx="-10" cy="-2" r="3.5" fill="${patternColor}" opacity="0.9"/>
+            <circle cx="-2" cy="4" r="3" fill="${patternColor}" opacity="0.9"/>
+            <circle cx="8" cy="-2" r="2.5" fill="${patternColor}" opacity="0.9"/>
+            <circle cx="-5" cy="-6" r="2" fill="${patternColor}" opacity="0.9"/>
+            <circle cx="3" cy="-4" r="2" fill="${patternColor}" opacity="0.9"/>
         `;
     } else if (pattern === 'patched') {
         catPatternMarkings = `
-            <ellipse cx="-5" cy="-2" rx="8" ry="6" fill="${patternColor}"/>
-            <ellipse cx="8" cy="2" rx="5" ry="4" fill="${patternColor}" opacity="0.8"/>
+            <ellipse cx="-6" cy="-2" rx="9" ry="7" fill="${patternColor}" opacity="0.85"/>
+            <ellipse cx="10" cy="3" rx="6" ry="5" fill="${patternColor}" opacity="0.8"/>
         `;
     }
     
@@ -1434,89 +1439,99 @@ function renderPlayerCat() {
     let extraEffects = '';
     
     if (emotion === 'happy') {
-        // Happy - curved eyes (^_^)
+        // Happy - curved closed eyes (^_^) style
         eyeStyle = `
-            <path d="M12,-10 Q15,-6 18,-10" stroke="${eyeColor}" stroke-width="3" fill="none" stroke-linecap="round"/>
-            <path d="M22,-10 Q25,-6 28,-10" stroke="${eyeColor}" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M10,-12 Q14,-8 18,-12" stroke="${eyeColor}" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M22,-12 Q26,-8 30,-12" stroke="${eyeColor}" stroke-width="3" fill="none" stroke-linecap="round"/>
         `;
         mouthStyle = `
-            <path d="M16,-2 Q20,2 24,-2" stroke="#e8a0a8" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M17,-3 Q20,1 23,-3" stroke="#d88a90" stroke-width="1.5" fill="none" stroke-linecap="round"/>
         `;
-        // Little hearts
         extraEffects = `
-            <text x="35" y="-20" fill="#ff6b6b" font-size="12">*</text>
+            <circle cx="36" cy="-18" r="3" fill="#ffb6c1" opacity="0.7"/>
+            <circle cx="4" cy="-18" r="3" fill="#ffb6c1" opacity="0.7"/>
         `;
     } else if (emotion === 'mad') {
-        // Mad - angry eyebrows, sharp eyes
+        // Mad - angry narrow eyes
         eyeStyle = `
-            <ellipse cx="15" cy="-9" rx="4" ry="4" fill="white"/>
-            <ellipse cx="25" cy="-9" rx="4" ry="4" fill="white"/>
-            <ellipse cx="15" cy="-9" rx="3" ry="3.5" fill="${eyeColor}"/>
-            <ellipse cx="25" cy="-9" rx="3" ry="3.5" fill="${eyeColor}"/>
-            <ellipse cx="15" cy="-9" rx="2" ry="2.5" fill="#1a1a2e"/>
-            <ellipse cx="25" cy="-9" rx="2" ry="2.5" fill="#1a1a2e"/>
+            <ellipse cx="14" cy="-12" rx="3.5" ry="3" fill="white"/>
+            <ellipse cx="26" cy="-12" rx="3.5" ry="3" fill="white"/>
+            <ellipse cx="14" cy="-12" rx="2.5" ry="2.5" fill="${eyeColor}"/>
+            <ellipse cx="26" cy="-12" rx="2.5" ry="2.5" fill="${eyeColor}"/>
+            <ellipse cx="14" cy="-12" rx="1.2" ry="2" fill="#0a0a0a"/>
+            <ellipse cx="26" cy="-12" rx="1.2" ry="2" fill="#0a0a0a"/>
             <!-- Angry eyebrows -->
-            <line x1="11" y1="-15" x2="18" y2="-13" stroke="${darkerFur}" stroke-width="3" stroke-linecap="round"/>
-            <line x1="29" y1="-15" x2="22" y2="-13" stroke="${darkerFur}" stroke-width="3" stroke-linecap="round"/>
+            <line x1="9" y1="-17" x2="17" y2="-15" stroke="${veryDarkFur}" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="31" y1="-17" x2="23" y2="-15" stroke="${veryDarkFur}" stroke-width="2.5" stroke-linecap="round"/>
         `;
         mouthStyle = `
-            <path d="M16,-1 L20,-3 L24,-1" stroke="#e8a0a8" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M17,-2 L20,-4 L23,-2" stroke="#d88a90" stroke-width="1.5" fill="none" stroke-linecap="round"/>
         `;
-        // Angry marks
         extraEffects = `
-            <text x="35" y="-18" fill="#ff4444" font-size="10" font-weight="bold">#</text>
+            <g fill="#ff6b6b" opacity="0.8">
+                <polygon points="36,-20 38,-16 34,-16"/>
+                <polygon points="38,-18 40,-14 36,-14"/>
+            </g>
         `;
     } else if (emotion === 'sad') {
-        // Sad - droopy eyes, frown
+        // Sad - droopy eyes with tears
         eyeStyle = `
-            <ellipse cx="15" cy="-9" rx="4" ry="3.5" fill="white"/>
-            <ellipse cx="25" cy="-9" rx="4" ry="3.5" fill="white"/>
-            <ellipse cx="15" cy="-8" rx="3" ry="3" fill="${eyeColor}"/>
-            <ellipse cx="25" cy="-8" rx="3" ry="3" fill="${eyeColor}"/>
-            <ellipse cx="15" cy="-8" rx="1.5" ry="2.5" fill="#1a1a2e"/>
-            <ellipse cx="25" cy="-8" rx="1.5" ry="2.5" fill="#1a1a2e"/>
-            <!-- Sad eyebrows (slanted down) -->
-            <line x1="12" y1="-13" x2="18" y2="-14" stroke="${darkerFur}" stroke-width="2" stroke-linecap="round"/>
-            <line x1="28" y1="-13" x2="22" y2="-14" stroke="${darkerFur}" stroke-width="2" stroke-linecap="round"/>
+            <ellipse cx="14" cy="-11" rx="4" ry="3.5" fill="white"/>
+            <ellipse cx="26" cy="-11" rx="4" ry="3.5" fill="white"/>
+            <ellipse cx="14" cy="-10" rx="3" ry="3" fill="${eyeColor}"/>
+            <ellipse cx="26" cy="-10" rx="3" ry="3" fill="${eyeColor}"/>
+            <ellipse cx="14" cy="-10" rx="1.5" ry="2.5" fill="#0a0a0a"/>
+            <ellipse cx="26" cy="-10" rx="1.5" ry="2.5" fill="#0a0a0a"/>
+            <!-- Sad eyebrows -->
+            <line x1="10" y1="-15" x2="17" y2="-16" stroke="${darkerFur}" stroke-width="2" stroke-linecap="round"/>
+            <line x1="30" y1="-15" x2="23" y2="-16" stroke="${darkerFur}" stroke-width="2" stroke-linecap="round"/>
         `;
         mouthStyle = `
-            <path d="M16,-1 Q20,-4 24,-1" stroke="#e8a0a8" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M17,-2 Q20,-5 23,-2" stroke="#d88a90" stroke-width="1.5" fill="none" stroke-linecap="round"/>
         `;
-        // Tear drop
         extraEffects = `
-            <ellipse cx="12" cy="-3" rx="1.5" ry="2" fill="#7ec8e3" opacity="0.8"/>
+            <ellipse cx="10" cy="-6" rx="1.5" ry="2.5" fill="#7ec8e3" opacity="0.8"/>
         `;
     } else if (isSleeping) {
-        // Sleeping - closed eyes
+        // Sleeping - peaceful closed eyes
         eyeStyle = `
-            <path d="M12,-10 Q15,-8 18,-10" stroke="#1a1a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
-            <path d="M22,-10 Q25,-8 28,-10" stroke="#1a1a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M10,-12 Q14,-10 18,-12" stroke="#3a3a4a" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M22,-12 Q26,-10 30,-12" stroke="#3a3a4a" stroke-width="2" fill="none" stroke-linecap="round"/>
         `;
         mouthStyle = `
-            <ellipse cx="20" cy="-3" rx="2" ry="1.5" fill="#e8a0a8"/>
+            <ellipse cx="20" cy="-4" rx="2" ry="1.5" fill="#d88a90" opacity="0.8"/>
         `;
-        // Zzz
         extraEffects = `
-            <text x="32" y="-20" fill="#aaa" font-size="10" font-weight="bold">z</text>
-            <text x="38" y="-26" fill="#888" font-size="8" font-weight="bold">z</text>
-            <text x="43" y="-30" fill="#666" font-size="6" font-weight="bold">z</text>
+            <text x="34" y="-22" fill="#9999aa" font-size="11" font-weight="bold">z</text>
+            <text x="40" y="-28" fill="#7777aa" font-size="9" font-weight="bold">z</text>
+            <text x="45" y="-33" fill="#5555aa" font-size="7" font-weight="bold">z</text>
         `;
     } else {
-        // Normal eyes
+        // Normal - beautiful almond-shaped cat eyes
         eyeStyle = `
-            <ellipse cx="15" cy="-10" rx="4" ry="4.5" fill="white"/>
-            <ellipse cx="25" cy="-10" rx="4" ry="4.5" fill="white"/>
-            <ellipse cx="15" cy="-10" rx="3" ry="4" fill="${eyeColor}"/>
-            <ellipse cx="25" cy="-10" rx="3" ry="4" fill="${eyeColor}"/>
-            <ellipse cx="15" cy="-10" rx="1.5" ry="3" fill="#1a1a2e"/>
-            <ellipse cx="25" cy="-10" rx="1.5" ry="3" fill="#1a1a2e"/>
-            <circle cx="13.5" cy="-12" r="1" fill="white" opacity="0.9"/>
-            <circle cx="23.5" cy="-12" r="1" fill="white" opacity="0.9"/>
+            <!-- Eye whites -->
+            <ellipse cx="14" cy="-12" rx="4" ry="4.5" fill="white"/>
+            <ellipse cx="26" cy="-12" rx="4" ry="4.5" fill="white"/>
+            <!-- Iris -->
+            <ellipse cx="14" cy="-12" rx="3" ry="4" fill="${eyeColor}"/>
+            <ellipse cx="26" cy="-12" rx="3" ry="4" fill="${eyeColor}"/>
+            <!-- Pupils (vertical cat slits) -->
+            <ellipse cx="14" cy="-12" rx="1.2" ry="3.5" fill="#0a0a0a"/>
+            <ellipse cx="26" cy="-12" rx="1.2" ry="3.5" fill="#0a0a0a"/>
+            <!-- Eye shine -->
+            <circle cx="12.5" cy="-14" r="1.2" fill="white" opacity="0.95"/>
+            <circle cx="24.5" cy="-14" r="1.2" fill="white" opacity="0.95"/>
+            <circle cx="15" cy="-10" r="0.6" fill="white" opacity="0.6"/>
+            <circle cx="27" cy="-10" r="0.6" fill="white" opacity="0.6"/>
         `;
         mouthStyle = `
-            <ellipse cx="20" cy="-4" rx="5" ry="3" fill="${lighterFur}" opacity="0.5"/>
-            <path d="M18,-3 L20,-1 L22,-3" fill="#e8a0a8"/>
-            <ellipse cx="20" cy="-3" rx="2.5" ry="2" fill="#e8a0a8"/>
+            <!-- Muzzle area -->
+            <ellipse cx="20" cy="-5" rx="6" ry="4" fill="${chestFur}" opacity="0.4"/>
+            <!-- Nose - pink triangle -->
+            <path d="M18,-5 L22,-5 L20,-2 Z" fill="#d88a90"/>
+            <ellipse cx="20" cy="-4.5" rx="1.5" ry="1" fill="#c87a80"/>
+            <!-- Mouth lines -->
+            <path d="M18,-2 Q20,-1 22,-2" stroke="${veryDarkFur}" stroke-width="0.8" fill="none"/>
         `;
     }
     
@@ -1526,57 +1541,86 @@ function renderPlayerCat() {
     let legsPose = '';
     
     if (isSitting || isSleeping) {
-        // Sitting/sleeping pose - curled up
+        // Sitting/sleeping pose - elegant curled up cat
         tailPose = `
-            <path d="M-15 8 Q-25 15 -20 20 Q-10 22 0 18" stroke="${darkerFur}" stroke-width="6" fill="none" stroke-linecap="round"/>
-            <path d="M-14 7 Q-23 14 -18 18 Q-8 20 0 16" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <!-- Fluffy curled tail -->
+            <path d="M-16 10 Q-28 14 -24 22 Q-16 26 -4 22" stroke="${veryDarkFur}" stroke-width="8" fill="none" stroke-linecap="round"/>
+            <path d="M-15 9 Q-26 13 -22 20 Q-14 24 -3 20" stroke="${darkerFur}" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <path d="M-14 8 Q-24 12 -20 18 Q-12 22 -2 18" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <!-- Tail tip fluff -->
+            <ellipse cx="-3" cy="18" rx="4" ry="3" fill="${furColor}"/>
         `;
         legsPose = `
-            <!-- Tucked paws -->
-            <ellipse cx="-8" cy="12" rx="6" ry="4" fill="${furColor}"/>
-            <ellipse cx="8" cy="12" rx="6" ry="4" fill="${furColor}"/>
+            <!-- Neatly tucked front paws -->
+            <ellipse cx="-6" cy="14" rx="7" ry="5" fill="${darkerFur}"/>
+            <ellipse cx="6" cy="14" rx="7" ry="5" fill="${darkerFur}"/>
+            <ellipse cx="-6" cy="13" rx="6" ry="4" fill="${furColor}"/>
+            <ellipse cx="6" cy="13" rx="6" ry="4" fill="${furColor}"/>
+            <!-- Paw details -->
+            <ellipse cx="-6" cy="15" rx="3" ry="2" fill="${darkerFur}"/>
+            <ellipse cx="6" cy="15" rx="3" ry="2" fill="${darkerFur}"/>
         `;
         bodyPose = `
+            <!-- Main body - curled -->
+            <ellipse cx="0" cy="6" rx="20" ry="14" fill="${veryDarkFur}"/>
             <ellipse cx="0" cy="4" rx="18" ry="12" fill="${darkerFur}"/>
             <ellipse cx="0" cy="2" rx="16" ry="10" fill="${furColor}"/>
-            <ellipse cx="0" cy="0" rx="12" ry="7" fill="${lighterFur}" opacity="0.3"/>
+            <!-- Fur highlights -->
+            <ellipse cx="0" cy="-2" rx="12" ry="6" fill="${lighterFur}" opacity="0.25"/>
+            <ellipse cx="-4" cy="0" rx="6" ry="4" fill="${chestFur}" opacity="0.2"/>
             ${catPatternMarkings}
         `;
     } else {
-        // Standing pose
+        // Standing pose - proud warrior cat
         tailPose = `
-            <path d="M-18 2 Q-32 -5 -30 -22 Q-28 -28 -24 -26" stroke="${darkerFur}" stroke-width="7" fill="none" stroke-linecap="round"/>
-            <path d="M-17 1 Q-30 -5 -28 -21 Q-26 -26 -23 -25" stroke="${furColor}" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <!-- Fluffy upright tail -->
+            <path d="M-20 4 Q-36 -2 -34 -24 Q-32 -34 -26 -32" stroke="${veryDarkFur}" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M-19 3 Q-34 -2 -32 -23 Q-30 -32 -25 -30" stroke="${darkerFur}" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <path d="M-18 2 Q-32 -2 -30 -22 Q-28 -30 -24 -28" stroke="${furColor}" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <!-- Tail tip poof -->
+            <ellipse cx="-25" cy="-30" rx="4" ry="5" fill="${furColor}"/>
         `;
         legsPose = `
-            <!-- Back legs with paws -->
-            <rect x="-16" y="6" width="6" height="14" rx="3" fill="${darkerFur}"/>
-            <ellipse cx="-13" cy="20" rx="4" ry="3" fill="${darkerFur}"/>
-            <rect x="-8" y="6" width="6" height="14" rx="3" fill="${furColor}"/>
-            <ellipse cx="-5" cy="20" rx="4" ry="3" fill="${furColor}"/>
+            <!-- Back legs - muscular and realistic -->
+            <path d="M-18 8 L-20 18 Q-18 24 -14 22" stroke="${veryDarkFur}" stroke-width="8" fill="none" stroke-linecap="round"/>
+            <ellipse cx="-14" cy="22" rx="5" ry="3" fill="${darkerFur}"/>
+            <path d="M-10 8 L-8 18 Q-6 24 -2 22" stroke="${darkerFur}" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <ellipse cx="-2" cy="22" rx="5" ry="3" fill="${furColor}"/>
             
-            <!-- Front legs with paws -->
-            <rect x="6" y="6" width="6" height="14" rx="3" fill="${darkerFur}"/>
-            <ellipse cx="9" cy="20" rx="4" ry="3" fill="${darkerFur}"/>
-            <rect x="13" y="6" width="6" height="14" rx="3" fill="${furColor}"/>
-            <ellipse cx="16" cy="20" rx="4" ry="3" fill="${furColor}"/>
+            <!-- Front legs - slender -->
+            <path d="M8 8 L6 18 Q8 24 12 22" stroke="${darkerFur}" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <ellipse cx="12" cy="22" rx="5" ry="3" fill="${darkerFur}"/>
+            <path d="M16 8 L18 18 Q20 24 24 22" stroke="${furColor}" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <ellipse cx="24" cy="22" rx="5" ry="3" fill="${furColor}"/>
+            
+            <!-- Paw details -->
+            <ellipse cx="-14" cy="23" rx="3" ry="1.5" fill="${veryDarkFur}"/>
+            <ellipse cx="12" cy="23" rx="3" ry="1.5" fill="${veryDarkFur}"/>
         `;
         bodyPose = `
-            <ellipse cx="0" cy="0" rx="20" ry="14" fill="${darkerFur}"/>
-            <ellipse cx="0" cy="-1" rx="18" ry="12" fill="${furColor}"/>
-            <ellipse cx="0" cy="-3" rx="14" ry="8" fill="${lighterFur}" opacity="0.3"/>
+            <!-- Body with depth and fur texture -->
+            <ellipse cx="0" cy="2" rx="22" ry="15" fill="${veryDarkFur}"/>
+            <ellipse cx="0" cy="0" rx="20" ry="13" fill="${darkerFur}"/>
+            <ellipse cx="0" cy="-2" rx="18" ry="11" fill="${furColor}"/>
+            <!-- Highlight fur -->
+            <ellipse cx="0" cy="-5" rx="14" ry="7" fill="${lighterFur}" opacity="0.2"/>
             ${catPatternMarkings}
             
-            <!-- Chest fluff -->
-            <ellipse cx="10" cy="2" rx="6" ry="5" fill="${lighterFur}" opacity="0.4"/>
+            <!-- Fluffy chest -->
+            <ellipse cx="14" cy="0" rx="8" ry="7" fill="${chestFur}" opacity="0.5"/>
+            <ellipse cx="12" cy="-2" rx="5" ry="4" fill="${lighterFur}" opacity="0.3"/>
+            
+            <!-- Neck fluff -->
+            <ellipse cx="18" cy="-6" rx="6" ry="8" fill="${furColor}"/>
+            <ellipse cx="20" cy="-8" rx="4" ry="5" fill="${chestFur}" opacity="0.3"/>
         `;
     }
     
     return `
-        <!-- Player cat with improved graphics -->
+        <!-- Player cat - beautiful Warrior Cat style -->
         <g id="player-cat" transform="translate(${x}, ${y}) scale(${scale})" filter="url(#softShadow)" opacity="${hideOpacity}" style="pointer-events: none;">
             <!-- Ground shadow -->
-            <ellipse cx="0" cy="22" rx="22" ry="6" fill="rgba(0,0,0,0.35)"/>
+            <ellipse cx="4" cy="24" rx="26" ry="7" fill="rgba(0,0,0,0.3)"/>
             
             <!-- Tail -->
             ${tailPose}
@@ -1587,19 +1631,25 @@ function renderPlayerCat() {
             <!-- Body -->
             ${bodyPose}
             
-            <!-- Head -->
-            <circle cx="20" cy="-8" r="14" fill="${darkerFur}"/>
-            <circle cx="20" cy="-9" r="13" fill="${furColor}"/>
-            <circle cx="20" cy="-11" r="10" fill="${lighterFur}" opacity="0.2"/>
+            <!-- Head - more feline shaped -->
+            <ellipse cx="20" cy="-10" rx="14" ry="12" fill="${veryDarkFur}"/>
+            <ellipse cx="20" cy="-11" rx="13" ry="11" fill="${darkerFur}"/>
+            <ellipse cx="20" cy="-12" rx="12" ry="10" fill="${furColor}"/>
+            <!-- Head highlight -->
+            <ellipse cx="20" cy="-14" rx="9" ry="7" fill="${lighterFur}" opacity="0.15"/>
             
-            <!-- Ears with detail -->
-            <polygon points="9,-16 10,-30 19,-20" fill="${furColor}"/>
-            <polygon points="10,-17 11,-27 18,-20" fill="${darkerFur}" opacity="0.3"/>
-            <polygon points="11,-18 12,-25 17,-20" fill="#e8b4b8"/>
+            <!-- Ears - tall pointed cat ears -->
+            <polygon points="7,-16 8,-32 18,-20" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="9,-17 9,-28 16,-20" fill="${darkerFur}" opacity="0.25"/>
+            <polygon points="10,-18 10,-26 15,-20" fill="#e8b4b8" opacity="0.7"/>
             
-            <polygon points="27,-20 34,-30 32,-16" fill="${furColor}"/>
-            <polygon points="28,-19 33,-27 31,-17" fill="${darkerFur}" opacity="0.3"/>
-            <polygon points="29,-18 32,-25 30,-18" fill="#e8b4b8"/>
+            <polygon points="22,-20 32,-32 33,-16" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="24,-20 30,-28 31,-18" fill="${darkerFur}" opacity="0.25"/>
+            <polygon points="25,-20 29,-26 30,-19" fill="#e8b4b8" opacity="0.7"/>
+            
+            <!-- Ear tufts -->
+            <ellipse cx="8" cy="-30" rx="2" ry="3" fill="${lighterFur}" opacity="0.6"/>
+            <ellipse cx="32" cy="-30" rx="2" ry="3" fill="${lighterFur}" opacity="0.6"/>
             
             <!-- Eyes (emotion-based) -->
             ${eyeStyle}
@@ -1610,15 +1660,19 @@ function renderPlayerCat() {
             <!-- Extra effects -->
             ${extraEffects}
             
-            <!-- Whiskers -->
-            <g stroke="#d0d0d0" stroke-width="0.5" opacity="0.7">
-                <line x1="10" y1="-4" x2="-2" y2="-6"/>
-                <line x1="10" y1="-2" x2="-2" y2="-2"/>
-                <line x1="10" y1="0" x2="-2" y2="2"/>
-                <line x1="30" y1="-4" x2="42" y2="-6"/>
-                <line x1="30" y1="-2" x2="42" y2="-2"/>
-                <line x1="30" y1="0" x2="42" y2="2"/>
+            <!-- Long whiskers -->
+            <g stroke="#e0e0e0" stroke-width="0.6" opacity="0.8">
+                <line x1="9" y1="-5" x2="-6" y2="-8"/>
+                <line x1="9" y1="-3" x2="-6" y2="-3"/>
+                <line x1="9" y1="-1" x2="-6" y2="2"/>
+                <line x1="31" y1="-5" x2="46" y2="-8"/>
+                <line x1="31" y1="-3" x2="46" y2="-3"/>
+                <line x1="31" y1="-1" x2="46" y2="2"/>
             </g>
+            
+            <!-- Fur tufts on cheeks -->
+            <ellipse cx="4" cy="-8" rx="3" ry="4" fill="${chestFur}" opacity="0.4"/>
+            <ellipse cx="36" cy="-8" rx="3" ry="4" fill="${chestFur}" opacity="0.4"/>
         </g>
     `;
 }
