@@ -1983,12 +1983,19 @@ function renderForest() {
     herbSpots.forEach((spot, i) => {
         const herb = HERBS[spot.herb];
         worldHTML += `
-            <g class="herb-spot clickable" data-herb="${spot.herb}" data-index="${i}" style="cursor: pointer;">
-                <circle cx="${spot.x}" cy="${spot.y}" r="22" fill="#2a4a2a" stroke="#5a8a5a" stroke-width="2"/>
-                <circle cx="${spot.x-5}" cy="${spot.y-3}" r="4" fill="#4a8a4a"/>
-                <circle cx="${spot.x+5}" cy="${spot.y+2}" r="3" fill="#3a7a3a"/>
-                <circle cx="${spot.x}" cy="${spot.y-6}" r="3" fill="#5a9a5a"/>
-                <text x="${spot.x}" y="${spot.y + 32}" text-anchor="middle" font-size="11" fill="#aaffaa" style="text-shadow: 1px 1px 2px black;">${herb.name}</text>
+            <g class="herb-spot-group">
+                <!-- Visual only - walk through this -->
+                <g style="pointer-events: none;">
+                    <circle cx="${spot.x}" cy="${spot.y}" r="22" fill="#2a4a2a" stroke="#5a8a5a" stroke-width="2" opacity="0.7"/>
+                    <circle cx="${spot.x-5}" cy="${spot.y-3}" r="4" fill="#4a8a4a"/>
+                    <circle cx="${spot.x+5}" cy="${spot.y+2}" r="3" fill="#3a7a3a"/>
+                    <circle cx="${spot.x}" cy="${spot.y-6}" r="3" fill="#5a9a5a"/>
+                </g>
+                <!-- Clickable label -->
+                <g class="herb-spot clickable" data-herb="${spot.herb}" data-index="${i}" style="cursor: pointer;">
+                    <rect x="${spot.x - 30}" y="${spot.y + 20}" width="60" height="18" fill="rgba(0,0,0,0.5)" rx="5"/>
+                    <text x="${spot.x}" y="${spot.y + 33}" text-anchor="middle" font-size="11" fill="#aaffaa" style="text-shadow: 1px 1px 2px black;">${herb.name}</text>
+                </g>
             </g>
         `;
     });
@@ -2014,12 +2021,19 @@ function renderForest() {
     
     preySpots.forEach((prey, i) => {
         worldHTML += `
-            <g class="prey-spot clickable" data-action="hunt" data-index="${i}" style="cursor: pointer;">
-                <circle cx="${prey.x}" cy="${prey.y}" r="28" fill="#4a3a2a" stroke="#7a6a5a" stroke-width="2"/>
-                <ellipse cx="${prey.x}" cy="${prey.y}" rx="10" ry="6" fill="#8B7355"/>
-                <circle cx="${prey.x-4}" cy="${prey.y-2}" r="2" fill="#1a1a1a"/>
-                <ellipse cx="${prey.x+8}" cy="${prey.y}" rx="3" ry="1" fill="#9a8a7a"/>
-                <text x="${prey.x}" y="${prey.y + 38}" text-anchor="middle" fill="#f0e6d2" font-size="11" style="text-shadow: 1px 1px 2px black;">Hunt ${prey.type}</text>
+            <g class="prey-spot-group">
+                <!-- Visual only - walk through this -->
+                <g style="pointer-events: none;">
+                    <circle cx="${prey.x}" cy="${prey.y}" r="28" fill="#4a3a2a" stroke="#7a6a5a" stroke-width="2" opacity="0.7"/>
+                    <ellipse cx="${prey.x}" cy="${prey.y}" rx="10" ry="6" fill="#8B7355"/>
+                    <circle cx="${prey.x-4}" cy="${prey.y-2}" r="2" fill="#1a1a1a"/>
+                    <ellipse cx="${prey.x+8}" cy="${prey.y}" rx="3" ry="1" fill="#9a8a7a"/>
+                </g>
+                <!-- Clickable label -->
+                <g class="prey-spot clickable" data-action="hunt" data-index="${i}" style="cursor: pointer;">
+                    <rect x="${prey.x - 35}" y="${prey.y + 26}" width="70" height="18" fill="rgba(0,0,0,0.5)" rx="5"/>
+                    <text x="${prey.x}" y="${prey.y + 39}" text-anchor="middle" fill="#f0e6d2" font-size="11" style="text-shadow: 1px 1px 2px black;">Hunt ${prey.type}</text>
+                </g>
             </g>
         `;
     });
