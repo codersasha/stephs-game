@@ -182,6 +182,11 @@ body {
     border-color: #8a8a8a;
 }
 
+.kittypet {
+    background: linear-gradient(135deg, #ff9ec4, #ff6b9d);
+    border-color: #ffb6c1;
+}
+
 .starclan {
     background: linear-gradient(135deg, #1a1a3a, #0a0a2a);
     border-color: #ffd700;

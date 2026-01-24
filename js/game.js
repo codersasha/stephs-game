@@ -105,6 +105,7 @@ const CLANS = {
     wind: { name: 'WindClan', color: '#8bc34a' },
     shadow: { name: 'ShadowClan', color: '#673ab7' },
     loner: { name: 'Loner', color: '#8a7a6a' },
+    kittypet: { name: 'KittyPet', color: '#ff6b9d' },
     star: { name: 'StarClan', color: '#ffd700' }
 };
 
@@ -470,17 +471,19 @@ function updateNamePreview() {
     const startBtn = document.getElementById('start-game-btn');
     const suffix = document.getElementById('name-suffix');
     const isLoner = GameState.selectedClan === 'loner';
+    const isKittypet = GameState.selectedClan === 'kittypet';
+    const canChooseFullName = isLoner || isKittypet;
     
     const firstName = nameInput.value.trim();
     
     if (firstName.length > 0) {
         // Capitalize first letter
         const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-        // Loners can pick any name - no suffix added!
-        preview.textContent = isLoner ? formattedName : formattedName + suffix.textContent;
+        // Loners and KittyPets can pick any name - no suffix added!
+        preview.textContent = canChooseFullName ? formattedName : formattedName + suffix.textContent;
         startBtn.disabled = false;
     } else {
-        preview.textContent = isLoner ? '(Your choice!)' : '___' + suffix.textContent;
+        preview.textContent = canChooseFullName ? '(Your choice!)' : '___' + suffix.textContent;
         startBtn.disabled = true;
     }
 }
@@ -601,18 +604,24 @@ function initNameScreen() {
         btn.classList.toggle('selected', btn.dataset.color === '#2ecc71');
     });
     
-    // Check if loner - they can pick ANY name!
+    // Check if loner or kittypet - they can pick ANY name!
     const isLoner = GameState.selectedClan === 'loner';
+    const isKittypet = GameState.selectedClan === 'kittypet';
+    const canChooseFullName = isLoner || isKittypet;
     const nameInput = document.getElementById('cat-name-input');
     const nameSuffix = document.getElementById('name-suffix');
     const nameInstruction = document.querySelector('.name-instruction');
     
-    if (isLoner) {
-        // Loners pick their whole name!
+    if (canChooseFullName) {
+        // Loners and KittyPets pick their whole name!
         nameSuffix.style.display = 'none';
         nameInput.placeholder = 'Enter your full name...';
         if (nameInstruction) {
-            nameInstruction.textContent = "Choose any name you like!";
+            if (isKittypet) {
+                nameInstruction.textContent = "What do your Twolegs call you?";
+            } else {
+                nameInstruction.textContent = "Choose any name you like!";
+            }
         }
     } else {
         // Clan cats get suffixes
@@ -625,7 +634,7 @@ function initNameScreen() {
     
     // Clear name input
     nameInput.value = '';
-    document.getElementById('full-name-preview').textContent = isLoner ? '(Your choice!)' : '___kit';
+    document.getElementById('full-name-preview').textContent = canChooseFullName ? '(Your choice!)' : '___kit';
     document.getElementById('start-game-btn').disabled = true;
     
     // Render preview
@@ -640,6 +649,9 @@ function beginAdventure() {
     
     // Check if starting as a loner
     const isLoner = GameState.selectedClan === 'loner';
+    
+    // Check if starting as a kittypet
+    const isKittypet = GameState.selectedClan === 'kittypet';
     
     // Check if starting as StarClan
     const isStarClan = GameState.selectedClan === 'star';
@@ -664,6 +676,10 @@ function beginAdventure() {
         nameSuffix = '';
         rankName = 'Loner';
         experience = 50;
+    } else if (isKittypet) {
+        nameSuffix = '';
+        rankName = 'KittyPet';
+        experience = 0;
     } else {
         switch (startingRank) {
             case 'kit':
@@ -705,16 +721,23 @@ function beginAdventure() {
         }
     }
     
-    // Loners can choose any name they want!
-    const fullName = isLoner ? formattedName : formattedName + nameSuffix;
+    // Loners and KittyPets can choose any name they want!
+    const canChooseFullName = isLoner || isKittypet;
+    const fullName = canChooseFullName ? formattedName : formattedName + nameSuffix;
+    
+    // Determine clan value
+    let clanValue = GameState.selectedClan;
+    if (isStarClan) clanValue = 'StarClan';
+    else if (isLoner) clanValue = 'Loner';
+    else if (isKittypet) clanValue = 'KittyPet';
     
     // Create new cat data with customization
     GameState.catData = {
         firstName: formattedName,
         name: fullName,
-        clan: isStarClan ? 'StarClan' : (isLoner ? 'Loner' : GameState.selectedClan),
+        clan: clanValue,
         rank: rankName,
-        age: isStarClan ? 100 : (isLoner ? 12 : startingAge), // StarClan cats are ancient
+        age: isStarClan ? 100 : (isLoner ? 12 : (isKittypet ? 1 : startingAge)), // KittyPets start young
         health: 100,
         hunger: isStarClan ? 100 : (isLoner ? 70 : 100), // StarClan cats don't need food
         thirst: isStarClan ? 100 : (isLoner ? 70 : 100),
@@ -723,6 +746,7 @@ function beginAdventure() {
         isLeader: isLeader,
         lives: isLeader ? 9 : 1, // Leaders have 9 lives!
         isLoner: isLoner,
+        isKittypet: isKittypet, // Lives with Twolegs
         isStarClanCat: isStarClan, // Permanently a StarClan cat
         inStarClan: isStarClan, // Start in StarClan
         hasSeenTutorial: false,
@@ -815,12 +839,19 @@ function startGameplay() {
     
     const cat = GameState.catData;
     
-    // Loners start in the forest, clan cats start in camp
-    if (cat.isLoner) {
+    // Different starting locations based on cat type
+    if (cat.isKittypet) {
+        // KittyPets start in their Twoleg house
+        GameState.playerX = 200;
+        GameState.playerY = 200;
+        GameState.currentLocation = 'twoleg_house';
+    } else if (cat.isLoner) {
+        // Loners start in the forest
         GameState.playerX = 300;
         GameState.playerY = 250;
         GameState.currentLocation = 'forest';
     } else {
+        // Clan cats start in camp
         GameState.playerX = 225;
         GameState.playerY = 250;
         GameState.currentLocation = 'camp';
@@ -887,6 +918,8 @@ function renderGameWorld() {
         renderDenInterior(GameState.currentLocation.replace('den_', ''));
     } else if (GameState.currentLocation === 'barn') {
         renderBarnInterior();
+    } else if (GameState.currentLocation === 'twoleg_house') {
+        renderTwolegHouse();
     } else if (GameState.currentLocation === 'starclan_world') {
         renderStarClanWorld();
     } else {
@@ -3024,6 +3057,240 @@ function renderBarnInterior() {
         renderGameWorld();
         showMessage('You exit the barn into the forest.');
     });
+}
+
+// Render Twoleg House interior (for KittyPets)
+function renderTwolegHouse() {
+    const gameWorld = document.getElementById('game-world');
+    const cat = GameState.catData;
+    const isNight = GameState.isNight;
+    
+    let houseHTML = `
+        <svg viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <radialGradient id="houseLight" cx="50%" cy="30%" r="70%">
+                    <stop offset="0%" stop-color="${isNight ? '#2a2a3a' : '#f5f0e8'}"/>
+                    <stop offset="100%" stop-color="${isNight ? '#1a1a2a' : '#e5e0d8'}"/>
+                </radialGradient>
+                <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="2" dy="3" stdDeviation="2" flood-color="rgba(0,0,0,0.2)"/>
+                </filter>
+            </defs>
+            
+            <!-- Room background -->
+            <rect x="0" y="0" width="450" height="400" fill="url(#houseLight)"/>
+            
+            <!-- Walls -->
+            <rect x="0" y="0" width="450" height="50" fill="#d4c4a8"/>
+            <rect x="0" y="0" width="20" height="400" fill="#d4c4a8"/>
+            <rect x="430" y="0" width="20" height="400" fill="#d4c4a8"/>
+            
+            <!-- Wooden floor -->
+            <rect x="20" y="340" width="410" height="60" fill="#8B7355"/>
+            <line x1="20" y1="360" x2="430" y2="360" stroke="#7a6345" stroke-width="1"/>
+            <line x1="20" y1="380" x2="430" y2="380" stroke="#7a6345" stroke-width="1"/>
+            
+            <!-- Window with view outside -->
+            <g class="window">
+                <rect x="180" y="20" width="90" height="70" fill="#4a3a2a" rx="3"/>
+                <rect x="185" y="25" width="80" height="60" fill="${isNight ? '#1a2a4a' : '#87CEEB'}"/>
+                ${isNight ? `
+                    <circle cx="240" cy="40" r="8" fill="#ffd700" opacity="0.8"/>
+                    <circle cx="200" cy="35" r="1" fill="#fff"/>
+                    <circle cx="215" cy="50" r="1" fill="#fff"/>
+                    <circle cx="250" cy="45" r="1" fill="#fff"/>
+                ` : `
+                    <circle cx="220" cy="45" r="12" fill="#fff" opacity="0.8"/>
+                    <ellipse cx="225" cy="75" rx="30" ry="5" fill="#228B22" opacity="0.8"/>
+                `}
+                <line x1="225" y1="25" x2="225" y2="85" stroke="#5a4a3a" stroke-width="3"/>
+                <line x1="185" y1="55" x2="265" y2="55" stroke="#5a4a3a" stroke-width="3"/>
+            </g>
+            
+            <!-- Cozy cat bed -->
+            <g class="cat-bed clickable" data-action="rest" style="cursor: pointer;" filter="url(#softShadow)">
+                <ellipse cx="80" cy="300" rx="50" ry="25" fill="#8B4513"/>
+                <ellipse cx="80" cy="295" rx="42" ry="20" fill="#DEB887"/>
+                <ellipse cx="80" cy="292" rx="35" ry="16" fill="#F5DEB3"/>
+                <text x="80" y="340" text-anchor="middle" fill="#8B4513" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px white;">Cat Bed</text>
+            </g>
+            
+            <!-- Food bowl -->
+            <g class="food-bowl clickable" data-action="eat" style="cursor: pointer;" filter="url(#softShadow)">
+                <ellipse cx="350" cy="320" rx="28" ry="14" fill="#ff6b6b"/>
+                <ellipse cx="350" cy="317" rx="22" ry="10" fill="#d4a76a"/>
+                <ellipse cx="355" cy="315" rx="6" ry="3" fill="#8B4513"/>
+                <ellipse cx="345" cy="316" rx="5" ry="3" fill="#8B4513"/>
+                <ellipse cx="350" cy="319" rx="4" ry="2" fill="#8B4513"/>
+                <text x="350" y="345" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold" style="text-shadow: 1px 1px 2px white;">Food</text>
+            </g>
+            
+            <!-- Water bowl -->
+            <g class="water-bowl clickable" data-action="drink" style="cursor: pointer;" filter="url(#softShadow)">
+                <ellipse cx="390" cy="320" rx="22" ry="11" fill="#4a9ac7"/>
+                <ellipse cx="390" cy="318" rx="17" ry="8" fill="#7ac4e8"/>
+                <ellipse cx="385" cy="316" rx="5" ry="3" fill="#b8e4ff" opacity="0.6"/>
+                <text x="390" y="345" text-anchor="middle" fill="#4a9ac7" font-size="9" font-weight="bold" style="text-shadow: 1px 1px 2px white;">Water</text>
+            </g>
+            
+            <!-- Cat toys -->
+            <g class="cat-toy clickable" data-action="play-ball" style="cursor: pointer;">
+                <circle cx="150" cy="330" r="12" fill="#ff4757"/>
+                <circle cx="147" cy="327" r="3" fill="#ff6b7a" opacity="0.6"/>
+                <text x="150" y="355" text-anchor="middle" fill="#ff4757" font-size="8" style="text-shadow: 1px 1px 2px white;">Ball</text>
+            </g>
+            
+            <g class="cat-toy clickable" data-action="play-mouse" style="cursor: pointer;">
+                <ellipse cx="280" cy="335" rx="12" ry="8" fill="#808080"/>
+                <circle cx="290" cy="332" r="4" fill="#696969"/>
+                <circle cx="293" cy="330" r="1.5" fill="#1a1a1a"/>
+                <path d="M265,335 Q255,330 250,335" stroke="#666" stroke-width="2" fill="none"/>
+                <text x="270" y="355" text-anchor="middle" fill="#666" font-size="8" style="text-shadow: 1px 1px 2px white;">Toy Mouse</text>
+            </g>
+            
+            <!-- Scratching post -->
+            <g class="scratching-post clickable" data-action="scratch" style="cursor: pointer;" filter="url(#softShadow)">
+                <rect x="40" y="150" width="30" height="120" fill="#8B7355"/>
+                <rect x="35" y="140" width="40" height="15" rx="5" fill="#DEB887"/>
+                <line x1="45" y1="160" x2="45" y2="260" stroke="#a08060" stroke-width="2"/>
+                <line x1="55" y1="160" x2="55" y2="260" stroke="#a08060" stroke-width="2"/>
+                <line x1="65" y1="160" x2="65" y2="260" stroke="#a08060" stroke-width="2"/>
+                <text x="55" y="285" text-anchor="middle" fill="#8B7355" font-size="8" style="text-shadow: 1px 1px 2px white;">Scratch</text>
+            </g>
+            
+            <!-- Couch with Twoleg -->
+            <g class="twoleg" style="pointer-events: none;">
+                <rect x="300" y="120" width="120" height="70" rx="10" fill="#6B4423"/>
+                <rect x="295" y="110" width="10" height="90" rx="5" fill="#5a3a1a"/>
+                <rect x="415" y="110" width="10" height="90" rx="5" fill="#5a3a1a"/>
+                <!-- Twoleg (simplified human shape) -->
+                <ellipse cx="360" cy="150" rx="25" ry="20" fill="#f5d0b8"/>
+                <ellipse cx="360" cy="175" rx="30" ry="15" fill="#4a7cb0"/>
+                <circle cx="360" cy="135" r="15" fill="#f5d0b8"/>
+                <ellipse cx="360" cy="128" rx="10" ry="8" fill="#4a3a2a"/>
+                <circle cx="355" cy="133" r="2" fill="#2a2a2a"/>
+                <circle cx="365" cy="133" r="2" fill="#2a2a2a"/>
+                <path d="M357,140 Q360,143 363,140" stroke="#c4a090" stroke-width="1.5" fill="none"/>
+            </g>
+            
+            <!-- Ask for pets button -->
+            <g class="twoleg-pet clickable" data-action="pet" style="cursor: pointer;">
+                <rect x="320" y="200" width="80" height="25" rx="5" fill="#ff9ff3" opacity="0.8"/>
+                <text x="360" y="217" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px #c44;">Ask for Pets</text>
+            </g>
+            
+            <!-- Cat flap (exit) -->
+            <g class="cat-flap clickable" data-action="exit" style="cursor: pointer;">
+                <rect x="20" y="300" width="5" height="60" fill="#4a3a2a"/>
+                <rect x="0" y="310" width="25" height="40" fill="#5a4a3a"/>
+                <rect x="3" y="315" width="18" height="30" fill="#2a1a0a"/>
+                <text x="12" y="365" text-anchor="middle" fill="#aaffaa" font-size="8" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Outside</text>
+            </g>
+    `;
+    
+    // Add player cat
+    houseHTML += renderPlayerCat();
+    
+    // Add speech bubbles
+    houseHTML += renderSpeechBubbles();
+    
+    houseHTML += `</svg>`;
+    
+    gameWorld.innerHTML = houseHTML;
+    
+    // Add event listeners
+    document.querySelector('.cat-bed')?.addEventListener('click', () => {
+        cat.health = Math.min(100, cat.health + 20);
+        showMessage('You curl up in your cozy bed. So soft and warm! (+20 health)');
+        updateGameUI();
+        saveGameData();
+    });
+    
+    document.querySelector('.food-bowl')?.addEventListener('click', () => {
+        if (cat.hunger >= 100) {
+            showMessage('Your tummy is already full!');
+            return;
+        }
+        cat.hunger = Math.min(100, cat.hunger + 30);
+        showMessage('You eat the yummy cat food! Delicious! (+30 hunger)');
+        updateGameUI();
+        saveGameData();
+    });
+    
+    document.querySelector('.water-bowl')?.addEventListener('click', () => {
+        if (cat.thirst >= 100) {
+            showMessage('You\'re not thirsty right now!');
+            return;
+        }
+        cat.thirst = Math.min(100, cat.thirst + 30);
+        showMessage('You drink the fresh water. So refreshing! (+30 thirst)');
+        updateGameUI();
+        saveGameData();
+    });
+    
+    document.querySelectorAll('.cat-toy').forEach(toy => {
+        toy.addEventListener('click', () => {
+            const action = toy.dataset.action;
+            if (action === 'play-ball') {
+                showMessage('You bat the ball around! It rolls across the floor. So fun!');
+                cat.experience = (cat.experience || 0) + 2;
+            } else if (action === 'play-mouse') {
+                showMessage('You pounce on the toy mouse! Got it! You\'re such a good hunter!');
+                cat.experience = (cat.experience || 0) + 2;
+            }
+            updateGameUI();
+            saveGameData();
+        });
+    });
+    
+    document.querySelector('.scratching-post')?.addEventListener('click', () => {
+        showMessage('You stretch and scratch the post. Your claws feel great!');
+        cat.health = Math.min(100, cat.health + 5);
+        updateGameUI();
+        saveGameData();
+    });
+    
+    document.querySelector('.twoleg-pet')?.addEventListener('click', () => {
+        showMessage('You rub against the Twoleg\'s legs. They reach down and pet you. Purrrr!');
+        cat.health = Math.min(100, cat.health + 10);
+        cat.experience = (cat.experience || 0) + 3;
+        updateGameUI();
+        saveGameData();
+    });
+    
+    document.querySelector('.cat-flap')?.addEventListener('click', () => {
+        showTwolegHouseExitPopup();
+    });
+}
+
+// Show popup when exiting twoleg house
+function showTwolegHouseExitPopup() {
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Go Outside?';
+    desc.textContent = 'The cat flap leads to the big world outside. There are forests, other cats, and adventures waiting... but also dangers!';
+    
+    actions.innerHTML = '';
+    
+    addAction(actions, 'Go to the Forest', () => {
+        closePopup();
+        GameState.currentLocation = 'forest';
+        GameState.playerX = 100;
+        GameState.playerY = 100;
+        GameState.forestThreats = []; // Reset threats
+        renderGameWorld();
+        showMessage('You push through the cat flap and step into the wild forest!');
+    });
+    
+    addAction(actions, 'Stay Inside', () => {
+        closePopup();
+        showMessage('You decide to stay in your cozy home.');
+    });
+    
+    popup.classList.add('active');
 }
 
 // Become a loner!
