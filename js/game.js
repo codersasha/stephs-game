@@ -9051,6 +9051,7 @@ function sendPlayerData() {
             furColor: GameState.catData?.furColor || '#e67e22',
             eyeColor: GameState.catData?.eyeColor || '#2ecc71',
             pattern: GameState.catData?.pattern || 'solid',
+            clan: GameState.selectedClan || 'thunder',
             x: GameState.playerX,
             y: GameState.playerY,
             location: GameState.currentLocation,
@@ -9086,6 +9087,7 @@ function broadcastAllPlayers() {
         furColor: GameState.catData?.furColor || '#e67e22',
         eyeColor: GameState.catData?.eyeColor || '#2ecc71',
         pattern: GameState.catData?.pattern || 'solid',
+        clan: GameState.selectedClan || 'thunder',
         x: GameState.playerX,
         y: GameState.playerY,
         location: GameState.currentLocation,
@@ -9289,6 +9291,7 @@ function sendPositionUpdate() {
             furColor: GameState.catData?.furColor || '#e67e22',
             eyeColor: GameState.catData?.eyeColor || '#2ecc71',
             pattern: GameState.catData?.pattern || 'solid',
+            clan: GameState.selectedClan || 'thunder',
             x: GameState.playerX,
             y: GameState.playerY,
             location: GameState.currentLocation,
@@ -9317,16 +9320,40 @@ function renderOtherPlayers() {
     if (!GameState.isMultiplayer) return '';
     
     let html = '';
+    const myClan = GameState.selectedClan || 'thunder';
+    const myLocation = GameState.currentLocation;
     
     Object.entries(GameState.otherPlayers).forEach(([peerId, player]) => {
-        // Only render if in same location
-        if (player.location === GameState.currentLocation) {
+        const theirLocation = player.location;
+        const theirClan = player.clan || 'thunder';
+        
+        // Check if we should see this player
+        let shouldRender = false;
+        
+        if (theirLocation === myLocation) {
+            // Same location - but check if it's a clan-specific location
+            if (myLocation === 'camp' || myLocation.startsWith('den_')) {
+                // Camp/dens are clan-specific - only see same clan
+                shouldRender = (theirClan === myClan);
+            } else {
+                // Forest, StarClan, barn, etc are shared - see everyone
+                shouldRender = true;
+            }
+        }
+        
+        if (shouldRender) {
             const x = player.x || 200;
             const y = player.y || 200;
+            
+            // Show clan badge for players from other clans (in forest)
+            const clanBadge = (theirClan !== myClan && myLocation === 'forest') 
+                ? `<text x="0" y="-45" text-anchor="middle" fill="${getClanColor(theirClan)}" font-size="8" font-weight="bold">[${theirClan.toUpperCase()}]</text>`
+                : '';
             
             html += `
                 <g class="other-player-cat" transform="translate(${x}, ${y})">
                     ${renderOtherPlayerCatSVG(player)}
+                    ${clanBadge}
                     <text x="0" y="-35" class="other-player-name">${player.name || 'Player'}</text>
                 </g>
             `;
@@ -9334,6 +9361,17 @@ function renderOtherPlayers() {
     });
     
     return html;
+}
+
+// Get clan color for badge
+function getClanColor(clan) {
+    const colors = {
+        thunder: '#ff9800',
+        river: '#2196f3',
+        wind: '#8bc34a',
+        shadow: '#9c27b0'
+    };
+    return colors[clan] || '#ffffff';
 }
 
 // Render another player's cat SVG
