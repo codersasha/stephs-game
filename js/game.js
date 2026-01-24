@@ -2061,6 +2061,123 @@ if (!window.npcPositions) {
     };
 }
 
+// Twoleg (human) positions for the house and yard
+if (!window.twolegPositions) {
+    window.twolegPositions = {
+        // House Twolegs
+        adult1: { x: 250, y: 200, targetX: 350, targetY: 200, speed: 0.2, location: 'house', name: 'Mom' },
+        adult2: { x: 400, y: 180, targetX: 150, targetY: 220, speed: 0.15, location: 'house', name: 'Dad' },
+        child: { x: 150, y: 280, targetX: 300, targetY: 250, speed: 0.35, location: 'house', name: 'Kid', isChild: true },
+        // Yard Twolegs
+        yardAdult: { x: 250, y: 250, targetX: 350, targetY: 300, speed: 0.18, location: 'yard', name: 'Human' },
+        yardChild: { x: 350, y: 280, targetX: 150, targetY: 250, speed: 0.4, location: 'yard', name: 'Kid', isChild: true }
+    };
+}
+
+// Update Twoleg positions
+function updateTwolegPositions() {
+    const twolegs = window.twolegPositions;
+    for (const name in twolegs) {
+        const twoleg = twolegs[name];
+        const dx = twoleg.targetX - twoleg.x;
+        const dy = twoleg.targetY - twoleg.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 3) {
+            twoleg.x += (dx / dist) * twoleg.speed;
+            twoleg.y += (dy / dist) * twoleg.speed;
+        } else {
+            // Pick new random target based on location
+            if (twoleg.location === 'house') {
+                twoleg.targetX = 100 + Math.random() * 300;
+                twoleg.targetY = 150 + Math.random() * 150;
+            } else {
+                // Yard
+                twoleg.targetX = 100 + Math.random() * 300;
+                twoleg.targetY = 200 + Math.random() * 150;
+            }
+        }
+    }
+}
+
+// Render a Twoleg (human)
+function renderTwoleg(x, y, name, isChild = false) {
+    const scale = isChild ? 0.6 : 1;
+    const bodyColor = isChild ? '#66ccff' : '#4a7cb0';
+    const skinColor = '#f5d0b8';
+    const hairColor = isChild ? '#d4a574' : '#4a3a2a';
+    
+    return `
+        <g class="twoleg" transform="translate(${x}, ${y}) scale(${scale})" style="pointer-events: none;">
+            <!-- Shadow -->
+            <ellipse cx="0" cy="50" rx="15" ry="5" fill="rgba(0,0,0,0.2)"/>
+            
+            <!-- Legs -->
+            <rect x="-10" y="25" width="8" height="25" rx="3" fill="#4a4a6a"/>
+            <rect x="2" y="25" width="8" height="25" rx="3" fill="#4a4a6a"/>
+            
+            <!-- Shoes -->
+            <ellipse cx="-6" cy="50" rx="6" ry="4" fill="#2a2a2a"/>
+            <ellipse cx="6" cy="50" rx="6" ry="4" fill="#2a2a2a"/>
+            
+            <!-- Body -->
+            <ellipse cx="0" cy="15" rx="15" ry="18" fill="${bodyColor}"/>
+            
+            <!-- Arms -->
+            <rect x="-22" y="5" width="10" height="20" rx="4" fill="${skinColor}"/>
+            <rect x="12" y="5" width="10" height="20" rx="4" fill="${skinColor}"/>
+            
+            <!-- Head -->
+            <circle cx="0" cy="-10" r="14" fill="${skinColor}"/>
+            
+            <!-- Hair -->
+            <ellipse cx="0" cy="-18" rx="12" ry="8" fill="${hairColor}"/>
+            
+            <!-- Eyes -->
+            <circle cx="-5" cy="-12" r="2.5" fill="#2a2a2a"/>
+            <circle cx="5" cy="-12" r="2.5" fill="#2a2a2a"/>
+            <circle cx="-4" cy="-13" r="0.8" fill="#fff"/>
+            <circle cx="6" cy="-13" r="0.8" fill="#fff"/>
+            
+            <!-- Smile -->
+            <path d="M-4,-4 Q0,0 4,-4" stroke="#c4a090" stroke-width="1.5" fill="none"/>
+            
+            <!-- Name -->
+            <text x="0" y="65" text-anchor="middle" fill="#666" font-size="8" font-weight="bold">${name}</text>
+        </g>
+    `;
+}
+
+// Render Twolegs in house
+function renderHouseTwolegs() {
+    let html = '';
+    const twolegs = window.twolegPositions;
+    
+    for (const name in twolegs) {
+        const twoleg = twolegs[name];
+        if (twoleg.location === 'house') {
+            html += renderTwoleg(twoleg.x, twoleg.y, twoleg.name, twoleg.isChild);
+        }
+    }
+    
+    return html;
+}
+
+// Render Twolegs in yard
+function renderYardTwolegs() {
+    let html = '';
+    const twolegs = window.twolegPositions;
+    
+    for (const name in twolegs) {
+        const twoleg = twolegs[name];
+        if (twoleg.location === 'yard') {
+            html += renderTwoleg(twoleg.x, twoleg.y, twoleg.name, twoleg.isChild);
+        }
+    }
+    
+    return html;
+}
+
 // Update NPC positions (called in game loop)
 function updateNPCPositions() {
     const npcs = window.npcPositions;
@@ -3594,6 +3711,9 @@ function renderTwolegHouse() {
             ` : ''}
     `;
     
+    // Add walking Twolegs
+    houseHTML += renderHouseTwolegs();
+    
     // Add player cat (with collar if kittypet)
     houseHTML += renderPlayerCat();
     
@@ -3917,6 +4037,9 @@ function renderBackyard() {
                 <ellipse cx="465" cy="170" rx="20" ry="18" fill="#1e7a1e"/>
             </g>
     `;
+    
+    // Add walking Twolegs in the yard
+    yardHTML += renderYardTwolegs();
     
     // Add other players (multiplayer)
     yardHTML += renderOtherPlayers();
@@ -6190,9 +6313,18 @@ function startGameLoop() {
     // NPC animation - update positions and re-render every 100ms
     npcAnimationInterval = setInterval(() => {
         if (GameState.currentScreen !== 'game') return;
-        if (GameState.currentLocation !== 'camp') return;
-        updateNPCPositions();
-        renderGameWorld();
+        
+        // Update NPCs in camp
+        if (GameState.currentLocation === 'camp') {
+            updateNPCPositions();
+            renderGameWorld();
+        }
+        
+        // Update Twolegs in house or backyard
+        if (GameState.currentLocation === 'twoleg_house' || GameState.currentLocation === 'backyard') {
+            updateTwolegPositions();
+            renderGameWorld();
+        }
     }, 100);
     
     gameLoopInterval = setInterval(() => {
