@@ -920,6 +920,8 @@ function renderGameWorld() {
         renderBarnInterior();
     } else if (GameState.currentLocation === 'twoleg_house') {
         renderTwolegHouse();
+    } else if (GameState.currentLocation === 'backyard') {
+        renderBackyard();
     } else if (GameState.currentLocation === 'starclan_world') {
         renderStarClanWorld();
     } else {
@@ -3376,7 +3378,12 @@ function renderTwolegHouse() {
     });
     
     document.querySelector('.cat-flap')?.addEventListener('click', () => {
-        showTwolegHouseExitPopup();
+        // Go to the backyard
+        GameState.currentLocation = 'backyard';
+        GameState.playerX = 200;
+        GameState.playerY = 150;
+        renderGameWorld();
+        showMessage('You push through the cat flap into the backyard!');
     });
 }
 
@@ -3441,29 +3448,247 @@ function showTalkToHumanPopup() {
     popup.classList.add('active');
 }
 
-// Show popup when exiting twoleg house
-function showTwolegHouseExitPopup() {
+// Render backyard (for KittyPets)
+function renderBackyard() {
+    const gameWorld = document.getElementById('game-world');
+    const cat = GameState.catData;
+    const isNight = GameState.isNight;
+    
+    let yardHTML = `
+        <svg viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="${isNight ? '#0a1a2a' : '#87CEEB'}"/>
+                    <stop offset="100%" stop-color="${isNight ? '#1a2a3a' : '#b0e0e6'}"/>
+                </linearGradient>
+                <linearGradient id="grassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#4a9a4a"/>
+                    <stop offset="100%" stop-color="#2d6a2d"/>
+                </linearGradient>
+                <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="2" dy="3" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
+                </filter>
+            </defs>
+            
+            <!-- Sky -->
+            <rect x="0" y="0" width="500" height="200" fill="url(#skyGrad)"/>
+            
+            <!-- Sun/Moon -->
+            ${isNight ? `
+                <circle cx="420" cy="50" r="20" fill="#ffd700" opacity="0.9"/>
+                <circle cx="415" cy="48" r="17" fill="url(#skyGrad)"/>
+                <circle cx="50" cy="30" r="1" fill="#fff"/>
+                <circle cx="100" cy="60" r="1" fill="#fff"/>
+                <circle cx="200" cy="40" r="1" fill="#fff"/>
+                <circle cx="300" cy="55" r="1" fill="#fff"/>
+            ` : `
+                <circle cx="420" cy="50" r="25" fill="#ffd700"/>
+                <circle cx="100" cy="80" r="30" fill="#fff" opacity="0.4"/>
+            `}
+            
+            <!-- Grass/Lawn -->
+            <rect x="0" y="150" width="500" height="250" fill="url(#grassGrad)"/>
+            
+            <!-- Grass texture -->
+            <g fill="#3a8a3a" opacity="0.5">
+                <ellipse cx="50" cy="200" rx="20" ry="8"/>
+                <ellipse cx="150" cy="220" rx="25" ry="10"/>
+                <ellipse cx="280" cy="190" rx="22" ry="9"/>
+                <ellipse cx="400" cy="210" rx="18" ry="7"/>
+                <ellipse cx="100" cy="300" rx="30" ry="12"/>
+                <ellipse cx="350" cy="320" rx="28" ry="10"/>
+                <ellipse cx="200" cy="350" rx="35" ry="12"/>
+            </g>
+            
+            <!-- Flowers in garden -->
+            <g class="flowers">
+                <circle cx="60" cy="180" r="5" fill="#ff69b4"/>
+                <circle cx="75" cy="185" r="4" fill="#ffd700"/>
+                <circle cx="90" cy="178" r="5" fill="#ff4757"/>
+                <circle cx="105" cy="183" r="4" fill="#9b59b6"/>
+                <circle cx="380" cy="175" r="5" fill="#ff69b4"/>
+                <circle cx="400" cy="180" r="4" fill="#ffd700"/>
+                <circle cx="420" cy="173" r="5" fill="#e74c3c"/>
+            </g>
+            
+            <!-- House at the back -->
+            <g class="house-back clickable" data-action="go-inside" style="cursor: pointer;">
+                <rect x="150" y="50" width="200" height="120" fill="#d4c4a8" stroke="#8a7a6a" stroke-width="3"/>
+                <!-- Roof -->
+                <polygon points="140,50 250,0 360,50" fill="#8B4513" stroke="#5D3A1A" stroke-width="2"/>
+                <!-- Door -->
+                <rect x="220" y="100" width="60" height="70" fill="#5D3A1A"/>
+                <circle cx="270" cy="135" r="4" fill="#ffd700"/>
+                <!-- Windows -->
+                <rect x="165" y="75" width="40" height="40" fill="#87CEEB" stroke="#5D3A1A" stroke-width="2"/>
+                <line x1="185" y1="75" x2="185" y2="115" stroke="#5D3A1A" stroke-width="1"/>
+                <line x1="165" y1="95" x2="205" y2="95" stroke="#5D3A1A" stroke-width="1"/>
+                <rect x="295" y="75" width="40" height="40" fill="#87CEEB" stroke="#5D3A1A" stroke-width="2"/>
+                <line x1="315" y1="75" x2="315" y2="115" stroke="#5D3A1A" stroke-width="1"/>
+                <line x1="295" y1="95" x2="335" y2="95" stroke="#5D3A1A" stroke-width="1"/>
+                <!-- Cat flap -->
+                <rect x="242" y="158" width="16" height="12" fill="#2a2a2a"/>
+                <text x="250" y="185" text-anchor="middle" fill="#8B4513" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px white;">Go Inside</text>
+            </g>
+            
+            <!-- Wooden fence on sides -->
+            <g class="fence-left">
+                <rect x="0" y="140" width="15" height="260" fill="#8B7355"/>
+                <rect x="0" y="150" width="12" height="50" fill="#a08060"/>
+                <rect x="0" y="210" width="12" height="50" fill="#a08060"/>
+                <rect x="0" y="270" width="12" height="50" fill="#a08060"/>
+                <rect x="0" y="330" width="12" height="70" fill="#a08060"/>
+            </g>
+            
+            <g class="fence-right">
+                <rect x="485" y="140" width="15" height="260" fill="#8B7355"/>
+                <rect x="488" y="150" width="12" height="50" fill="#a08060"/>
+                <rect x="488" y="210" width="12" height="50" fill="#a08060"/>
+                <rect x="488" y="270" width="12" height="50" fill="#a08060"/>
+                <rect x="488" y="330" width="12" height="70" fill="#a08060"/>
+            </g>
+            
+            <!-- Back fence with HOLE! -->
+            <g class="fence-back">
+                <rect x="0" y="380" width="200" height="20" fill="#8B7355"/>
+                <rect x="5" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="35" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="65" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="95" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="125" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="155" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="185" y="382" width="15" height="16" fill="#a08060"/>
+                
+                <!-- THE HOLE IN THE FENCE! -->
+                <g class="fence-hole clickable" data-action="go-forest" style="cursor: pointer;">
+                    <rect x="200" y="375" width="60" height="25" fill="#1a3a1a"/>
+                    <ellipse cx="230" cy="387" rx="28" ry="12" fill="#0a2a0a"/>
+                    <!-- Broken fence pieces -->
+                    <rect x="195" y="378" width="8" height="18" fill="#6B5344" transform="rotate(-15 199 387)"/>
+                    <rect x="257" y="378" width="8" height="18" fill="#6B5344" transform="rotate(15 261 387)"/>
+                    <text x="230" y="370" text-anchor="middle" fill="#aaffaa" font-size="9" font-weight="bold" style="text-shadow: 1px 1px 2px black;">To Forest!</text>
+                </g>
+                
+                <!-- Rest of fence -->
+                <rect x="260" y="380" width="240" height="20" fill="#8B7355"/>
+                <rect x="265" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="295" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="325" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="355" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="385" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="415" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="445" y="382" width="25" height="16" fill="#a08060"/>
+                <rect x="475" y="382" width="25" height="16" fill="#a08060"/>
+            </g>
+            
+            <!-- Butterfly -->
+            ${!isNight ? `
+            <g class="butterfly" style="pointer-events: none;">
+                <ellipse cx="320" cy="130" rx="8" ry="12" fill="#ff69b4" opacity="0.8"/>
+                <ellipse cx="334" cy="130" rx="8" ry="12" fill="#ff69b4" opacity="0.8"/>
+                <ellipse cx="327" cy="132" rx="2" ry="5" fill="#333"/>
+            </g>
+            ` : ''}
+            
+            <!-- Bird on fence -->
+            ${!isNight ? `
+            <g class="bird" style="pointer-events: none;">
+                <ellipse cx="470" cy="135" rx="8" ry="6" fill="#4a4a4a"/>
+                <circle cx="476" cy="132" r="5" fill="#4a4a4a"/>
+                <polygon points="481,132 488,131 481,134" fill="#ffa500"/>
+                <circle cx="478" cy="131" r="1.5" fill="#000"/>
+            </g>
+            ` : ''}
+            
+            <!-- Water bowl in yard -->
+            <g class="yard-water clickable" data-action="drink" style="cursor: pointer;">
+                <ellipse cx="80" cy="280" rx="20" ry="10" fill="#4a9ac7"/>
+                <ellipse cx="80" cy="278" rx="16" ry="7" fill="#7ac4e8"/>
+                <text x="80" y="300" text-anchor="middle" fill="#4a9ac7" font-size="8" style="text-shadow: 1px 1px 2px white;">Water</text>
+            </g>
+            
+            <!-- Toy ball in yard -->
+            <g class="yard-toy clickable" data-action="play" style="cursor: pointer;">
+                <circle cx="400" cy="300" r="12" fill="#ff4757"/>
+                <circle cx="397" cy="297" r="4" fill="#ff6b7a" opacity="0.6"/>
+            </g>
+            
+            <!-- Tree in corner -->
+            <g class="tree" style="pointer-events: none;">
+                <rect x="440" y="180" width="20" height="60" fill="#8B4513"/>
+                <ellipse cx="450" cy="160" rx="40" ry="35" fill="#228B22"/>
+                <ellipse cx="435" cy="175" rx="25" ry="20" fill="#2d8a2d"/>
+                <ellipse cx="465" cy="170" rx="20" ry="18" fill="#1e7a1e"/>
+            </g>
+    `;
+    
+    // Add player cat
+    yardHTML += renderPlayerCat();
+    
+    // Add speech bubbles
+    yardHTML += renderSpeechBubbles();
+    
+    yardHTML += `</svg>`;
+    
+    gameWorld.innerHTML = yardHTML;
+    
+    // Add event listeners
+    document.querySelector('.house-back')?.addEventListener('click', () => {
+        GameState.currentLocation = 'twoleg_house';
+        GameState.playerX = 200;
+        GameState.playerY = 200;
+        renderGameWorld();
+        showMessage('You slip back inside through the cat flap.');
+    });
+    
+    document.querySelector('.fence-hole')?.addEventListener('click', () => {
+        showFenceHolePopup();
+    });
+    
+    document.querySelector('.yard-water')?.addEventListener('click', () => {
+        const cat = GameState.catData;
+        if (cat.thirst >= 100) {
+            showMessage('You\'re not thirsty!');
+            return;
+        }
+        cat.thirst = Math.min(100, cat.thirst + 25);
+        showMessage('You drink from the water bowl. Refreshing! (+25 thirst)');
+        updateGameUI();
+        saveGameData();
+    });
+    
+    document.querySelector('.yard-toy')?.addEventListener('click', () => {
+        showMessage('You bat the ball around the yard! Wheee!');
+        GameState.catData.experience = (GameState.catData.experience || 0) + 2;
+        saveGameData();
+    });
+}
+
+// Show popup when going through fence hole
+function showFenceHolePopup() {
     const cat = GameState.catData;
     const popup = document.getElementById('location-popup');
     const title = document.getElementById('location-title');
     const desc = document.getElementById('location-desc');
     const actions = document.getElementById('location-actions');
     
-    title.textContent = 'Go Outside?';
-    desc.textContent = cat.hasCollar ? 
-        'The cat flap leads to the wild forest. You could explore, or even leave your kittypet life forever...' :
-        'The cat flap leads outside. You could go back to the forest.';
+    title.textContent = 'The Fence Hole';
+    desc.textContent = 'Through this hole in the fence, you can see the wild forest! It looks exciting... but maybe dangerous too.';
     
     actions.innerHTML = '';
     
-    addAction(actions, 'Just Explore (Keep Collar)', () => {
+    addAction(actions, 'Explore the Forest', () => {
         closePopup();
         GameState.currentLocation = 'forest';
-        GameState.playerX = 100;
-        GameState.playerY = 100;
+        GameState.playerX = 750;
+        GameState.playerY = 150;
         GameState.forestThreats = [];
         renderGameWorld();
-        showMessage('You push through the cat flap to explore. Your collar jingles as you go!');
+        if (cat.hasCollar) {
+            showMessage('You squeeze through the hole! Your collar jingles as you enter the wild forest...');
+        } else {
+            showMessage('You squeeze through the hole into the wild forest!');
+        }
     });
     
     if (cat.hasCollar) {
@@ -3473,9 +3698,9 @@ function showTwolegHouseExitPopup() {
         });
     }
     
-    addAction(actions, 'Stay Inside', () => {
+    addAction(actions, 'Stay in the Yard', () => {
         closePopup();
-        showMessage('You decide to stay in your cozy home.');
+        showMessage('You decide to stay in the safe backyard.');
     });
     
     popup.classList.add('active');
