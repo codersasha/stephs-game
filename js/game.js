@@ -887,6 +887,8 @@ function renderGameWorld() {
         renderDenInterior(GameState.currentLocation.replace('den_', ''));
     } else if (GameState.currentLocation === 'barn') {
         renderBarnInterior();
+    } else if (GameState.currentLocation === 'starclan_world') {
+        renderStarClanWorld();
     } else {
         renderForest();
     }
@@ -6889,70 +6891,276 @@ function goToStarClan() {
     showScreen('starclan');
 }
 
-// Stay in StarClan - show a peaceful starry scene
+// Stay in StarClan - go to walkable StarClan world!
 function stayInStarClan() {
-    const starclanScreen = document.getElementById('starclan-screen');
+    GameState.currentLocation = 'starclan_world';
+    GameState.playerX = 225;
+    GameState.playerY = 200;
+    GameState.inStarClan = true;
     
-    starclanScreen.innerHTML = `
-        <div class="starclan-bg"></div>
-        <div class="starclan-view">
-            <h2>StarClan</h2>
-            <p class="starclan-message">You rest peacefully among your warrior ancestors...</p>
-            <div class="starclan-stars-view">
-                <svg viewBox="0 0 400 300" style="width: 100%; max-width: 400px;">
-                    <!-- Starry sky -->
-                    <rect x="0" y="0" width="400" height="300" fill="#1a0a2e"/>
-                    <!-- Big stars -->
-                    <circle cx="50" cy="50" r="3" fill="#ffd700" opacity="0.9"/>
-                    <circle cx="150" cy="80" r="4" fill="#fff" opacity="0.8"/>
-                    <circle cx="300" cy="40" r="3" fill="#e1bee7" opacity="0.9"/>
-                    <circle cx="350" cy="120" r="2" fill="#fff" opacity="0.7"/>
-                    <circle cx="80" cy="150" r="3" fill="#ffd700" opacity="0.8"/>
-                    <circle cx="200" cy="100" r="5" fill="#fff" opacity="1"/>
-                    <circle cx="250" cy="180" r="3" fill="#e1bee7" opacity="0.9"/>
-                    <circle cx="100" cy="220" r="2" fill="#fff" opacity="0.7"/>
-                    <circle cx="320" cy="250" r="4" fill="#ffd700" opacity="0.8"/>
-                    <circle cx="180" cy="260" r="3" fill="#fff" opacity="0.9"/>
-                    <!-- Small twinkling stars -->
-                    <circle cx="30" cy="100" r="1" fill="#fff" opacity="0.5"/>
-                    <circle cx="380" cy="80" r="1" fill="#fff" opacity="0.6"/>
-                    <circle cx="220" cy="30" r="1" fill="#fff" opacity="0.5"/>
-                    <circle cx="270" cy="280" r="1" fill="#fff" opacity="0.4"/>
-                    <!-- Silverpelt (milky way) -->
-                    <ellipse cx="200" cy="150" rx="180" ry="30" fill="url(#silverpelt)" opacity="0.3"/>
-                    <defs>
-                        <linearGradient id="silverpelt" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stop-color="transparent"/>
-                            <stop offset="50%" stop-color="#e1bee7"/>
-                            <stop offset="100%" stop-color="transparent"/>
-                        </linearGradient>
-                    </defs>
-                    <!-- Your ancestor -->
-                    <text x="200" y="290" text-anchor="middle" fill="#e1bee7" font-size="12">The stars of your ancestors watch over you...</text>
-                </svg>
-            </div>
-            <button class="starclan-btn" id="back-to-starclan-menu">Go Back</button>
-        </div>
+    showScreen('gameplay');
+    renderGameWorld();
+    showMessage('You walk among the stars of StarClan...');
+}
+
+// Render StarClan world - a beautiful purple starry place to explore
+function renderStarClanWorld() {
+    const gameWorld = document.getElementById('game-world');
+    
+    let worldHTML = `
+        <svg viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <radialGradient id="starclanGlow" cx="50%" cy="50%" r="70%">
+                    <stop offset="0%" stop-color="#3a1a5a"/>
+                    <stop offset="100%" stop-color="#1a0a2e"/>
+                </radialGradient>
+                <linearGradient id="silverpeltGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="transparent"/>
+                    <stop offset="50%" stop-color="#e1bee7"/>
+                    <stop offset="100%" stop-color="transparent"/>
+                </linearGradient>
+                <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+                    <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+            
+            <!-- Purple starry background -->
+            <rect x="0" y="0" width="450" height="400" fill="url(#starclanGlow)"/>
+            
+            <!-- Silverpelt (milky way) -->
+            <ellipse cx="225" cy="100" rx="200" ry="40" fill="url(#silverpeltGrad)" opacity="0.4"/>
+            
+            <!-- Starry ground - like walking on stars -->
+            <ellipse cx="225" cy="380" rx="220" ry="30" fill="#2a1a4a" opacity="0.8"/>
+            <ellipse cx="225" cy="375" rx="200" ry="25" fill="#3a2a5a" opacity="0.6"/>
+            
+            <!-- Floating star islands -->
+            <ellipse cx="100" cy="280" rx="50" ry="20" fill="#4a3a6a" opacity="0.7"/>
+            <ellipse cx="350" cy="300" rx="60" ry="25" fill="#4a3a6a" opacity="0.7"/>
+            <ellipse cx="225" cy="180" rx="40" ry="15" fill="#5a4a7a" opacity="0.6"/>
+            
+            <!-- Many twinkling stars -->
+            <circle cx="50" cy="50" r="4" fill="#ffd700" filter="url(#starGlow)"/>
+            <circle cx="150" cy="80" r="5" fill="#fff" filter="url(#starGlow)"/>
+            <circle cx="300" cy="40" r="4" fill="#e1bee7" filter="url(#starGlow)"/>
+            <circle cx="400" cy="70" r="3" fill="#fff" filter="url(#starGlow)"/>
+            <circle cx="80" cy="150" r="4" fill="#ffd700" filter="url(#starGlow)"/>
+            <circle cx="370" cy="150" r="5" fill="#fff" filter="url(#starGlow)"/>
+            <circle cx="200" cy="50" r="6" fill="#fff" filter="url(#starGlow)"/>
+            <circle cx="250" cy="120" r="4" fill="#e1bee7" filter="url(#starGlow)"/>
+            <circle cx="30" cy="250" r="3" fill="#fff" filter="url(#starGlow)"/>
+            <circle cx="420" cy="280" r="4" fill="#ffd700" filter="url(#starGlow)"/>
+            <circle cx="180" cy="320" r="3" fill="#e1bee7" filter="url(#starGlow)"/>
+            <circle cx="280" cy="350" r="4" fill="#fff" filter="url(#starGlow)"/>
+            
+            <!-- Small twinkling stars -->
+            <circle cx="70" cy="100" r="1.5" fill="#fff" opacity="0.7"/>
+            <circle cx="130" cy="180" r="1" fill="#fff" opacity="0.5"/>
+            <circle cx="320" cy="130" r="1.5" fill="#fff" opacity="0.6"/>
+            <circle cx="380" cy="200" r="1" fill="#fff" opacity="0.5"/>
+            <circle cx="100" cy="320" r="1.5" fill="#fff" opacity="0.7"/>
+            <circle cx="350" cy="370" r="1" fill="#fff" opacity="0.5"/>
+            <circle cx="220" cy="250" r="1.5" fill="#fff" opacity="0.6"/>
+            <circle cx="50" cy="350" r="1" fill="#fff" opacity="0.5"/>
+            <circle cx="400" cy="350" r="1.5" fill="#fff" opacity="0.7"/>
+            
+            <!-- StarClan ancestor cats (ghostly) -->
+            ${renderStarClanAncestor(100, 260, 'Bluestar')}
+            ${renderStarClanAncestor(350, 280, 'Yellowfang')}
+            ${renderStarClanAncestor(225, 160, 'Spottedleaf')}
+            
+            <!-- Moon Pool / Gathering spot -->
+            <g class="moonpool clickable" style="cursor: pointer;">
+                <ellipse cx="225" cy="320" rx="40" ry="20" fill="#1a1a4a" stroke="#7a7aff" stroke-width="2"/>
+                <ellipse cx="225" cy="318" rx="35" ry="17" fill="#3a3a8a" opacity="0.8"/>
+                <ellipse cx="220" cy="315" rx="10" ry="5" fill="#7a7aff" opacity="0.5"/>
+                <text x="225" y="355" text-anchor="middle" fill="#aaaaff" font-size="10">Moonpool</text>
+            </g>
+            
+            <!-- Portal back to living world -->
+            <g class="starclan-portal clickable" style="cursor: pointer;">
+                <ellipse cx="50" cy="50" rx="25" ry="25" fill="#ffd700" opacity="0.3"/>
+                <ellipse cx="50" cy="50" rx="18" ry="18" fill="#ffaa00" opacity="0.5"/>
+                <ellipse cx="50" cy="50" rx="10" ry="10" fill="#fff" opacity="0.7"/>
+                <text x="50" y="85" text-anchor="middle" fill="#ffd700" font-size="9">New Life</text>
+            </g>
+            
+            <!-- Visit dreams portal -->
+            <g class="dreams-portal clickable" style="cursor: pointer;">
+                <ellipse cx="400" cy="50" rx="25" ry="25" fill="#9966ff" opacity="0.3"/>
+                <ellipse cx="400" cy="50" rx="18" ry="18" fill="#7744dd" opacity="0.5"/>
+                <ellipse cx="400" cy="50" rx="10" ry="10" fill="#e1bee7" opacity="0.7"/>
+                <text x="400" y="85" text-anchor="middle" fill="#e1bee7" font-size="9">Visit Dreams</text>
+            </g>
     `;
     
-    document.getElementById('back-to-starclan-menu')?.addEventListener('click', () => {
-        showScreen('starclan');
-        // Restore the original StarClan screen
-        starclanScreen.innerHTML = `
-            <div class="starclan-bg"></div>
-            <h2>Welcome to StarClan</h2>
-            <p class="starclan-message">You have joined your warrior ancestors among the stars.</p>
-            <div class="starclan-options">
-                <button class="starclan-btn" id="stay-starclan">Stay in StarClan</button>
-                <button class="starclan-btn" id="visit-dreams">Visit a Cat's Dream</button>
-                <button class="starclan-btn portal-btn" id="restart-portal">Portal to New Life</button>
-            </div>
-        `;
-        // Re-add event listeners
-        document.getElementById('stay-starclan')?.addEventListener('click', stayInStarClan);
-        document.getElementById('visit-dreams')?.addEventListener('click', visitDreams);
-        document.getElementById('restart-portal')?.addEventListener('click', restartGame);
+    // Add player cat (with starry glow effect)
+    worldHTML += renderStarClanPlayerCat();
+    
+    // Add speech bubbles
+    worldHTML += renderSpeechBubbles();
+    
+    worldHTML += `</svg>`;
+    
+    gameWorld.innerHTML = worldHTML;
+    
+    // Add event listeners
+    document.querySelector('.moonpool')?.addEventListener('click', () => {
+        showMessage('You gaze into the Moonpool... You see visions of the living clans.');
+        setTimeout(() => {
+            showSpeechBubble('Bluestar', 'The clans need guidance. Watch over them well.');
+        }, 2000);
     });
+    
+    document.querySelector('.starclan-portal')?.addEventListener('click', () => {
+        if (confirm('Do you want to start a new life? You will be reborn as a new cat.')) {
+            restartGame();
+        }
+    });
+    
+    document.querySelector('.dreams-portal')?.addEventListener('click', () => {
+        visitDreams();
+    });
+    
+    // Click on ancestors to talk
+    document.querySelectorAll('.starclan-ancestor').forEach(ancestor => {
+        ancestor.addEventListener('click', () => {
+            const name = ancestor.dataset.name;
+            talkToAncestor(name);
+        });
+    });
+}
+
+// Render a StarClan ancestor cat (ghostly, translucent)
+function renderStarClanAncestor(x, y, name) {
+    const colors = {
+        'Bluestar': { fur: '#6a8aaa', eye: '#3498db' },
+        'Yellowfang': { fur: '#8a8a8a', eye: '#f1c40f' },
+        'Spottedleaf': { fur: '#d4a574', eye: '#e67e22' }
+    };
+    
+    const color = colors[name] || { fur: '#aaaacc', eye: '#9966ff' };
+    
+    return `
+        <g class="starclan-ancestor clickable" data-name="${name}" style="cursor: pointer; opacity: 0.7;">
+            <!-- Starry glow around cat -->
+            <ellipse cx="${x}" cy="${y}" rx="30" ry="20" fill="#e1bee7" opacity="0.2"/>
+            
+            <!-- Cat body -->
+            <ellipse cx="${x}" cy="${y}" rx="20" ry="12" fill="${color.fur}" opacity="0.8"/>
+            
+            <!-- Head -->
+            <circle cx="${x + 15}" cy="${y - 8}" r="10" fill="${color.fur}" opacity="0.8"/>
+            
+            <!-- Ears -->
+            <polygon points="${x + 8},${y - 16} ${x + 11},${y - 26} ${x + 16},${y - 14}" fill="${color.fur}" opacity="0.8"/>
+            <polygon points="${x + 18},${y - 14} ${x + 23},${y - 24} ${x + 22},${y - 12}" fill="${color.fur}" opacity="0.8"/>
+            
+            <!-- Eyes (glowing) -->
+            <ellipse cx="${x + 12}" cy="${y - 8}" rx="2" ry="3" fill="${color.eye}" filter="url(#starGlow)"/>
+            <ellipse cx="${x + 19}" cy="${y - 8}" rx="2" ry="3" fill="${color.eye}" filter="url(#starGlow)"/>
+            
+            <!-- Star sparkles on fur -->
+            <circle cx="${x - 5}" cy="${y - 2}" r="1" fill="#fff" opacity="0.8"/>
+            <circle cx="${x + 8}" cy="${y + 3}" r="1" fill="#fff" opacity="0.6"/>
+            <circle cx="${x + 20}" cy="${y - 15}" r="1" fill="#fff" opacity="0.7"/>
+            
+            <!-- Name -->
+            <text x="${x}" y="${y + 25}" text-anchor="middle" fill="#e1bee7" font-size="10" font-weight="bold">${name}</text>
+        </g>
+    `;
+}
+
+// Render player cat in StarClan (with starry effects)
+function renderStarClanPlayerCat() {
+    const x = GameState.playerX;
+    const y = GameState.playerY;
+    const cat = GameState.catData;
+    const furColor = cat?.furColor || '#e67e22';
+    const eyeColor = cat?.eyeColor || '#2ecc71';
+    const darkerFur = adjustColor(furColor, -30);
+    
+    return `
+        <g id="player-cat" style="pointer-events: none;">
+            <!-- Starry glow around player -->
+            <ellipse cx="${x}" cy="${y}" rx="35" ry="25" fill="#ffd700" opacity="0.15"/>
+            <ellipse cx="${x}" cy="${y}" rx="28" ry="20" fill="#fff" opacity="0.1"/>
+            
+            <!-- Cat body -->
+            <ellipse cx="${x}" cy="${y}" rx="22" ry="13" fill="${darkerFur}"/>
+            <ellipse cx="${x}" cy="${y - 2}" rx="19" ry="10" fill="${furColor}"/>
+            
+            <!-- Head -->
+            <circle cx="${x + 18}" cy="${y - 10}" r="12" fill="${furColor}"/>
+            
+            <!-- Ears -->
+            <polygon points="${x + 10},${y - 20} ${x + 13},${y - 32} ${x + 20},${y - 18}" fill="${furColor}"/>
+            <polygon points="${x + 22},${y - 18} ${x + 28},${y - 30} ${x + 26},${y - 16}" fill="${furColor}"/>
+            <polygon points="${x + 12},${y - 21} ${x + 14},${y - 29} ${x + 18},${y - 19}" fill="#ffb6c1"/>
+            <polygon points="${x + 23},${y - 17} ${x + 27},${y - 27} ${x + 25},${y - 16}" fill="#ffb6c1"/>
+            
+            <!-- Eyes (glowing in StarClan) -->
+            <ellipse cx="${x + 14}" cy="${y - 12}" rx="3" ry="4" fill="${eyeColor}" filter="url(#starGlow)"/>
+            <ellipse cx="${x + 24}" cy="${y - 12}" rx="3" ry="4" fill="${eyeColor}" filter="url(#starGlow)"/>
+            <circle cx="${x + 14}" cy="${y - 12}" r="1.5" fill="#1a1a1a"/>
+            <circle cx="${x + 24}" cy="${y - 12}" r="1.5" fill="#1a1a1a"/>
+            
+            <!-- Nose -->
+            <ellipse cx="${x + 19}" cy="${y - 5}" rx="2" ry="1.5" fill="#ffb6c1"/>
+            
+            <!-- Legs -->
+            <rect x="${x - 12}" y="${y + 6}" width="5" height="12" rx="2" fill="${darkerFur}"/>
+            <rect x="${x - 3}" y="${y + 6}" width="5" height="12" rx="2" fill="${furColor}"/>
+            <rect x="${x + 6}" y="${y + 6}" width="5" height="12" rx="2" fill="${darkerFur}"/>
+            <rect x="${x + 15}" y="${y + 6}" width="5" height="12" rx="2" fill="${furColor}"/>
+            
+            <!-- Tail with star sparkle -->
+            <path d="M${x - 18} ${y} Q${x - 32} ${y - 10} ${x - 28} ${y - 25}" stroke="${furColor}" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <circle cx="${x - 28}" cy="${y - 25}" r="3" fill="#ffd700" opacity="0.8" filter="url(#starGlow)"/>
+            
+            <!-- Star sparkles on fur -->
+            <circle cx="${x - 8}" cy="${y - 3}" r="1.5" fill="#fff" opacity="0.9"/>
+            <circle cx="${x + 5}" cy="${y + 2}" r="1" fill="#fff" opacity="0.7"/>
+            <circle cx="${x + 22}" cy="${y - 18}" r="1.5" fill="#fff" opacity="0.8"/>
+            
+            <!-- Name above cat -->
+            <text x="${x}" y="${y - 35}" text-anchor="middle" fill="#ffd700" font-size="11" font-weight="bold" style="text-shadow: 0 0 5px #ffd700;">${cat?.name || 'StarClan Cat'}</text>
+        </g>
+    `;
+}
+
+// Talk to a StarClan ancestor
+function talkToAncestor(name) {
+    const messages = {
+        'Bluestar': [
+            'Welcome, young warrior. StarClan watches over you.',
+            'The clans face many challenges. Stay strong.',
+            'Remember, a true leader puts their clan first.',
+            'I see great things in your future.'
+        ],
+        'Yellowfang': [
+            'Hmph. Another visitor. What do you want?',
+            'Medicine cats carry heavy burdens. Respect them.',
+            'Even in death, I watch over ThunderClan.',
+            'Trust your instincts, kit. They will guide you.'
+        ],
+        'Spottedleaf': [
+            'Greetings, dear one. Walk in peace.',
+            'The stars hold many secrets. Listen closely.',
+            'Love and loyalty will guide your path.',
+            'I sense a great destiny awaits you.'
+        ]
+    };
+    
+    const ancestorMessages = messages[name] || ['Greetings from StarClan.'];
+    const message = ancestorMessages[Math.floor(Math.random() * ancestorMessages.length)];
+    
+    showSpeechBubble(name, message);
+    showMessage(`${name} speaks to you from the stars.`);
 }
 
 // Visit dreams - talk to a random living cat!
