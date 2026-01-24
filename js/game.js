@@ -938,6 +938,8 @@ function renderGameWorld() {
         renderBackyard();
     } else if (GameState.currentLocation === 'starclan_world') {
         renderStarClanWorld();
+    } else if (GameState.currentLocation === 'starclan_forest') {
+        renderStarClanForest();
     } else {
         renderForest();
     }
@@ -3666,25 +3668,29 @@ function renderBackyard() {
         showMessage('You slip back inside through the cat flap.');
     });
     
-    // Use event delegation for fence hole - more reliable for SVG
-    gameWorld.addEventListener('click', (e) => {
-        const fenceHole = e.target.closest('.fence-hole');
-        if (fenceHole) {
-            e.preventDefault();
-            e.stopPropagation();
-            showFenceHolePopup();
-        }
-    });
-    
-    // Also add direct listener as backup
+    // Fence hole - use multiple event types for better mobile support
     const fenceHoleEl = document.querySelector('.fence-hole');
     if (fenceHoleEl) {
         fenceHoleEl.style.cursor = 'pointer';
-        fenceHoleEl.onclick = function(e) {
+        
+        const handleFenceClick = function(e) {
             e.preventDefault();
+            e.stopPropagation();
             showFenceHolePopup();
         };
+        
+        fenceHoleEl.addEventListener('click', handleFenceClick);
+        fenceHoleEl.addEventListener('touchend', handleFenceClick);
     }
+    
+    // Also use delegation as backup
+    gameWorld.addEventListener('touchend', (e) => {
+        const fenceHole = e.target.closest('.fence-hole');
+        if (fenceHole) {
+            e.preventDefault();
+            showFenceHolePopup();
+        }
+    });
     
     document.querySelector('.yard-water')?.addEventListener('click', () => {
         const cat = GameState.catData;
@@ -7581,6 +7587,15 @@ function triggerNPCResponse(playerText) {
 function renderSpeechBubbles() {
     let bubblesHTML = '';
     
+    // Only show speech bubbles in valid locations where there are cats
+    const validLocations = ['camp', 'forest', 'starclan_world', 'starclan_forest', 
+                            'den_nursery', 'den_warriors', 'den_elders', 'den_apprentices', 
+                            'den_medicine', 'den_leader', 'barn'];
+    
+    if (!validLocations.includes(GameState.currentLocation)) {
+        return bubblesHTML; // No speech bubbles in these locations
+    }
+    
     for (const bubble of activeSpeechBubbles) {
         let x, y;
         
@@ -7951,6 +7966,13 @@ function renderStarClanWorld() {
             
             <!-- Silverpelt across the sky -->
             <ellipse cx="225" cy="80" rx="180" ry="25" fill="url(#silverpeltGrad)" opacity="0.3"/>
+            
+            <!-- Exit to StarClan Forest -->
+            <g class="starclan-forest-exit clickable" style="cursor: pointer;">
+                <rect x="380" y="30" width="60" height="35" rx="5" fill="#5a3a8a" stroke="#e1bee7" stroke-width="2"/>
+                <text x="410" y="52" text-anchor="middle" fill="#e1bee7" font-size="10" font-weight="bold">Forest</text>
+                <text x="410" y="62" text-anchor="middle" fill="#ffaaff" font-size="8">-></text>
+            </g>
     `;
     
     // Add dead cats wandering around (ghostly, translucent)
@@ -8027,6 +8049,198 @@ function renderStarClanWorld() {
         ancestor.addEventListener('click', () => {
             const name = ancestor.dataset.name;
             talkToAncestor(name);
+        });
+    });
+    
+    // Click to go to StarClan forest
+    document.querySelector('.starclan-forest-exit')?.addEventListener('click', () => {
+        GameState.currentLocation = 'starclan_forest';
+        GameState.playerX = 200;
+        GameState.playerY = 300;
+        renderGameWorld();
+        showMessage('You wander into the starlit forest...');
+    });
+}
+
+// Render StarClan Forest - blue/pink/purple, no threats, many cats
+function renderStarClanForest() {
+    const gameWorld = document.getElementById('game-world');
+    
+    // Many spirit cats in the forest
+    const forestSpirits = [
+        { name: 'Runningwind', x: 150, y: 200, furColor: '#c4a574' },
+        { name: 'Whitestorm', x: 350, y: 180, furColor: '#ffffff' },
+        { name: 'Stonefur', x: 500, y: 250, furColor: '#6a8aaa' },
+        { name: 'Mosskit', x: 250, y: 350, furColor: '#8a8a8a' },
+        { name: 'Snowfur', x: 600, y: 300, furColor: '#f5f5f5' },
+        { name: 'Swiftpaw', x: 400, y: 400, furColor: '#2a2a2a' },
+        { name: 'Cinderpelt', x: 700, y: 200, furColor: '#808080' },
+        { name: 'Tallstar', x: 180, y: 450, furColor: '#1a1a1a' },
+        { name: 'Crookedstar', x: 550, y: 500, furColor: '#d4a574' },
+        { name: 'Raggedstar', x: 300, y: 550, furColor: '#5a4a3a' },
+        { name: 'Nightstar', x: 650, y: 420, furColor: '#1a1a2a' },
+        { name: 'Brindleface', x: 450, y: 550, furColor: '#a08060' },
+        { name: 'Fernshade', x: 100, y: 350, furColor: '#4a5a4a' },
+        { name: 'Patchpelt', x: 750, y: 350, furColor: '#3a3a3a' }
+    ];
+    
+    let worldHTML = `
+        <svg viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <!-- Purple/blue/pink gradient sky -->
+                <linearGradient id="starclanSky" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#1a0a3a"/>
+                    <stop offset="30%" stop-color="#2a1a5a"/>
+                    <stop offset="60%" stop-color="#3a2a6a"/>
+                    <stop offset="100%" stop-color="#2a1a4a"/>
+                </linearGradient>
+                <radialGradient id="starclanGround" cx="50%" cy="100%" r="80%">
+                    <stop offset="0%" stop-color="#4a3a6a"/>
+                    <stop offset="100%" stop-color="#2a1a4a"/>
+                </radialGradient>
+                <filter id="starGlow2" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+                    <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+            
+            <!-- Starry purple sky -->
+            <rect x="0" y="0" width="900" height="700" fill="url(#starclanSky)"/>
+            
+            <!-- Glowing ground -->
+            <ellipse cx="450" cy="750" rx="500" ry="150" fill="url(#starclanGround)"/>
+            
+            <!-- Purple/pink trees -->
+            <polygon points="50,600 100,300 150,600" fill="#5a4a8a" opacity="0.8"/>
+            <polygon points="100,620 160,350 220,620" fill="#6a5a9a" opacity="0.7"/>
+            <polygon points="200,600 260,280 320,600" fill="#7a6aaa" opacity="0.8"/>
+            <polygon points="700,600 760,320 820,600" fill="#5a4a8a" opacity="0.8"/>
+            <polygon points="750,620 820,380 890,620" fill="#6a5a9a" opacity="0.7"/>
+            <polygon points="380,580 440,250 500,580" fill="#8a7aba" opacity="0.6"/>
+            <polygon points="550,600 620,300 690,600" fill="#7a6aaa" opacity="0.7"/>
+            
+            <!-- Many many stars -->
+            <circle cx="80" cy="50" r="4" fill="#ffd700" filter="url(#starGlow2)"/>
+            <circle cx="200" cy="80" r="5" fill="#fff" filter="url(#starGlow2)"/>
+            <circle cx="320" cy="40" r="4" fill="#ffaaff" filter="url(#starGlow2)"/>
+            <circle cx="450" cy="60" r="5" fill="#fff" filter="url(#starGlow2)"/>
+            <circle cx="580" cy="45" r="4" fill="#ffd700" filter="url(#starGlow2)"/>
+            <circle cx="700" cy="70" r="5" fill="#ffaaff" filter="url(#starGlow2)"/>
+            <circle cx="820" cy="55" r="4" fill="#fff" filter="url(#starGlow2)"/>
+            <circle cx="130" cy="120" r="3" fill="#e1bee7" filter="url(#starGlow2)"/>
+            <circle cx="260" cy="150" r="3" fill="#fff" filter="url(#starGlow2)"/>
+            <circle cx="400" cy="130" r="4" fill="#ffd700" filter="url(#starGlow2)"/>
+            <circle cx="530" cy="110" r="3" fill="#ffaaff" filter="url(#starGlow2)"/>
+            <circle cx="670" cy="140" r="4" fill="#e1bee7" filter="url(#starGlow2)"/>
+            <circle cx="780" cy="160" r="3" fill="#fff" filter="url(#starGlow2)"/>
+            
+            <!-- Silverpelt band -->
+            <ellipse cx="450" cy="100" rx="400" ry="40" fill="#e1bee7" opacity="0.15"/>
+            
+            <!-- Glowing flowers/plants -->
+            <circle cx="100" cy="550" r="8" fill="#ff69b4" opacity="0.6"/>
+            <circle cx="250" cy="520" r="6" fill="#9966ff" opacity="0.5"/>
+            <circle cx="400" cy="540" r="7" fill="#ff69b4" opacity="0.6"/>
+            <circle cx="550" cy="510" r="5" fill="#9966ff" opacity="0.5"/>
+            <circle cx="700" cy="530" r="8" fill="#ff69b4" opacity="0.6"/>
+            <circle cx="850" cy="550" r="6" fill="#9966ff" opacity="0.5"/>
+            
+            <!-- Back to Camp button -->
+            <g class="starclan-camp-exit clickable" style="cursor: pointer;">
+                <rect x="10" y="10" width="80" height="35" rx="5" fill="#5a3a8a" stroke="#e1bee7" stroke-width="2"/>
+                <text x="50" y="32" text-anchor="middle" fill="#e1bee7" font-size="11" font-weight="bold"><- Camp</text>
+            </g>
+    `;
+    
+    // Add all the spirit cats
+    forestSpirits.forEach(cat => {
+        // Random talking
+        const isTalking = Math.random() > 0.6;
+        const sayings = [
+            'The stars shine tonight...',
+            'Welcome, young one.',
+            'We watch over you.',
+            'StarClan guides all.',
+            'Peace be with you.',
+            'The forest is eternal.',
+            'We are always here.',
+            'Walk softly, friend.'
+        ];
+        const saying = sayings[Math.floor(Math.random() * sayings.length)];
+        
+        worldHTML += `
+            <g class="forest-spirit clickable" data-name="${cat.name}" style="cursor: pointer; opacity: 0.75;">
+                <!-- Starry glow -->
+                <ellipse cx="${cat.x}" cy="${cat.y}" rx="25" ry="18" fill="#e1bee7" opacity="0.2"/>
+                
+                <!-- Cat body -->
+                <ellipse cx="${cat.x}" cy="${cat.y}" rx="18" ry="10" fill="${cat.furColor}" opacity="0.8"/>
+                
+                <!-- Head -->
+                <circle cx="${cat.x + 12}" cy="${cat.y - 6}" r="8" fill="${cat.furColor}" opacity="0.8"/>
+                
+                <!-- Ears -->
+                <polygon points="${cat.x + 6},${cat.y - 12} ${cat.x + 9},${cat.y - 20} ${cat.x + 13},${cat.y - 10}" fill="${cat.furColor}" opacity="0.8"/>
+                <polygon points="${cat.x + 14},${cat.y - 10} ${cat.x + 18},${cat.y - 18} ${cat.x + 17},${cat.y - 8}" fill="${cat.furColor}" opacity="0.8"/>
+                
+                <!-- Glowing eyes -->
+                <ellipse cx="${cat.x + 9}" cy="${cat.y - 6}" rx="1.5" ry="2" fill="#9966ff" filter="url(#starGlow2)"/>
+                <ellipse cx="${cat.x + 15}" cy="${cat.y - 6}" rx="1.5" ry="2" fill="#9966ff" filter="url(#starGlow2)"/>
+                
+                <!-- Sparkles -->
+                <circle cx="${cat.x - 5}" cy="${cat.y - 2}" r="1" fill="#fff" opacity="0.7"/>
+                <circle cx="${cat.x + 20}" cy="${cat.y + 3}" r="0.8" fill="#ffaaff" opacity="0.6"/>
+                
+                <!-- Name -->
+                <text x="${cat.x}" y="${cat.y + 22}" text-anchor="middle" fill="#e1bee7" font-size="9" font-weight="bold">${cat.name}</text>
+                
+                <!-- Speech bubble if talking -->
+                ${isTalking ? `
+                    <g style="pointer-events: none;">
+                        <rect x="${cat.x - 50}" y="${cat.y - 55}" width="100" height="25" rx="8" fill="rgba(255,255,255,0.9)" stroke="#9966ff"/>
+                        <polygon points="${cat.x - 5},${cat.y - 30} ${cat.x + 5},${cat.y - 30} ${cat.x},${cat.y - 22}" fill="white" stroke="#9966ff"/>
+                        <text x="${cat.x}" y="${cat.y - 38}" text-anchor="middle" fill="#5a3a8a" font-size="8">${saying}</text>
+                    </g>
+                ` : ''}
+            </g>
+        `;
+    });
+    
+    // Player cat (starry version)
+    worldHTML += renderStarClanPlayerCat();
+    
+    // Speech bubbles
+    worldHTML += renderSpeechBubbles();
+    
+    worldHTML += '</svg>';
+    
+    gameWorld.innerHTML = worldHTML;
+    
+    // Event listeners
+    document.querySelector('.starclan-camp-exit')?.addEventListener('click', () => {
+        GameState.currentLocation = 'starclan_world';
+        GameState.playerX = 225;
+        GameState.playerY = 200;
+        renderGameWorld();
+        showMessage('You return to the StarClan camp...');
+    });
+    
+    // Click on spirits to talk
+    document.querySelectorAll('.forest-spirit').forEach(spirit => {
+        spirit.addEventListener('click', () => {
+            const name = spirit.dataset.name;
+            const greetings = [
+                `${name} purrs: "Greetings, young spirit."`,
+                `${name} nods: "The stars brought you here."`,
+                `${name} whispers: "We are all connected."`,
+                `${name} says: "Walk among us in peace."`,
+                `${name} smiles: "You are home now."`,
+                `${name} murmurs: "The forest welcomes you."`
+            ];
+            showMessage(greetings[Math.floor(Math.random() * greetings.length)]);
         });
     });
 }
