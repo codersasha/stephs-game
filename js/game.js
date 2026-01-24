@@ -1732,11 +1732,31 @@ function interactWithLocation(locationKey) {
             
             // Kits can sneak out if no one is watching!
             if (cat.rank === 'Kit') {
-                const isWatching = Math.random() > 0.4; // 40% chance no one is watching
-                if (isWatching) {
-                    desc.textContent = 'A warrior is watching the exit! You cannot sneak out right now...';
+                const watchChance = Math.random();
+                const watchers = ['Dustpelt', 'Sandstorm', 'Cloudtail', 'Brightheart', 'Thornclaw'];
+                const watcher = watchers[Math.floor(Math.random() * watchers.length)];
+                
+                // 65% chance no one is watching (35% someone is watching)
+                if (watchChance < 0.35) {
+                    const watcherSays = [
+                        `${watcher} is sitting by the exit, watching carefully.`,
+                        `${watcher} sees you and shakes their head. "Not so fast, little one!"`,
+                        `${watcher} is guarding the entrance. No sneaking out right now!`,
+                        `Uh oh! ${watcher} is right there watching the exit!`
+                    ];
+                    desc.textContent = watcherSays[Math.floor(Math.random() * watcherSays.length)];
+                    addAction(actions, 'Wait for them to leave', () => {
+                        showMessage('You wait, but they\'re still watching... Maybe try again later?');
+                        closePopup();
+                    });
                 } else {
-                    desc.textContent = 'No one is watching the exit! You could sneak out...';
+                    const clearMessages = [
+                        'No one is watching the exit! Now\'s your chance!',
+                        'The coast is clear! All the warriors are busy...',
+                        'Everyone is distracted. You could sneak out!',
+                        'The exit is unguarded! Quick, before someone sees!'
+                    ];
+                    desc.textContent = clearMessages[Math.floor(Math.random() * clearMessages.length)];
                     addAction(actions, 'Sneak to the forest', () => {
                         sneakOutOfCamp('forest');
                         closePopup();
@@ -1754,6 +1774,7 @@ function interactWithLocation(locationKey) {
                         closePopup();
                     });
                 }
+                addAction(actions, 'Go back', closePopup);
             } else {
                 desc.textContent = 'Leave camp to hunt and gather herbs.';
                 addAction(actions, 'Go to forest', () => {
