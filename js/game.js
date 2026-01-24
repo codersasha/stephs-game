@@ -1886,7 +1886,14 @@ function interactWithLocation(locationKey) {
                         'The exit is unguarded! Quick, before someone sees!'
                     ];
                     desc.textContent = clearMessages[Math.floor(Math.random() * clearMessages.length)];
-                    addAction(actions, 'Sneak to the forest', () => {
+                    
+                    // Ask a friend to come!
+                    addAction(actions, 'Ask a friend to come', () => {
+                        closePopup();
+                        askKitToSneakOut();
+                    });
+                    
+                    addAction(actions, 'Sneak alone to forest', () => {
                         sneakOutOfCamp('forest');
                         closePopup();
                     });
@@ -2092,6 +2099,102 @@ function showClanVisitOptions() {
     addAction(actions, 'Cancel', closePopup);
     
     popup.classList.remove('hidden');
+}
+
+// Ask another kit to sneak out with you!
+function askKitToSneakOut() {
+    const kits = ['Molekit', 'Cherrykit', 'Lilykit', 'Seedkit', 'Honeykit'];
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Ask a Friend!';
+    desc.textContent = 'Which kit do you want to ask to sneak out with you?';
+    actions.innerHTML = '';
+    
+    for (const kitName of kits) {
+        addAction(actions, kitName, () => {
+            closePopup();
+            
+            // Random chance they say yes or no
+            const saysYes = Math.random() > 0.3; // 70% chance they say yes
+            
+            if (saysYes) {
+                const yesResponses = [
+                    `${kitName}: "Yes! Let's go on an adventure!"`,
+                    `${kitName}: "Okay! This is so exciting!"`,
+                    `${kitName}: "An adventure? Count me in!"`,
+                    `${kitName}: "Let's do it! But we have to be careful!"`
+                ];
+                showSpeechBubble(kitName, yesResponses[Math.floor(Math.random() * yesResponses.length)].split(': "')[1].replace('"', ''));
+                showMessage(yesResponses[Math.floor(Math.random() * yesResponses.length)]);
+                
+                // Store that a friend is coming
+                GameState.sneakingWithFriend = kitName;
+                
+                setTimeout(() => {
+                    sneakOutWithFriend(kitName);
+                }, 2000);
+            } else {
+                const noResponses = [
+                    `${kitName}: "No way! We'll get in trouble!"`,
+                    `${kitName}: "I'm scared... What if there are foxes?"`,
+                    `${kitName}: "My mom would be so mad! I can't..."`,
+                    `${kitName}: "Maybe another time... I'm too tired."`
+                ];
+                showSpeechBubble(kitName, noResponses[Math.floor(Math.random() * noResponses.length)].split(': "')[1].replace('"', ''));
+                showMessage(noResponses[Math.floor(Math.random() * noResponses.length)]);
+            }
+        });
+    }
+    
+    addAction(actions, 'Never mind', closePopup);
+    popup.classList.remove('hidden');
+}
+
+// Sneak out with a friend!
+function sneakOutWithFriend(friendName) {
+    const cat = GameState.catData;
+    
+    showMessage(`You and ${friendName} sneak toward the exit together...`);
+    
+    setTimeout(() => {
+        // Higher chance of getting caught with a friend (they might make noise!)
+        if (Math.random() < 0.4) {
+            const catchers = ['Sandstorm', 'Ferncloud', 'Dustpelt'];
+            const catcher = catchers[Math.floor(Math.random() * catchers.length)];
+            showMessage(`${catcher} spots you! "Where do you two think you're going?!"`);
+            showSpeechBubble(friendName, 'Uh oh!');
+            setTimeout(() => {
+                showMessage('You are both carried back to the nursery...');
+                GameState.sneakingWithFriend = null;
+            }, 2000);
+            return;
+        }
+        
+        // Made it out together!
+        showMessage(`You and ${friendName} made it out! The forest awaits!`);
+        showSpeechBubble(friendName, 'We did it!');
+        
+        setTimeout(() => {
+            GameState.currentLocation = 'forest';
+            GameState.playerX = 225;
+            GameState.playerY = 200;
+            renderGameWorld();
+            
+            // Friend provides some protection/company
+            showMessage(`${friendName} stays close to you. "This is scary but fun!"`);
+            
+            // With a friend, you might get warned about danger
+            if (Math.random() < 0.3) {
+                setTimeout(() => {
+                    showSpeechBubble(friendName, 'Did you hear that?!');
+                    showMessage(`${friendName} looks nervous. "Maybe we should go back soon..."`);
+                }, 5000);
+            }
+        }, 2000);
+    }, 2000);
 }
 
 // Diplomatic visit for warriors
