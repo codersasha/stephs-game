@@ -1330,6 +1330,16 @@ function renderForest() {
         </g>
     `;
     
+    // Add warrior companion if with one
+    if (GameState.withWarrior) {
+        worldHTML += renderWarriorCompanion();
+    }
+    
+    // Add kit friend if sneaking with one
+    if (GameState.sneakingWithFriend) {
+        worldHTML += renderKitFriend();
+    }
+    
     // Add player cat
     worldHTML += renderPlayerCat();
     
@@ -1365,14 +1375,194 @@ function renderForest() {
                 GameState.currentLocation = 'camp';
                 GameState.playerX = 225;
                 GameState.playerY = 250;
+                
+                // Clear companions when returning
+                if (GameState.withWarrior) {
+                    showMessage(`${GameState.withWarrior} brought you back to camp safely!`);
+                    GameState.withWarrior = null;
+                } else if (GameState.sneakingWithFriend) {
+                    showMessage(`You and ${GameState.sneakingWithFriend} snuck back into camp!`);
+                    GameState.sneakingWithFriend = null;
+                } else {
+                    showMessage('You returned to camp safely!');
+                }
+                
                 renderGameWorld();
-                showMessage('You returned to camp safely!');
             }
         });
     });
     
     // Check for random forest events
     checkForestEvents();
+}
+
+// Render the warrior companion in the forest
+function renderWarriorCompanion() {
+    const warriorName = GameState.withWarrior;
+    if (!warriorName) return '';
+    
+    // Find warrior data or use default colors
+    const warriorData = {
+        'Sandstorm': { fur: '#e8d4a0', eye: '#7fb069' },
+        'Graystripe': { fur: '#888899', eye: '#f4d35e' },
+        'Dustpelt': { fur: '#8B7355', eye: '#c4a35a' },
+        'Cloudtail': { fur: '#ffffff', eye: '#4a90d9' },
+        'Brackenfur': { fur: '#c4a35a', eye: '#c4a35a' },
+        'Thornclaw': { fur: '#d4a45a', eye: '#c4a35a' }
+    };
+    
+    const data = warriorData[warriorName] || { fur: '#8d6e63', eye: '#2ecc71' };
+    const furColor = data.fur;
+    const eyeColor = data.eye;
+    const darkerFur = adjustColor(furColor, -30);
+    const lighterFur = adjustColor(furColor, 20);
+    const chestFur = adjustColor(furColor, 40);
+    
+    // Position near the player but slightly behind
+    const x = GameState.playerX - 50;
+    const y = GameState.playerY + 10;
+    
+    return `
+        <!-- Warrior Companion: ${warriorName} -->
+        <g class="warrior-companion" transform="translate(${x}, ${y}) scale(0.9)" style="pointer-events: none;">
+            <!-- Shadow -->
+            <ellipse cx="15" cy="25" rx="20" ry="6" fill="rgba(0,0,0,0.3)"/>
+            
+            <!-- Tail up -->
+            <path d="M-10 5 Q-25 0 -22 -18 Q-20 -25 -15 -22" stroke="${darkerFur}" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <path d="M-9 4 Q-23 0 -20 -16 Q-18 -22 -14 -20" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+            
+            <!-- Back legs -->
+            <ellipse cx="-5" cy="18" rx="5" ry="6" fill="${darkerFur}"/>
+            <ellipse cx="5" cy="18" rx="5" ry="6" fill="${furColor}"/>
+            
+            <!-- Body -->
+            <ellipse cx="8" cy="4" rx="18" ry="12" fill="${darkerFur}"/>
+            <ellipse cx="8" cy="2" rx="16" ry="10" fill="${furColor}"/>
+            <ellipse cx="12" cy="0" rx="6" ry="5" fill="${chestFur}" opacity="0.4"/>
+            
+            <!-- Front legs -->
+            <ellipse cx="18" cy="18" rx="4" ry="6" fill="${darkerFur}"/>
+            <ellipse cx="26" cy="18" rx="4" ry="6" fill="${furColor}"/>
+            
+            <!-- Neck -->
+            <ellipse cx="22" cy="-2" rx="7" ry="8" fill="${furColor}"/>
+            
+            <!-- Head -->
+            <ellipse cx="26" cy="-10" rx="11" ry="10" fill="${furColor}"/>
+            <ellipse cx="26" cy="-12" rx="8" ry="7" fill="${lighterFur}" opacity="0.15"/>
+            
+            <!-- Ears -->
+            <polygon points="18,-14 18,-28 26,-18" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="19,-15 19,-25 24,-18" fill="#e8b4b8" opacity="0.6"/>
+            <polygon points="30,-18 38,-28 36,-14" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="31,-17 36,-25 35,-15" fill="#e8b4b8" opacity="0.6"/>
+            
+            <!-- Eyes - alert and watching -->
+            <ellipse cx="22" cy="-11" rx="3" ry="3.5" fill="white"/>
+            <ellipse cx="30" cy="-11" rx="3" ry="3.5" fill="white"/>
+            <ellipse cx="22" cy="-11" rx="2" ry="3" fill="${eyeColor}"/>
+            <ellipse cx="30" cy="-11" rx="2" ry="3" fill="${eyeColor}"/>
+            <ellipse cx="22" cy="-11" rx="1" ry="2.5" fill="#0a0a0a"/>
+            <ellipse cx="30" cy="-11" rx="1" ry="2.5" fill="#0a0a0a"/>
+            <circle cx="21" cy="-12.5" r="0.8" fill="white" opacity="0.9"/>
+            <circle cx="29" cy="-12.5" r="0.8" fill="white" opacity="0.9"/>
+            
+            <!-- Nose -->
+            <path d="M25,-6 L27,-6 L26,-4 Z" fill="#d88a90"/>
+            
+            <!-- Whiskers -->
+            <g stroke="#d8d8d8" stroke-width="0.4" opacity="0.7">
+                <line x1="19" y1="-6" x2="10" y2="-8"/>
+                <line x1="19" y1="-5" x2="10" y2="-5"/>
+                <line x1="33" y1="-6" x2="42" y2="-8"/>
+                <line x1="33" y1="-5" x2="42" y2="-5"/>
+            </g>
+            
+            <!-- Name -->
+            <text x="20" y="38" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.9);">${warriorName}</text>
+        </g>
+    `;
+}
+
+// Render kit friend in the forest
+function renderKitFriend() {
+    const friendName = GameState.sneakingWithFriend;
+    if (!friendName) return '';
+    
+    // Kit friend colors
+    const kitData = {
+        'Molekit': { fur: '#d4a574', eye: '#c4a35a' },
+        'Cherrykit': { fur: '#cc8866', eye: '#7fb069' },
+        'Lilykit': { fur: '#f0e6d2', eye: '#4a90d9' },
+        'Seedkit': { fur: '#c4a35a', eye: '#c4a35a' },
+        'Honeykit': { fur: '#e8c078', eye: '#c4a35a' }
+    };
+    
+    const data = kitData[friendName] || { fur: '#d4a574', eye: '#7fb069' };
+    const furColor = data.fur;
+    const eyeColor = data.eye;
+    const darkerFur = adjustColor(furColor, -30);
+    const lighterFur = adjustColor(furColor, 20);
+    
+    // Position near the player
+    const x = GameState.playerX + 30;
+    const y = GameState.playerY + 5;
+    
+    return `
+        <!-- Kit Friend: ${friendName} -->
+        <g class="kit-friend" transform="translate(${x}, ${y}) scale(0.35)" style="pointer-events: none;">
+            <!-- Shadow -->
+            <ellipse cx="10" cy="22" rx="18" ry="5" fill="rgba(0,0,0,0.25)"/>
+            
+            <!-- Tail -->
+            <path d="M-12 6 Q-18 10 -14 16 Q-8 18 0 14" stroke="${darkerFur}" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <path d="M-11 5 Q-16 9 -12 14 Q-6 16 0 12" stroke="${furColor}" stroke-width="3" fill="none" stroke-linecap="round"/>
+            
+            <!-- Body -->
+            <ellipse cx="0" cy="6" rx="16" ry="11" fill="${darkerFur}"/>
+            <ellipse cx="0" cy="4" rx="14" ry="9" fill="${furColor}"/>
+            <ellipse cx="0" cy="2" rx="10" ry="6" fill="${lighterFur}" opacity="0.2"/>
+            
+            <!-- Legs -->
+            <ellipse cx="-6" cy="14" rx="5" ry="4" fill="${furColor}"/>
+            <ellipse cx="6" cy="14" rx="5" ry="4" fill="${furColor}"/>
+            
+            <!-- Head - big for a kit -->
+            <ellipse cx="16" cy="-6" rx="13" ry="11" fill="${furColor}"/>
+            <ellipse cx="16" cy="-8" rx="10" ry="8" fill="${lighterFur}" opacity="0.15"/>
+            
+            <!-- Big ears -->
+            <polygon points="6,-10 6,-26 16,-14" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="8,-11 8,-22 14,-14" fill="#e8b4b8" opacity="0.6"/>
+            <polygon points="20,-14 30,-26 28,-10" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="22,-13 28,-22 27,-11" fill="#e8b4b8" opacity="0.6"/>
+            
+            <!-- Big eyes - excited/scared -->
+            <ellipse cx="12" cy="-7" rx="4" ry="4.5" fill="white"/>
+            <ellipse cx="22" cy="-7" rx="4" ry="4.5" fill="white"/>
+            <ellipse cx="12" cy="-7" rx="3" ry="4" fill="${eyeColor}"/>
+            <ellipse cx="22" cy="-7" rx="3" ry="4" fill="${eyeColor}"/>
+            <ellipse cx="12" cy="-7" rx="1.5" ry="3" fill="#0a0a0a"/>
+            <ellipse cx="22" cy="-7" rx="1.5" ry="3" fill="#0a0a0a"/>
+            <circle cx="10.5" cy="-9" r="1" fill="white" opacity="0.9"/>
+            <circle cx="20.5" cy="-9" r="1" fill="white" opacity="0.9"/>
+            
+            <!-- Nose -->
+            <path d="M15,-1 L18,-1 L16.5,1 Z" fill="#d88a90"/>
+            
+            <!-- Whiskers -->
+            <g stroke="#d8d8d8" stroke-width="0.3" opacity="0.6">
+                <line x1="9" y1="-2" x2="0" y2="-4"/>
+                <line x1="9" y1="0" x2="0" y2="0"/>
+                <line x1="25" y1="-2" x2="34" y2="-4"/>
+                <line x1="25" y1="0" x2="34" y2="0"/>
+            </g>
+            
+            <!-- Name -->
+            <text x="12" y="32" text-anchor="middle" fill="#f0e6d2" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.9);">${friendName}</text>
+        </g>
+    `;
 }
 
 // Render player cat at current position
