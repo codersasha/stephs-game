@@ -2347,45 +2347,95 @@ function askToJoinClan(clanName) {
     showMessage(`You approach the ${clanName} border and call out...`);
     
     setTimeout(() => {
-        // 60% chance they accept
-        if (Math.random() < 0.6) {
-            const leaders = {
-                'ThunderClan': 'Firestar',
-                'ShadowClan': 'Blackstar',
-                'RiverClan': 'Leopardstar',
-                'WindClan': 'Onestar'
-            };
-            const leader = leaders[clanName] || 'the leader';
-            
-            showMessage(`${leader} considers your request...`);
+        const leaders = {
+            'ThunderClan': 'Firestar',
+            'ShadowClan': 'Blackstar',
+            'RiverClan': 'Leopardstar',
+            'WindClan': 'Onestar'
+        };
+        const leader = leaders[clanName] || 'the leader';
+        
+        // Banished cats have MUCH lower chance of being accepted
+        let acceptChance = 0.5; // Base 50% chance
+        
+        if (cat.isBanished) {
+            acceptChance = 0.15; // Only 15% if banished
+            showMessage(`A patrol spots you. They recognize you as a banished cat...`);
+        } else {
+            showMessage(`A patrol finds you and takes you to ${leader}...`);
+        }
+        
+        setTimeout(() => {
+            showMessage(`${leader} looks you over carefully...`);
             
             setTimeout(() => {
-                showSpeechBubble(leader, 'We could use another cat. You may join us.');
-                showMessage(`${leader}: "We could use another cat. You may join ${clanName}!"`);
-                
-                setTimeout(() => {
-                    cat.isLoner = false;
-                    cat.clan = clanName;
-                    cat.rank = 'Warrior'; // Loners join as warriors
-                    cat.name = cat.name + 'heart'; // Give a warrior name
+                if (Math.random() < acceptChance) {
+                    // They accept!
+                    const acceptMessages = [
+                        'We could use another strong cat.',
+                        'You seem capable. Very well.',
+                        'StarClan has sent you to us, perhaps.',
+                        'We are short on warriors. You may stay.'
+                    ];
+                    const acceptMsg = acceptMessages[Math.floor(Math.random() * acceptMessages.length)];
                     
-                    GameState.selectedClan = clanName.toLowerCase().replace('clan', '');
-                    GameState.currentLocation = 'camp';
-                    GameState.playerX = 225;
-                    GameState.playerY = 250;
+                    showSpeechBubble(leader, acceptMsg);
+                    showMessage(`${leader}: "${acceptMsg}"`);
                     
-                    showMessage(`Welcome to ${clanName}! You are now ${cat.name}!`);
-                    renderGameWorld();
-                    updateGameUI();
-                    saveGameData();
-                }, 2500);
+                    setTimeout(() => {
+                        cat.isLoner = false;
+                        cat.isBanished = false; // Fresh start!
+                        cat.clan = clanName;
+                        cat.rank = 'Warrior';
+                        
+                        // Give a warrior suffix if they don't have one
+                        if (!cat.name.match(/(claw|fur|heart|pelt|tail|stripe|storm|whisker|foot|nose)$/)) {
+                            const suffixes = ['claw', 'heart', 'pelt', 'fur', 'storm'];
+                            cat.name = cat.firstName + suffixes[Math.floor(Math.random() * suffixes.length)];
+                        }
+                        
+                        GameState.selectedClan = clanName.toLowerCase().replace('clan', '');
+                        GameState.currentLocation = 'camp';
+                        GameState.playerX = 225;
+                        GameState.playerY = 250;
+                        
+                        showMessage(`Welcome to ${clanName}! You are now ${cat.name}!`);
+                        renderGameWorld();
+                        updateGameUI();
+                        saveGameData();
+                    }, 2500);
+                } else {
+                    // They say NO!
+                    const rejectMessages = [
+                        { speech: 'We have no room for rogues.', action: 'turns away coldly' },
+                        { speech: 'You are not welcome here. Leave!', action: 'hisses at you' },
+                        { speech: 'The Clan does not need outsiders.', action: 'flicks their tail dismissively' },
+                        { speech: 'Prove your loyalty elsewhere first.', action: 'looks unimpressed' },
+                        { speech: 'We cannot trust a cat with no Clan.', action: 'narrows their eyes' }
+                    ];
+                    
+                    // Harsher rejections for banished cats
+                    const banishedRejects = [
+                        { speech: 'You were banished for a reason! Get out!', action: 'snarls furiously' },
+                        { speech: 'We know what you did. You are not welcome!', action: 'unsheathes their claws' },
+                        { speech: 'A traitor to their own Clan? Never!', action: 'bares their teeth' }
+                    ];
+                    
+                    const rejects = cat.isBanished ? banishedRejects : rejectMessages;
+                    const rejection = rejects[Math.floor(Math.random() * rejects.length)];
+                    
+                    showSpeechBubble(leader, rejection.speech);
+                    showMessage(`${leader} ${rejection.action}. "${rejection.speech}"`);
+                    
+                    setTimeout(() => {
+                        showMessage(`The ${clanName} warriors chase you away from their territory!`);
+                        cat.health -= 10;
+                        updateGameUI();
+                        saveGameData();
+                    }, 2500);
+                }
             }, 2000);
-        } else {
-            showMessage(`The ${clanName} cats chase you away! "We don't need rogues here!"`);
-            cat.health -= 10;
-            updateGameUI();
-            saveGameData();
-        }
+        }, 2000);
     }, 2000);
 }
 
