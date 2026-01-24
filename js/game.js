@@ -1557,26 +1557,52 @@ function getVisibleThreats() {
     if (!GameState.forestThreats || GameState.forestThreats.length === 0) {
         GameState.forestThreats = [];
         
-        // Random chance of threats appearing
-        if (Math.random() < 0.4) { // 40% chance of a fox
+        // Random threats scattered across the HUGE forest
+        // Multiple foxes possible!
+        if (Math.random() < 0.5) {
             GameState.forestThreats.push({
                 type: 'fox',
-                x: 450 + Math.random() * 80,
+                x: 800 + Math.random() * 200,
+                y: 200 + Math.random() * 150
+            });
+        }
+        if (Math.random() < 0.3) {
+            GameState.forestThreats.push({
+                type: 'fox',
+                x: 400 + Math.random() * 200,
+                y: 600 + Math.random() * 150
+            });
+        }
+        
+        // Dogs in different areas
+        if (Math.random() < 0.25) {
+            GameState.forestThreats.push({
+                type: 'dog',
+                x: 150 + Math.random() * 150,
                 y: 150 + Math.random() * 100
             });
         }
-        if (Math.random() < 0.2) { // 20% chance of a dog
+        if (Math.random() < 0.2) {
             GameState.forestThreats.push({
                 type: 'dog',
-                x: 100 + Math.random() * 100,
-                y: 100 + Math.random() * 80
+                x: 900 + Math.random() * 200,
+                y: 700 + Math.random() * 150
             });
         }
-        if (Math.random() < 0.15) { // 15% chance of a badger
+        
+        // Badgers lurking
+        if (Math.random() < 0.2) {
             GameState.forestThreats.push({
                 type: 'badger',
-                x: 300 + Math.random() * 100,
-                y: 350 + Math.random() * 80
+                x: 500 + Math.random() * 200,
+                y: 400 + Math.random() * 150
+            });
+        }
+        if (Math.random() < 0.15) {
+            GameState.forestThreats.push({
+                type: 'badger',
+                x: 700 + Math.random() * 200,
+                y: 800 + Math.random() * 100
             });
         }
     }
@@ -1720,16 +1746,24 @@ function renderForest() {
     const clan = GameState.selectedClan;
     const isNight = GameState.isNight;
     
-    // Forest is bigger! 600x500
+    // Forest is HUGE! 1200x1000
     const herbSpots = [
         { x: 100, y: 120, herb: 'cobweb' },
         { x: 480, y: 100, herb: 'catmint' },
         { x: 150, y: 380, herb: 'marigold' },
-        { x: 400, y: 420, herb: 'dock' },
-        { x: 70, y: 280, herb: 'juniper' },
-        { x: 520, y: 320, herb: 'poppy' },
+        { x: 400, y: 520, herb: 'dock' },
+        { x: 70, y: 480, herb: 'juniper' },
+        { x: 820, y: 320, herb: 'poppy' },
         { x: 300, y: 80, herb: 'cobweb' },
-        { x: 550, y: 200, herb: 'marigold' }
+        { x: 950, y: 200, herb: 'marigold' },
+        { x: 700, y: 150, herb: 'catmint' },
+        { x: 1100, y: 400, herb: 'dock' },
+        { x: 600, y: 700, herb: 'juniper' },
+        { x: 900, y: 800, herb: 'poppy' },
+        { x: 200, y: 850, herb: 'cobweb' },
+        { x: 1050, y: 600, herb: 'marigold' },
+        { x: 750, y: 500, herb: 'catmint' },
+        { x: 350, y: 750, herb: 'dock' }
     ];
     
     // Different ground colors based on clan territory
@@ -1743,7 +1777,7 @@ function renderForest() {
     const skyColor = isNight ? '#0a0a1a' : '#1a3a2a';
     
     let worldHTML = `
-        <svg id="forest-svg" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+        <svg id="forest-svg" viewBox="0 0 1200 1000" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
             <defs>
                 <radialGradient id="forestGlow" cx="50%" cy="30%" r="60%">
                     <stop offset="0%" stop-color="${isNight ? '#1a2a3a' : '#2a4a3a'}"/>
@@ -1760,41 +1794,96 @@ function renderForest() {
                     <stop offset="0%" stop-color="#2d5d16"/>
                     <stop offset="100%" stop-color="#1a3a1a"/>
                 </linearGradient>
+                <linearGradient id="treeGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#1e5d2b"/>
+                    <stop offset="100%" stop-color="#0a3a1a"/>
+                </linearGradient>
             </defs>
             
-            <!-- Forest ground with texture -->
-            <rect x="0" y="0" width="600" height="500" fill="url(#forestGlow)"/>
+            <!-- HUGE Forest ground -->
+            <rect x="0" y="0" width="1200" height="1000" fill="url(#forestGlow)"/>
             
-            <!-- Ground texture - grass patches -->
+            <!-- Ground texture - MANY grass patches -->
             <ellipse cx="100" cy="450" rx="80" ry="30" fill="${colors.accent}" opacity="0.6"/>
             <ellipse cx="300" cy="480" rx="100" ry="40" fill="${colors.accent}" opacity="0.5"/>
             <ellipse cx="500" cy="460" rx="90" ry="35" fill="${colors.accent}" opacity="0.6"/>
             <ellipse cx="200" cy="350" rx="60" ry="25" fill="${colors.accent}" opacity="0.4"/>
             <ellipse cx="450" cy="300" rx="70" ry="30" fill="${colors.accent}" opacity="0.5"/>
+            <ellipse cx="700" cy="400" rx="100" ry="40" fill="${colors.accent}" opacity="0.5"/>
+            <ellipse cx="900" cy="350" rx="80" ry="35" fill="${colors.accent}" opacity="0.6"/>
+            <ellipse cx="1050" cy="500" rx="90" ry="40" fill="${colors.accent}" opacity="0.5"/>
+            <ellipse cx="150" cy="700" rx="70" ry="30" fill="${colors.accent}" opacity="0.6"/>
+            <ellipse cx="400" cy="800" rx="100" ry="45" fill="${colors.accent}" opacity="0.5"/>
+            <ellipse cx="650" cy="750" rx="85" ry="35" fill="${colors.accent}" opacity="0.6"/>
+            <ellipse cx="850" cy="700" rx="95" ry="40" fill="${colors.accent}" opacity="0.5"/>
+            <ellipse cx="1100" cy="800" rx="80" ry="35" fill="${colors.accent}" opacity="0.6"/>
+            <ellipse cx="600" cy="550" rx="120" ry="50" fill="${colors.accent}" opacity="0.4"/>
+            <ellipse cx="300" cy="600" rx="75" ry="30" fill="${colors.accent}" opacity="0.5"/>
+            <ellipse cx="950" cy="600" rx="90" ry="38" fill="${colors.accent}" opacity="0.5"/>
             
-            <!-- Fallen leaves scattered -->
+            <!-- LOTS of fallen leaves -->
             <circle cx="120" cy="320" r="3" fill="#8B4513" opacity="0.7"/>
             <circle cx="250" cy="400" r="2" fill="#CD853F" opacity="0.6"/>
             <circle cx="380" cy="280" r="3" fill="#A0522D" opacity="0.7"/>
             <circle cx="480" cy="380" r="2" fill="#8B4513" opacity="0.6"/>
             <circle cx="180" cy="220" r="2" fill="#CD853F" opacity="0.5"/>
             <circle cx="520" cy="150" r="3" fill="#A0522D" opacity="0.7"/>
+            <circle cx="700" cy="250" r="3" fill="#8B4513" opacity="0.6"/>
+            <circle cx="850" cy="400" r="2" fill="#CD853F" opacity="0.7"/>
+            <circle cx="950" cy="300" r="3" fill="#A0522D" opacity="0.6"/>
+            <circle cx="1100" cy="450" r="2" fill="#8B4513" opacity="0.7"/>
+            <circle cx="200" cy="600" r="3" fill="#CD853F" opacity="0.6"/>
+            <circle cx="350" cy="700" r="2" fill="#A0522D" opacity="0.7"/>
+            <circle cx="500" cy="650" r="3" fill="#8B4513" opacity="0.6"/>
+            <circle cx="750" cy="600" r="2" fill="#CD853F" opacity="0.7"/>
+            <circle cx="900" cy="750" r="3" fill="#A0522D" opacity="0.6"/>
+            <circle cx="1050" cy="700" r="2" fill="#8B4513" opacity="0.7"/>
+            <circle cx="150" cy="850" r="3" fill="#CD853F" opacity="0.6"/>
+            <circle cx="450" cy="900" r="2" fill="#A0522D" opacity="0.7"/>
+            <circle cx="750" cy="850" r="3" fill="#8B4513" opacity="0.6"/>
+            <circle cx="1000" cy="900" r="2" fill="#CD853F" opacity="0.7"/>
             
-            <!-- Trees - many more! -->
-            <!-- Back row (distant, smaller) -->
+            <!-- MANY Trees - Back row -->
             <polygon points="50,150 65,50 80,150" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
             <polygon points="130,160 150,40 170,160" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
             <polygon points="220,140 240,30 260,140" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
             <polygon points="310,150 330,20 350,150" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
             <polygon points="400,140 420,35 440,140" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
             <polygon points="490,155 510,45 530,155" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
-            <polygon points="560,145 575,60 590,145" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="580,145 600,50 620,145" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="670,150 690,40 710,150" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="760,140 780,30 800,140" fill="url(#treeGrad3)" filter="url(#treeShadow)"/>
+            <polygon points="850,155 870,45 890,155" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="940,145 960,35 980,145" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="1030,150 1050,40 1070,150" fill="url(#treeGrad3)" filter="url(#treeShadow)"/>
+            <polygon points="1120,145 1140,50 1160,145" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
             
             <!-- Middle row trees -->
             <polygon points="20,320 45,150 70,320" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
             <polygon points="90,340 120,180 150,340" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
-            <polygon points="530,300 555,140 580,300" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
-            <polygon points="560,350 580,200 600,350" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="1130,300 1155,140 1180,300" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="1160,350 1180,200 1200,350" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            
+            <!-- Trees on sides -->
+            <polygon points="0,500 25,320 50,500" fill="url(#treeGrad3)" filter="url(#treeShadow)"/>
+            <polygon points="0,700 30,500 60,700" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="1150,550 1175,350 1200,550" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="1150,750 1175,550 1200,750" fill="url(#treeGrad3)" filter="url(#treeShadow)"/>
+            
+            <!-- Forest clearing in center -->
+            <ellipse cx="600" cy="450" rx="150" ry="100" fill="${colors.accent}" opacity="0.3"/>
+            
+            <!-- Scattered trees in middle -->
+            <polygon points="280,450 310,280 340,450" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="450,400 480,250 510,400" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="720,420 750,260 780,420" fill="url(#treeGrad3)" filter="url(#treeShadow)"/>
+            <polygon points="900,450 930,290 960,450" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            
+            <!-- Trees in lower area -->
+            <polygon points="100,800 135,600 170,800" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="250,750 285,570 320,750" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="880,780 915,600 950,780" fill="url(#treeGrad3)" filter="url(#treeShadow)"/>
+            <polygon points="1050,820 1085,650 1120,820" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
             
             <!-- Tree trunks -->
             <rect x="60" y="150" width="10" height="30" fill="#5D4037"/>
@@ -1803,35 +1892,71 @@ function renderForest() {
             <rect x="325" y="150" width="12" height="32" fill="#4E342E"/>
             <rect x="415" y="140" width="10" height="28" fill="#5D4037"/>
             <rect x="505" y="155" width="11" height="30" fill="#4E342E"/>
-            <rect x="40" y="320" width="12" height="40" fill="#5D4037"/>
-            <rect x="115" y="340" width="14" height="45" fill="#4E342E"/>
-            <rect x="550" y="300" width="12" height="35" fill="#5D4037"/>
+            <rect x="595" y="145" width="10" height="28" fill="#5D4037"/>
+            <rect x="685" y="150" width="12" height="32" fill="#4E342E"/>
+            <rect x="775" y="140" width="10" height="28" fill="#5D4037"/>
+            <rect x="865" y="155" width="11" height="30" fill="#4E342E"/>
+            <rect x="955" y="145" width="10" height="28" fill="#5D4037"/>
+            <rect x="1045" y="150" width="12" height="32" fill="#4E342E"/>
+            <rect x="1135" y="145" width="10" height="28" fill="#5D4037"/>
             
-            <!-- Bushes -->
+            <!-- MANY Bushes everywhere -->
             <ellipse cx="180" cy="250" rx="25" ry="18" fill="#2d5d26"/>
             <ellipse cx="350" cy="200" rx="30" ry="20" fill="#1e4d1b"/>
             <ellipse cx="450" cy="350" rx="28" ry="16" fill="#2d5d26"/>
             <ellipse cx="80" cy="400" rx="22" ry="14" fill="#1e4d1b"/>
-            <ellipse cx="520" cy="420" rx="25" ry="15" fill="#2d5d26"/>
+            <ellipse cx="520" cy="520" rx="25" ry="15" fill="#2d5d26"/>
+            <ellipse cx="650" cy="300" rx="30" ry="20" fill="#1e4d1b"/>
+            <ellipse cx="800" cy="250" rx="25" ry="18" fill="#2d5d26"/>
+            <ellipse cx="950" cy="400" rx="28" ry="16" fill="#1e4d1b"/>
+            <ellipse cx="1100" cy="350" rx="22" ry="14" fill="#2d5d26"/>
+            <ellipse cx="200" cy="550" rx="30" ry="18" fill="#1e4d1b"/>
+            <ellipse cx="380" cy="600" rx="25" ry="15" fill="#2d5d26"/>
+            <ellipse cx="550" cy="700" rx="28" ry="17" fill="#1e4d1b"/>
+            <ellipse cx="750" cy="650" rx="25" ry="15" fill="#2d5d26"/>
+            <ellipse cx="900" cy="550" rx="30" ry="18" fill="#1e4d1b"/>
+            <ellipse cx="1050" cy="650" rx="25" ry="15" fill="#2d5d26"/>
+            <ellipse cx="150" cy="750" rx="22" ry="14" fill="#1e4d1b"/>
+            <ellipse cx="350" cy="850" rx="28" ry="16" fill="#2d5d26"/>
+            <ellipse cx="600" cy="850" rx="30" ry="18" fill="#1e4d1b"/>
+            <ellipse cx="850" cy="850" rx="25" ry="15" fill="#2d5d26"/>
+            <ellipse cx="1100" cy="850" rx="28" ry="16" fill="#1e4d1b"/>
             
-            <!-- Stream for RiverClan territory -->
+            <!-- Stream for RiverClan territory - LONG winding river -->
             ${clan === 'river' ? `
-            <path d="M0,250 Q150,220 300,260 Q450,300 600,270" stroke="#4a8aaa" stroke-width="20" fill="none" opacity="0.7"/>
-            <path d="M0,250 Q150,220 300,260 Q450,300 600,270" stroke="#6aaacc" stroke-width="8" fill="none" opacity="0.5"/>
+            <path d="M0,250 Q200,200 400,280 Q600,350 800,300 Q1000,250 1200,320" stroke="#4a8aaa" stroke-width="30" fill="none" opacity="0.7"/>
+            <path d="M0,250 Q200,200 400,280 Q600,350 800,300 Q1000,250 1200,320" stroke="#6aaacc" stroke-width="12" fill="none" opacity="0.5"/>
+            <path d="M0,700 Q300,650 600,720 Q900,780 1200,730" stroke="#4a8aaa" stroke-width="25" fill="none" opacity="0.6"/>
+            <path d="M0,700 Q300,650 600,720 Q900,780 1200,730" stroke="#6aaacc" stroke-width="10" fill="none" opacity="0.5"/>
             ` : ''}
             
-            <!-- Moorland grass for WindClan -->
+            <!-- Moorland grass for WindClan - scattered across huge area -->
             ${clan === 'wind' ? `
-            <line x1="100" y1="300" x2="110" y2="280" stroke="#5a7a4a" stroke-width="2"/>
-            <line x1="200" y1="350" x2="210" y2="330" stroke="#5a7a4a" stroke-width="2"/>
-            <line x1="350" y1="320" x2="360" y2="300" stroke="#5a7a4a" stroke-width="2"/>
-            <line x1="480" y1="280" x2="490" y2="260" stroke="#5a7a4a" stroke-width="2"/>
+            <line x1="100" y1="300" x2="110" y2="270" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="200" y1="350" x2="210" y2="320" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="350" y1="320" x2="360" y2="290" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="500" y1="280" x2="510" y2="250" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="700" y1="350" x2="710" y2="320" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="900" y1="300" x2="910" y2="270" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="1050" y1="350" x2="1060" y2="320" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="150" y1="600" x2="160" y2="570" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="400" y1="550" x2="410" y2="520" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="650" y1="600" x2="660" y2="570" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="850" y1="550" x2="860" y2="520" stroke="#6a8a5a" stroke-width="3"/>
+            <line x1="1000" y1="600" x2="1010" y2="570" stroke="#6a8a5a" stroke-width="3"/>
             ` : ''}
             
-            <!-- Dark pines for ShadowClan -->
+            <!-- Dark pines for ShadowClan - creepy forest -->
             ${clan === 'shadow' ? `
-            <polygon points="280,380 300,200 320,380" fill="#1a3a2a" filter="url(#treeShadow)"/>
-            <polygon points="380,400 400,250 420,400" fill="#0a2a1a" filter="url(#treeShadow)"/>
+            <polygon points="280,380 300,180 320,380" fill="#1a3a2a" filter="url(#treeShadow)"/>
+            <polygon points="380,400 400,220 420,400" fill="#0a2a1a" filter="url(#treeShadow)"/>
+            <polygon points="550,420 575,200 600,420" fill="#1a3a2a" filter="url(#treeShadow)"/>
+            <polygon points="750,380 775,180 800,380" fill="#0a2a1a" filter="url(#treeShadow)"/>
+            <polygon points="950,400 975,200 1000,400" fill="#1a3a2a" filter="url(#treeShadow)"/>
+            <polygon points="200,700 225,500 250,700" fill="#0a2a1a" filter="url(#treeShadow)"/>
+            <polygon points="500,680 525,480 550,680" fill="#1a3a2a" filter="url(#treeShadow)"/>
+            <polygon points="800,720 825,520 850,720" fill="#0a2a1a" filter="url(#treeShadow)"/>
+            <polygon points="1050,700 1075,500 1100,700" fill="#1a3a2a" filter="url(#treeShadow)"/>
             ` : ''}
             
             <!-- Herb spots -->
@@ -1850,12 +1975,23 @@ function renderForest() {
         `;
     });
     
-    // Multiple prey spots around the forest
+    // MANY prey spots around the HUGE forest
     const preySpots = [
         { x: 280, y: 300, type: 'mouse' },
         { x: 450, y: 180, type: 'mouse' },
         { x: 180, y: 450, type: 'vole' },
-        { x: 380, y: 380, type: 'mouse' }
+        { x: 380, y: 380, type: 'mouse' },
+        { x: 700, y: 350, type: 'squirrel' },
+        { x: 900, y: 250, type: 'mouse' },
+        { x: 1050, y: 400, type: 'rabbit' },
+        { x: 550, y: 550, type: 'vole' },
+        { x: 250, y: 650, type: 'mouse' },
+        { x: 450, y: 750, type: 'thrush' },
+        { x: 700, y: 700, type: 'mouse' },
+        { x: 950, y: 650, type: 'squirrel' },
+        { x: 150, y: 850, type: 'vole' },
+        { x: 600, y: 900, type: 'rabbit' },
+        { x: 1000, y: 850, type: 'mouse' }
     ];
     
     preySpots.forEach((prey, i) => {
@@ -1906,12 +2042,12 @@ function renderForest() {
         `;
     }
     
-    // Paths to ALL clan territories!
+    // Paths to ALL clan territories - spread across the HUGE forest
     const clanPaths = [
-        { clan: 'ThunderClan', x: 35, y: 480, color: '#ffa500' },
-        { clan: 'ShadowClan', x: 200, y: 480, color: '#9966cc' },
-        { clan: 'RiverClan', x: 400, y: 480, color: '#4a90d9' },
-        { clan: 'WindClan', x: 565, y: 250, color: '#c4a35a' }
+        { clan: 'ThunderClan', x: 35, y: 500, color: '#ffa500' },
+        { clan: 'ShadowClan', x: 1165, y: 400, color: '#9966cc' },
+        { clan: 'RiverClan', x: 600, y: 970, color: '#4a90d9' },
+        { clan: 'WindClan', x: 1165, y: 700, color: '#c4a35a' }
     ];
     
     clanPaths.forEach(path => {
@@ -4514,10 +4650,101 @@ function doAttack() {
                 saveGameData();
             }
         });
+        
+        // Attack a clanmate (dangerous!)
+        addAction(actions, 'Attack a Clanmate...', () => {
+            closePopup();
+            showAttackClanmateMenu();
+        });
     }
     
     addAction(actions, 'Cancel', closePopup);
     popup.classList.remove('hidden');
+}
+
+// Attack a clanmate - leads to banishment!
+function showAttackClanmateMenu() {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Attack a Clanmate?!';
+    desc.textContent = 'WARNING: Attacking your clanmates is against the warrior code! You will be BANISHED!';
+    actions.innerHTML = '';
+    
+    const clanmates = ['Sandstorm', 'Graystripe', 'Dustpelt', 'Cloudtail', 'Brackenfur', 'Brightheart'];
+    
+    clanmates.forEach(clanmate => {
+        addAction(actions, `Attack ${clanmate}`, () => {
+            closePopup();
+            attackClanmate(clanmate);
+        });
+    });
+    
+    addAction(actions, 'Never mind!', closePopup);
+    popup.classList.remove('hidden');
+}
+
+function attackClanmate(clanmateName) {
+    const cat = GameState.catData;
+    
+    showMessage(`You unsheathe your claws and attack ${clanmateName}!`);
+    showSpeechBubble(clanmateName, 'What are you doing?!');
+    
+    setTimeout(() => {
+        showMessage(`${clanmateName} fights back! The camp erupts in chaos!`);
+        
+        setTimeout(() => {
+            // Leader intervenes
+            const leaderName = cat.rank === 'Leader' ? 'Graystripe' : 'Firestar';
+            showSpeechBubble(leaderName, 'STOP! What is the meaning of this?!');
+            showMessage(`${leaderName} rushes over and separates you!`);
+            
+            setTimeout(() => {
+                showMessage(`${leaderName}: "You have attacked your own clanmate! This is against the warrior code!"`);
+                
+                setTimeout(() => {
+                    const oldClan = cat.clan;
+                    showMessage(`${leaderName}: "You are hereby BANISHED from ${CLANS[oldClan]?.name || oldClan}!"`);
+                    
+                    setTimeout(() => {
+                        showMessage('The clan turns their backs on you...');
+                        showSpeechBubble(clanmateName, 'How could you...');
+                        
+                        setTimeout(() => {
+                            // Banish the player
+                            cat.isLoner = true;
+                            cat.isBanished = true;
+                            cat.previousClan = oldClan;
+                            cat.clan = 'Loner';
+                            cat.rank = 'Loner';
+                            
+                            // Remove rank suffix
+                            if (cat.name.endsWith('star')) {
+                                cat.name = cat.firstName;
+                            }
+                            
+                            GameState.currentLocation = 'forest';
+                            GameState.playerX = 300;
+                            GameState.playerY = 250;
+                            GameState.forestThreats = [];
+                            
+                            showMessage('You have been banished. You are now a rogue, alone in the forest.');
+                            
+                            setTimeout(() => {
+                                showMessage('You can try to join another clan... if they will have you.');
+                                renderGameWorld();
+                                updateGameUI();
+                                saveGameData();
+                            }, 3000);
+                        }, 3000);
+                    }, 2500);
+                }, 2500);
+            }, 2500);
+        }, 2000);
+    }, 2000);
 }
 
 function practiceFighting() {
