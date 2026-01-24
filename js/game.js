@@ -8021,34 +8021,38 @@ function cancelJoining() {
 
 // Start multiplayer game (host only)
 function startMultiplayerGame() {
-    console.log('Starting multiplayer game, connections:', GameState.connections.length);
-    showHostStatus('Starting game with ' + GameState.connections.length + ' connections');
+    console.log('=== START MULTIPLAYER GAME ===');
+    console.log('Connections array:', GameState.connections);
+    console.log('Connections length:', GameState.connections.length);
+    
+    alert('Starting game! Connections: ' + GameState.connections.length);
     
     // Notify all clients FIRST (so they start transitioning)
     const startMessage = { type: 'startGame', clan: null };
     
     let sentCount = 0;
+    let connectionDetails = [];
+    
     GameState.connections.forEach((conn, i) => {
-        console.log('Connection', i, '- peer:', conn.peer, 'open:', conn.open);
-        showHostStatus('Checking connection ' + i + ': ' + conn.peer + ' open=' + conn.open);
+        const info = `Conn ${i}: peer=${conn.peer}, open=${conn.open}`;
+        console.log(info);
+        connectionDetails.push(info);
         
         if (conn.open) {
             try {
                 conn.send(startMessage);
                 sentCount++;
                 console.log('Sent startGame to', conn.peer);
-                showHostStatus('Sent startGame to ' + conn.peer);
             } catch (e) {
                 console.error('Failed to send to', conn.peer, e);
-                showHostStatus('FAILED to send to ' + conn.peer);
+                connectionDetails.push('ERROR: ' + e.message);
             }
         } else {
             console.warn('Connection not open:', conn.peer);
-            showHostStatus('Connection NOT OPEN: ' + conn.peer);
         }
     });
     
-    showHostStatus('Sent to ' + sentCount + ' players. Starting...');
+    alert('Sent to ' + sentCount + ' players.\n' + connectionDetails.join('\n'));
     
     // Short delay to ensure messages are sent, then go to clan selection
     setTimeout(() => {
