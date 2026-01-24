@@ -3155,6 +3155,7 @@ function playKitGame(game) {
 let mossballPosition = { x: 300, y: 200 };
 let mossballVelocity = { x: 3, y: 2 };
 let mossballHits = 0;
+let mossballAnimationId = null;
 
 function startMossballGame() {
     mossballHits = 0;
@@ -3163,39 +3164,10 @@ function startMossballGame() {
     
     showMessage(`${kitGamePlaymate}: "Let's play moss-ball! Hit it 5 times to win!"`);
     
-    renderMossballGame();
-    
-    kitGameInterval = setInterval(() => {
-        if (kitGameActive) {
-            // Move the ball
-            mossballPosition.x += mossballVelocity.x;
-            mossballPosition.y += mossballVelocity.y;
-            
-            // Bounce off walls
-            if (mossballPosition.x < 50 || mossballPosition.x > 550) {
-                mossballVelocity.x *= -1;
-            }
-            if (mossballPosition.y < 50 || mossballPosition.y > 350) {
-                mossballVelocity.y *= -1;
-            }
-            
-            renderMossballGame();
-        }
-    }, 50);
-    
-    // Time limit
-    kitGameTimeout = setTimeout(() => {
-        if (kitGameActive) {
-            endKitGame(mossballHits >= 5, 'mossball');
-        }
-    }, 15000);
-}
-
-function renderMossballGame() {
+    // Create the game once
     const gameWorld = document.getElementById('game-world');
-    
     gameWorld.innerHTML = `
-        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; touch-action: manipulation;">
             <defs>
                 <radialGradient id="nurseryGlow" cx="50%" cy="50%" r="50%">
                     <stop offset="0%" stop-color="#4a4a3a"/>
@@ -3203,44 +3175,78 @@ function renderMossballGame() {
                 </radialGradient>
             </defs>
             
-            <!-- Nursery background -->
             <rect x="0" y="0" width="600" height="400" fill="url(#nurseryGlow)"/>
-            <text x="300" y="30" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold">MOSS-BALL! Hit it ${5 - mossballHits} more times!</text>
-            <text x="300" y="380" text-anchor="middle" fill="#aaa" font-size="14">Click the moss-ball to hit it!</text>
+            <text id="mossball-title" x="300" y="35" text-anchor="middle" fill="#ffd700" font-size="24" font-weight="bold">MOSS-BALL!</text>
+            <text id="mossball-subtitle" x="300" y="60" text-anchor="middle" fill="#fff" font-size="16">Hit it 5 more times!</text>
+            <text x="300" y="385" text-anchor="middle" fill="#aaa" font-size="16">Tap the moss-ball!</text>
             
-            <!-- The moss-ball -->
-            <g id="mossball" class="clickable" style="cursor: pointer;">
-                <circle cx="${mossballPosition.x}" cy="${mossballPosition.y}" r="25" fill="#5a8a3a"/>
-                <circle cx="${mossballPosition.x - 5}" cy="${mossballPosition.y - 5}" r="8" fill="#4a7a2a"/>
-                <circle cx="${mossballPosition.x + 8}" cy="${mossballPosition.y + 5}" r="6" fill="#6a9a4a"/>
-                <circle cx="${mossballPosition.x - 8}" cy="${mossballPosition.y + 8}" r="5" fill="#3a6a1a"/>
+            <!-- The moss-ball - bigger for mobile -->
+            <g id="mossball" style="cursor: pointer;">
+                <circle id="mossball-hitarea" cx="300" cy="200" r="45" fill="transparent"/>
+                <circle id="mossball-main" cx="300" cy="200" r="35" fill="#5a8a3a"/>
+                <circle id="mossball-spot1" cx="295" cy="195" r="10" fill="#4a7a2a"/>
+                <circle id="mossball-spot2" cx="310" cy="205" r="8" fill="#6a9a4a"/>
+                <circle id="mossball-spot3" cx="290" cy="210" r="7" fill="#3a6a1a"/>
             </g>
             
-            <!-- Score -->
-            <text x="50" y="60" fill="white" font-size="16">Hits: ${mossballHits}/5</text>
+            <text id="mossball-score" x="50" y="60" fill="white" font-size="20" font-weight="bold">Hits: 0/5</text>
             
-            <!-- Quit button -->
-            <g id="quit-game" class="clickable" style="cursor: pointer;">
-                <rect x="500" y="10" width="80" height="30" rx="5" fill="#6a4a4a" stroke="#8a6a6a" stroke-width="2"/>
-                <text x="540" y="30" text-anchor="middle" fill="white" font-size="12">Quit</text>
+            <g id="quit-game" style="cursor: pointer;">
+                <rect x="480" y="10" width="100" height="40" rx="8" fill="#6a4a4a" stroke="#8a6a6a" stroke-width="2"/>
+                <text x="530" y="36" text-anchor="middle" fill="white" font-size="16">Quit</text>
             </g>
         </svg>
     `;
     
-    document.getElementById('mossball')?.addEventListener('click', () => {
+    // Add event listeners once
+    const mossball = document.getElementById('mossball');
+    const handleHit = (e) => {
+        e.preventDefault();
         mossballHits++;
-        // Ball bounces away when hit
-        mossballVelocity.x = (Math.random() - 0.5) * 10;
-        mossballVelocity.y = (Math.random() - 0.5) * 8;
-        
+        document.getElementById('mossball-score').textContent = `Hits: ${mossballHits}/5`;
+        document.getElementById('mossball-subtitle').textContent = `Hit it ${5 - mossballHits} more times!`;
+        mossballVelocity.x = (Math.random() - 0.5) * 12;
+        mossballVelocity.y = (Math.random() - 0.5) * 10;
         if (mossballHits >= 5) {
             endKitGame(true, 'mossball');
         }
-    });
+    };
+    mossball?.addEventListener('click', handleHit);
+    mossball?.addEventListener('touchstart', handleHit, { passive: false });
     
-    document.getElementById('quit-game')?.addEventListener('click', () => {
-        endKitGame(false, 'mossball');
-    });
+    document.getElementById('quit-game')?.addEventListener('click', () => endKitGame(false, 'mossball'));
+    document.getElementById('quit-game')?.addEventListener('touchstart', (e) => { e.preventDefault(); endKitGame(false, 'mossball'); });
+    
+    // Use requestAnimationFrame for smooth animation
+    function animateMossball() {
+        if (!kitGameActive) return;
+        
+        mossballPosition.x += mossballVelocity.x;
+        mossballPosition.y += mossballVelocity.y;
+        
+        if (mossballPosition.x < 50 || mossballPosition.x > 550) mossballVelocity.x *= -1;
+        if (mossballPosition.y < 80 || mossballPosition.y > 350) mossballVelocity.y *= -1;
+        
+        // Just update positions, don't recreate
+        document.getElementById('mossball-hitarea')?.setAttribute('cx', mossballPosition.x);
+        document.getElementById('mossball-main')?.setAttribute('cx', mossballPosition.x);
+        document.getElementById('mossball-main')?.setAttribute('cy', mossballPosition.y);
+        document.getElementById('mossball-hitarea')?.setAttribute('cy', mossballPosition.y);
+        document.getElementById('mossball-spot1')?.setAttribute('cx', mossballPosition.x - 5);
+        document.getElementById('mossball-spot1')?.setAttribute('cy', mossballPosition.y - 5);
+        document.getElementById('mossball-spot2')?.setAttribute('cx', mossballPosition.x + 10);
+        document.getElementById('mossball-spot2')?.setAttribute('cy', mossballPosition.y + 5);
+        document.getElementById('mossball-spot3')?.setAttribute('cx', mossballPosition.x - 10);
+        document.getElementById('mossball-spot3')?.setAttribute('cy', mossballPosition.y + 10);
+        
+        mossballAnimationId = requestAnimationFrame(animateMossball);
+    }
+    mossballAnimationId = requestAnimationFrame(animateMossball);
+    
+    // Time limit
+    kitGameTimeout = setTimeout(() => {
+        if (kitGameActive) endKitGame(mossballHits >= 5, 'mossball');
+    }, 15000);
 }
 
 // CHASE GAME - Click the running kit to catch them!
@@ -3251,148 +3257,146 @@ function startChaseGame() {
     
     showMessage(`${kitGamePlaymate}: "You can't catch me!"`);
     
-    renderChaseGame();
-    
-    // Kit runs away every 0.6 seconds
-    kitGameInterval = setInterval(() => {
-        if (kitGameActive) {
-            chasePosition.x = 80 + Math.random() * 440;
-            chasePosition.y = 80 + Math.random() * 280;
-            renderChaseGame();
-        }
-    }, 600);
-    
-    // Time limit - 10 seconds to catch
-    kitGameTimeout = setTimeout(() => {
-        if (kitGameActive) {
-            endKitGame(false, 'chase');
-        }
-    }, 10000);
-}
-
-function renderChaseGame() {
     const gameWorld = document.getElementById('game-world');
-    
     gameWorld.innerHTML = `
-        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; touch-action: manipulation;">
             <rect x="0" y="0" width="600" height="400" fill="#3a4a3a"/>
-            <text x="300" y="30" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold">CHASE! Click ${kitGamePlaymate} to catch them!</text>
+            <text x="300" y="35" text-anchor="middle" fill="#ffd700" font-size="24" font-weight="bold">CHASE!</text>
+            <text x="300" y="60" text-anchor="middle" fill="#fff" font-size="16">Tap ${kitGamePlaymate} to catch them!</text>
             
-            <!-- The running kit -->
-            <g id="running-kit" class="clickable" style="cursor: pointer;">
-                <ellipse cx="${chasePosition.x}" cy="${chasePosition.y}" rx="20" ry="12" fill="#c4a882"/>
-                <circle cx="${chasePosition.x - 12}" cy="${chasePosition.y - 8}" r="10" fill="#c4a882"/>
-                <polygon points="${chasePosition.x - 18},${chasePosition.y - 14} ${chasePosition.x - 14},${chasePosition.y - 22} ${chasePosition.x - 10},${chasePosition.y - 14}" fill="#c4a882"/>
-                <polygon points="${chasePosition.x - 8},${chasePosition.y - 14} ${chasePosition.x - 4},${chasePosition.y - 22} ${chasePosition.x},${chasePosition.y - 14}" fill="#c4a882"/>
-                <circle cx="${chasePosition.x - 15}" cy="${chasePosition.y - 10}" r="2" fill="#2ecc71"/>
-                <circle cx="${chasePosition.x - 9}" cy="${chasePosition.y - 10}" r="2" fill="#2ecc71"/>
-                <ellipse cx="${chasePosition.x + 25}" cy="${chasePosition.y}" rx="10" ry="4" fill="#c4a882"/>
-                <text x="${chasePosition.x}" y="${chasePosition.y + 35}" text-anchor="middle" fill="white" font-size="12">${kitGamePlaymate}</text>
+            <!-- The running kit - with big hit area -->
+            <g id="running-kit" style="cursor: pointer;">
+                <circle id="chase-hitarea" cx="300" cy="200" r="50" fill="transparent"/>
+                <g id="chase-kit-body">
+                    <ellipse cx="0" cy="0" rx="25" ry="15" fill="#c4a882"/>
+                    <circle cx="-15" cy="-10" r="12" fill="#c4a882"/>
+                    <polygon points="-22,-16 -17,-28 -12,-16" fill="#c4a882"/>
+                    <polygon points="-10,-16 -5,-28 0,-16" fill="#c4a882"/>
+                    <circle cx="-18" cy="-12" r="3" fill="#2ecc71"/>
+                    <circle cx="-11" cy="-12" r="3" fill="#2ecc71"/>
+                    <ellipse cx="30" cy="0" rx="12" ry="5" fill="#c4a882"/>
+                </g>
+                <text id="chase-name" x="300" y="260" text-anchor="middle" fill="white" font-size="16" font-weight="bold">${kitGamePlaymate}</text>
             </g>
             
-            <text x="300" y="380" text-anchor="middle" fill="#aaa" font-size="14">Quick! They're getting away!</text>
+            <text x="300" y="385" text-anchor="middle" fill="#aaa" font-size="16">Quick! They're getting away!</text>
             
-            <!-- Quit button -->
-            <g id="quit-game" class="clickable" style="cursor: pointer;">
-                <rect x="500" y="10" width="80" height="30" rx="5" fill="#6a4a4a"/>
-                <text x="540" y="30" text-anchor="middle" fill="white" font-size="12">Quit</text>
+            <g id="quit-game" style="cursor: pointer;">
+                <rect x="480" y="10" width="100" height="40" rx="8" fill="#6a4a4a"/>
+                <text x="530" y="36" text-anchor="middle" fill="white" font-size="16">Quit</text>
             </g>
         </svg>
     `;
     
-    document.getElementById('running-kit')?.addEventListener('click', () => {
-        endKitGame(true, 'chase');
-    });
+    const runningKit = document.getElementById('running-kit');
+    const handleCatch = (e) => { e.preventDefault(); endKitGame(true, 'chase'); };
+    runningKit?.addEventListener('click', handleCatch);
+    runningKit?.addEventListener('touchstart', handleCatch, { passive: false });
     
-    document.getElementById('quit-game')?.addEventListener('click', () => {
-        endKitGame(false, 'chase');
-    });
+    document.getElementById('quit-game')?.addEventListener('click', () => endKitGame(false, 'chase'));
+    document.getElementById('quit-game')?.addEventListener('touchstart', (e) => { e.preventDefault(); endKitGame(false, 'chase'); });
+    
+    // Move the kit smoothly
+    function moveKit() {
+        chasePosition.x = 80 + Math.random() * 440;
+        chasePosition.y = 100 + Math.random() * 220;
+        
+        document.getElementById('chase-hitarea')?.setAttribute('cx', chasePosition.x);
+        document.getElementById('chase-hitarea')?.setAttribute('cy', chasePosition.y);
+        document.getElementById('chase-kit-body')?.setAttribute('transform', `translate(${chasePosition.x}, ${chasePosition.y})`);
+        document.getElementById('chase-name')?.setAttribute('x', chasePosition.x);
+        document.getElementById('chase-name')?.setAttribute('y', chasePosition.y + 45);
+    }
+    
+    moveKit();
+    kitGameInterval = setInterval(() => {
+        if (kitGameActive) moveKit();
+    }, 800);
+    
+    kitGameTimeout = setTimeout(() => {
+        if (kitGameActive) endKitGame(false, 'chase');
+    }, 12000);
 }
 
 // HIDE AND SEEK - Pick a hiding spot!
 let hideSpotChosen = -1;
-let seekerLooking = false;
 
 function startHideSeekGame() {
     hideSpotChosen = -1;
-    seekerLooking = false;
     
     showMessage(`${kitGamePlaymate}: "I'll count to ten! Go hide!"`);
     
-    renderHideSeekGame();
-}
-
-function renderHideSeekGame() {
     const gameWorld = document.getElementById('game-world');
-    
-    if (!seekerLooking) {
-        // Choosing phase
-        gameWorld.innerHTML = `
-            <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-                <rect x="0" y="0" width="600" height="400" fill="#2a3a2a"/>
-                <text x="300" y="30" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold">HIDE AND SEEK! Pick a hiding spot!</text>
-                <text x="300" y="60" text-anchor="middle" fill="#aaa" font-size="14">${kitGamePlaymate} is counting... "1... 2... 3..."</text>
-                
-                <!-- Hiding spots -->
-                <g id="spot-0" class="clickable" style="cursor: pointer;">
-                    <ellipse cx="100" cy="200" rx="50" ry="35" fill="#4a6a3a"/>
-                    <text x="100" y="250" text-anchor="middle" fill="white" font-size="12">Bush</text>
-                </g>
-                
-                <g id="spot-1" class="clickable" style="cursor: pointer;">
-                    <rect x="230" y="150" width="80" height="80" fill="#5a4a3a" rx="5"/>
-                    <rect x="260" y="180" width="20" height="50" fill="#2a1a0a"/>
-                    <text x="270" y="250" text-anchor="middle" fill="white" font-size="12">Nest</text>
-                </g>
-                
-                <g id="spot-2" class="clickable" style="cursor: pointer;">
-                    <polygon points="420,230 450,140 480,230" fill="#6a5a4a"/>
-                    <rect x="440" y="180" width="20" height="50" fill="#4a3a2a"/>
-                    <text x="450" y="250" text-anchor="middle" fill="white" font-size="12">Rock pile</text>
-                </g>
-                
-                <g id="spot-3" class="clickable" style="cursor: pointer;">
-                    <rect x="520" y="280" width="60" height="50" fill="#3a3a4a"/>
-                    <text x="550" y="350" text-anchor="middle" fill="white" font-size="12">Shadow</text>
-                </g>
-                
-                <!-- Quit button -->
-                <g id="quit-game" class="clickable" style="cursor: pointer;">
-                    <rect x="500" y="10" width="80" height="30" rx="5" fill="#6a4a4a"/>
-                    <text x="540" y="30" text-anchor="middle" fill="white" font-size="12">Quit</text>
-                </g>
-            </svg>
-        `;
-        
-        for (let i = 0; i < 4; i++) {
-            document.getElementById(`spot-${i}`)?.addEventListener('click', () => {
-                hideSpotChosen = i;
-                seekerLooking = true;
-                showMessage('You hide! "...8... 9... 10! Ready or not, here I come!"');
-                setTimeout(() => {
-                    checkHideSeekResult();
-                }, 3000);
-            });
-        }
-    }
-    
-    document.getElementById('quit-game')?.addEventListener('click', () => {
-        endKitGame(false, 'hideseek');
-    });
-}
-
-function checkHideSeekResult() {
-    // Seeker checks random spots
-    const seekerChoice = Math.floor(Math.random() * 4);
-    const found = seekerChoice === hideSpotChosen;
+    gameWorld.innerHTML = `
+        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; touch-action: manipulation;">
+            <rect x="0" y="0" width="600" height="400" fill="#2a3a2a"/>
+            <text x="300" y="35" text-anchor="middle" fill="#ffd700" font-size="24" font-weight="bold">HIDE AND SEEK!</text>
+            <text x="300" y="65" text-anchor="middle" fill="#fff" font-size="16">"1... 2... 3..." Pick a spot to hide!</text>
+            
+            <!-- Hiding spots - bigger for mobile -->
+            <g id="spot-0" style="cursor: pointer;">
+                <ellipse cx="120" cy="180" rx="70" ry="50" fill="#4a6a3a" stroke="#5a8a4a" stroke-width="3"/>
+                <ellipse cx="100" cy="170" rx="20" ry="15" fill="#5a7a4a"/>
+                <ellipse cx="140" cy="185" rx="25" ry="18" fill="#3a5a2a"/>
+                <text x="120" y="250" text-anchor="middle" fill="white" font-size="18" font-weight="bold">Bush</text>
+            </g>
+            
+            <g id="spot-1" style="cursor: pointer;">
+                <rect x="220" y="140" width="100" height="90" fill="#5a4a3a" rx="10" stroke="#7a6a5a" stroke-width="3"/>
+                <rect x="255" y="170" width="30" height="60" fill="#2a1a0a" rx="5"/>
+                <text x="270" y="250" text-anchor="middle" fill="white" font-size="18" font-weight="bold">Nest</text>
+            </g>
+            
+            <g id="spot-2" style="cursor: pointer;">
+                <polygon points="450,220 490,120 530,220" fill="#6a5a4a" stroke="#8a7a6a" stroke-width="3"/>
+                <ellipse cx="490" cy="180" rx="15" ry="10" fill="#5a4a3a"/>
+                <text x="490" y="250" text-anchor="middle" fill="white" font-size="18" font-weight="bold">Rocks</text>
+            </g>
+            
+            <g id="spot-3" style="cursor: pointer;">
+                <rect x="80" y="290" width="120" height="70" fill="#2a2a3a" rx="10" stroke="#4a4a5a" stroke-width="3"/>
+                <rect x="90" y="300" width="100" height="50" fill="#1a1a2a" rx="5"/>
+                <text x="140" y="380" text-anchor="middle" fill="white" font-size="18" font-weight="bold">Shadow</text>
+            </g>
+            
+            <g id="quit-game" style="cursor: pointer;">
+                <rect x="480" y="10" width="100" height="40" rx="8" fill="#6a4a4a"/>
+                <text x="530" y="36" text-anchor="middle" fill="white" font-size="16">Quit</text>
+            </g>
+        </svg>
+    `;
     
     const spotNames = ['the bush', 'the nest', 'the rock pile', 'the shadow'];
     
-    showMessage(`${kitGamePlaymate} looks in ${spotNames[seekerChoice]}...`);
+    for (let i = 0; i < 4; i++) {
+        const spot = document.getElementById(`spot-${i}`);
+        const handleSpot = (e) => {
+            e.preventDefault();
+            hideSpotChosen = i;
+            showMessage(`You hide in ${spotNames[i]}! "...8... 9... 10! Ready or not!"`);
+            
+            // Show waiting screen
+            document.getElementById('game-world').innerHTML = `
+                <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                    <rect x="0" y="0" width="600" height="400" fill="#1a2a1a"/>
+                    <text x="300" y="180" text-anchor="middle" fill="#ffd700" font-size="28" font-weight="bold">Hiding...</text>
+                    <text x="300" y="220" text-anchor="middle" fill="#aaa" font-size="18">${kitGamePlaymate} is looking for you!</text>
+                </svg>
+            `;
+            
+            setTimeout(() => {
+                const seekerChoice = Math.floor(Math.random() * 4);
+                const found = seekerChoice === hideSpotChosen;
+                showMessage(`${kitGamePlaymate} looks in ${spotNames[seekerChoice]}...`);
+                setTimeout(() => endKitGame(!found, 'hideseek'), 2000);
+            }, 2500);
+        };
+        spot?.addEventListener('click', handleSpot);
+        spot?.addEventListener('touchstart', handleSpot, { passive: false });
+    }
     
-    setTimeout(() => {
-        endKitGame(!found, 'hideseek');
-    }, 2000);
+    document.getElementById('quit-game')?.addEventListener('click', () => endKitGame(false, 'hideseek'));
+    document.getElementById('quit-game')?.addEventListener('touchstart', (e) => { e.preventDefault(); endKitGame(false, 'hideseek'); });
 }
 
 // PLAY FIGHT - Click the action buttons when they appear!
@@ -3404,7 +3408,7 @@ function startPlayFightGame() {
     fightRound = 0;
     fightScore = 0;
     
-    showMessage(`${kitGamePlaymate}: "Let's play fight! Click the right move!"`);
+    showMessage(`${kitGamePlaymate}: "Let's play fight! Tap the right move!"`);
     
     setTimeout(() => {
         nextFightRound();
@@ -3421,69 +3425,51 @@ function nextFightRound() {
     const actions = ['POUNCE!', 'DODGE!', 'SWIPE!', 'ROLL!'];
     fightAction = actions[Math.floor(Math.random() * actions.length)];
     
-    renderFightGame();
-    
-    // Time limit for each round
-    kitGameTimeout = setTimeout(() => {
-        fightRound++;
-        if (fightRound > 5) {
-            endKitGame(fightScore >= 3, 'fight');
-        } else {
-            nextFightRound();
-        }
-    }, 2000);
-}
-
-function renderFightGame() {
     const gameWorld = document.getElementById('game-world');
-    
     gameWorld.innerHTML = `
-        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; touch-action: manipulation;">
             <rect x="0" y="0" width="600" height="400" fill="#4a3a3a"/>
-            <text x="300" y="30" text-anchor="middle" fill="#ffd700" font-size="18">PLAY FIGHT! Round ${fightRound}/5 - Score: ${fightScore}</text>
+            <text x="300" y="35" text-anchor="middle" fill="#ffd700" font-size="22" font-weight="bold">PLAY FIGHT! Round ${fightRound}/5</text>
+            <text x="300" y="60" text-anchor="middle" fill="#fff" font-size="18">Score: ${fightScore}/3 needed</text>
             
-            <text x="300" y="120" text-anchor="middle" fill="#ff6666" font-size="40" font-weight="bold">${fightAction}</text>
+            <text x="300" y="130" text-anchor="middle" fill="#ff6666" font-size="48" font-weight="bold">${fightAction}</text>
             
-            <!-- Action buttons -->
-            <g id="action-pounce" class="clickable" style="cursor: pointer;">
-                <rect x="50" y="200" width="120" height="60" rx="10" fill="${fightAction === 'POUNCE!' ? '#4a8a4a' : '#4a4a6a'}"/>
-                <text x="110" y="238" text-anchor="middle" fill="white" font-size="18">POUNCE!</text>
+            <!-- Action buttons - bigger, 2x2 grid for mobile -->
+            <g id="action-pounce" style="cursor: pointer;">
+                <rect x="40" y="170" width="260" height="80" rx="15" fill="${fightAction === 'POUNCE!' ? '#4a8a4a' : '#4a4a6a'}" stroke="${fightAction === 'POUNCE!' ? '#6aba6a' : '#6a6a8a'}" stroke-width="3"/>
+                <text x="170" y="220" text-anchor="middle" fill="white" font-size="28" font-weight="bold">POUNCE!</text>
             </g>
             
-            <g id="action-dodge" class="clickable" style="cursor: pointer;">
-                <rect x="180" y="200" width="120" height="60" rx="10" fill="${fightAction === 'DODGE!' ? '#4a8a4a' : '#4a4a6a'}"/>
-                <text x="240" y="238" text-anchor="middle" fill="white" font-size="18">DODGE!</text>
+            <g id="action-dodge" style="cursor: pointer;">
+                <rect x="310" y="170" width="260" height="80" rx="15" fill="${fightAction === 'DODGE!' ? '#4a8a4a' : '#4a4a6a'}" stroke="${fightAction === 'DODGE!' ? '#6aba6a' : '#6a6a8a'}" stroke-width="3"/>
+                <text x="440" y="220" text-anchor="middle" fill="white" font-size="28" font-weight="bold">DODGE!</text>
             </g>
             
-            <g id="action-swipe" class="clickable" style="cursor: pointer;">
-                <rect x="310" y="200" width="120" height="60" rx="10" fill="${fightAction === 'SWIPE!' ? '#4a8a4a' : '#4a4a6a'}"/>
-                <text x="370" y="238" text-anchor="middle" fill="white" font-size="18">SWIPE!</text>
+            <g id="action-swipe" style="cursor: pointer;">
+                <rect x="40" y="260" width="260" height="80" rx="15" fill="${fightAction === 'SWIPE!' ? '#4a8a4a' : '#4a4a6a'}" stroke="${fightAction === 'SWIPE!' ? '#6aba6a' : '#6a6a8a'}" stroke-width="3"/>
+                <text x="170" y="310" text-anchor="middle" fill="white" font-size="28" font-weight="bold">SWIPE!</text>
             </g>
             
-            <g id="action-roll" class="clickable" style="cursor: pointer;">
-                <rect x="440" y="200" width="120" height="60" rx="10" fill="${fightAction === 'ROLL!' ? '#4a8a4a' : '#4a4a6a'}"/>
-                <text x="500" y="238" text-anchor="middle" fill="white" font-size="18">ROLL!</text>
+            <g id="action-roll" style="cursor: pointer;">
+                <rect x="310" y="260" width="260" height="80" rx="15" fill="${fightAction === 'ROLL!' ? '#4a8a4a' : '#4a4a6a'}" stroke="${fightAction === 'ROLL!' ? '#6aba6a' : '#6a6a8a'}" stroke-width="3"/>
+                <text x="440" y="310" text-anchor="middle" fill="white" font-size="28" font-weight="bold">ROLL!</text>
             </g>
             
-            <text x="300" y="320" text-anchor="middle" fill="#aaa" font-size="14">Click the matching action quickly!</text>
+            <text x="300" y="375" text-anchor="middle" fill="#aaa" font-size="16">Tap the matching move quickly!</text>
             
-            <!-- Quit button -->
-            <g id="quit-game" class="clickable" style="cursor: pointer;">
-                <rect x="500" y="10" width="80" height="30" rx="5" fill="#6a4a4a"/>
-                <text x="540" y="30" text-anchor="middle" fill="white" font-size="12">Quit</text>
+            <g id="quit-game" style="cursor: pointer;">
+                <rect x="480" y="10" width="100" height="40" rx="8" fill="#6a4a4a"/>
+                <text x="530" y="36" text-anchor="middle" fill="white" font-size="16">Quit</text>
             </g>
         </svg>
     `;
     
-    const actionMap = {
-        'action-pounce': 'POUNCE!',
-        'action-dodge': 'DODGE!',
-        'action-swipe': 'SWIPE!',
-        'action-roll': 'ROLL!'
-    };
+    const actionMap = { 'action-pounce': 'POUNCE!', 'action-dodge': 'DODGE!', 'action-swipe': 'SWIPE!', 'action-roll': 'ROLL!' };
     
     for (const [id, action] of Object.entries(actionMap)) {
-        document.getElementById(id)?.addEventListener('click', () => {
+        const el = document.getElementById(id);
+        const handleAction = (e) => {
+            e.preventDefault();
             if (kitGameTimeout) clearTimeout(kitGameTimeout);
             if (action === fightAction) {
                 fightScore++;
@@ -3491,89 +3477,108 @@ function renderFightGame() {
             } else {
                 showMessage('Wrong move!');
             }
-            setTimeout(() => nextFightRound(), 800);
-        });
+            setTimeout(() => nextFightRound(), 600);
+        };
+        el?.addEventListener('click', handleAction);
+        el?.addEventListener('touchstart', handleAction, { passive: false });
     }
     
-    document.getElementById('quit-game')?.addEventListener('click', () => {
-        endKitGame(false, 'fight');
-    });
+    document.getElementById('quit-game')?.addEventListener('click', () => endKitGame(false, 'fight'));
+    document.getElementById('quit-game')?.addEventListener('touchstart', (e) => { e.preventDefault(); endKitGame(false, 'fight'); });
+    
+    // Time limit for each round
+    kitGameTimeout = setTimeout(() => {
+        showMessage('Too slow!');
+        setTimeout(() => nextFightRound(), 600);
+    }, 2500);
 }
 
 // POUNCE PRACTICE - Click the falling leaf!
 let leafPosition = { x: 300, y: 50 };
 let pouncesCaught = 0;
+let pounceAnimationId = null;
 
 function startPounceGame() {
     pouncesCaught = 0;
-    leafPosition = { x: 100 + Math.random() * 400, y: 50 };
+    leafPosition = { x: 100 + Math.random() * 400, y: 60 };
     
     showMessage(`${kitGamePlaymate}: "Catch 3 leaves to win!"`);
     
-    renderPounceGame();
-    
-    kitGameInterval = setInterval(() => {
-        if (kitGameActive) {
-            // Leaf falls down
-            leafPosition.y += 4;
-            // Leaf sways side to side
-            leafPosition.x += Math.sin(leafPosition.y / 20) * 3;
-            
-            // If leaf reaches bottom, reset
-            if (leafPosition.y > 380) {
-                leafPosition = { x: 100 + Math.random() * 400, y: 50 };
-            }
-            
-            renderPounceGame();
-        }
-    }, 50);
-    
-    // Time limit
-    kitGameTimeout = setTimeout(() => {
-        if (kitGameActive) {
-            endKitGame(pouncesCaught >= 3, 'pounce');
-        }
-    }, 20000);
-}
-
-function renderPounceGame() {
     const gameWorld = document.getElementById('game-world');
-    
     gameWorld.innerHTML = `
-        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; touch-action: manipulation;">
             <rect x="0" y="0" width="600" height="400" fill="#2a4a3a"/>
-            <text x="300" y="30" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold">POUNCE! Catch ${3 - pouncesCaught} more leaves!</text>
+            <text id="pounce-title" x="300" y="35" text-anchor="middle" fill="#ffd700" font-size="24" font-weight="bold">POUNCE!</text>
+            <text id="pounce-subtitle" x="300" y="60" text-anchor="middle" fill="#fff" font-size="16">Catch 3 more leaves!</text>
             
-            <!-- The falling leaf -->
-            <g id="falling-leaf" class="clickable" style="cursor: pointer;">
-                <ellipse cx="${leafPosition.x}" cy="${leafPosition.y}" rx="20" ry="12" fill="#CD853F" transform="rotate(${leafPosition.y * 2}, ${leafPosition.x}, ${leafPosition.y})"/>
-                <line x1="${leafPosition.x}" y1="${leafPosition.y}" x2="${leafPosition.x}" y2="${leafPosition.y + 8}" stroke="#8B4513" stroke-width="2"/>
+            <!-- The falling leaf - bigger hit area -->
+            <g id="falling-leaf" style="cursor: pointer;">
+                <circle id="leaf-hitarea" cx="300" cy="200" r="50" fill="transparent"/>
+                <ellipse id="leaf-body" cx="300" cy="200" rx="30" ry="18" fill="#CD853F"/>
+                <ellipse id="leaf-vein" cx="300" cy="200" rx="20" ry="10" fill="#B8732E"/>
+                <line id="leaf-stem" x1="300" y1="200" x2="300" y2="218" stroke="#8B4513" stroke-width="3"/>
             </g>
             
-            <!-- Score -->
-            <text x="50" y="60" fill="white" font-size="16">Caught: ${pouncesCaught}/3</text>
+            <text id="pounce-score" x="50" y="60" fill="white" font-size="20" font-weight="bold">Caught: 0/3</text>
             
-            <text x="300" y="380" text-anchor="middle" fill="#aaa" font-size="14">Click the leaf to pounce on it!</text>
+            <text x="300" y="385" text-anchor="middle" fill="#aaa" font-size="16">Tap the falling leaf!</text>
             
-            <!-- Quit button -->
-            <g id="quit-game" class="clickable" style="cursor: pointer;">
-                <rect x="500" y="10" width="80" height="30" rx="5" fill="#6a4a4a"/>
-                <text x="540" y="30" text-anchor="middle" fill="white" font-size="12">Quit</text>
+            <g id="quit-game" style="cursor: pointer;">
+                <rect x="480" y="10" width="100" height="40" rx="8" fill="#6a4a4a"/>
+                <text x="530" y="36" text-anchor="middle" fill="white" font-size="16">Quit</text>
             </g>
         </svg>
     `;
     
-    document.getElementById('falling-leaf')?.addEventListener('click', () => {
+    const leaf = document.getElementById('falling-leaf');
+    const handlePounce = (e) => {
+        e.preventDefault();
         pouncesCaught++;
-        leafPosition = { x: 100 + Math.random() * 400, y: 50 };
+        document.getElementById('pounce-score').textContent = `Caught: ${pouncesCaught}/3`;
+        document.getElementById('pounce-subtitle').textContent = `Catch ${3 - pouncesCaught} more leaves!`;
+        leafPosition = { x: 100 + Math.random() * 400, y: 60 };
         if (pouncesCaught >= 3) {
             endKitGame(true, 'pounce');
         }
-    });
+    };
+    leaf?.addEventListener('click', handlePounce);
+    leaf?.addEventListener('touchstart', handlePounce, { passive: false });
     
-    document.getElementById('quit-game')?.addEventListener('click', () => {
-        endKitGame(false, 'pounce');
-    });
+    document.getElementById('quit-game')?.addEventListener('click', () => endKitGame(false, 'pounce'));
+    document.getElementById('quit-game')?.addEventListener('touchstart', (e) => { e.preventDefault(); endKitGame(false, 'pounce'); });
+    
+    // Smooth animation
+    function animateLeaf() {
+        if (!kitGameActive) return;
+        
+        leafPosition.y += 3;
+        leafPosition.x += Math.sin(leafPosition.y / 25) * 2;
+        
+        if (leafPosition.y > 380) {
+            leafPosition = { x: 100 + Math.random() * 400, y: 60 };
+        }
+        
+        const rotation = leafPosition.y * 3;
+        document.getElementById('leaf-hitarea')?.setAttribute('cx', leafPosition.x);
+        document.getElementById('leaf-hitarea')?.setAttribute('cy', leafPosition.y);
+        document.getElementById('leaf-body')?.setAttribute('cx', leafPosition.x);
+        document.getElementById('leaf-body')?.setAttribute('cy', leafPosition.y);
+        document.getElementById('leaf-body')?.setAttribute('transform', `rotate(${rotation}, ${leafPosition.x}, ${leafPosition.y})`);
+        document.getElementById('leaf-vein')?.setAttribute('cx', leafPosition.x);
+        document.getElementById('leaf-vein')?.setAttribute('cy', leafPosition.y);
+        document.getElementById('leaf-vein')?.setAttribute('transform', `rotate(${rotation}, ${leafPosition.x}, ${leafPosition.y})`);
+        document.getElementById('leaf-stem')?.setAttribute('x1', leafPosition.x);
+        document.getElementById('leaf-stem')?.setAttribute('y1', leafPosition.y);
+        document.getElementById('leaf-stem')?.setAttribute('x2', leafPosition.x);
+        document.getElementById('leaf-stem')?.setAttribute('y2', leafPosition.y + 18);
+        
+        pounceAnimationId = requestAnimationFrame(animateLeaf);
+    }
+    pounceAnimationId = requestAnimationFrame(animateLeaf);
+    
+    kitGameTimeout = setTimeout(() => {
+        if (kitGameActive) endKitGame(pouncesCaught >= 3, 'pounce');
+    }, 20000);
 }
 
 // End any kit game
@@ -3581,6 +3586,8 @@ function endKitGame(won, gameType) {
     kitGameActive = false;
     if (kitGameInterval) clearInterval(kitGameInterval);
     if (kitGameTimeout) clearTimeout(kitGameTimeout);
+    if (mossballAnimationId) cancelAnimationFrame(mossballAnimationId);
+    if (pounceAnimationId) cancelAnimationFrame(pounceAnimationId);
     
     const cat = GameState.catData;
     
