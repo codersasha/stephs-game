@@ -2481,12 +2481,13 @@ function catDeath(cause) {
     
     setTimeout(() => {
         showMessage('You see a bright light... StarClan awaits...');
-        // TODO: Implement StarClan death sequence
-        cat.health = 100;
-        cat.rank = 'StarClan';
-        GameState.currentLocation = 'starclan';
-        renderGameWorld();
-    }, 3000);
+        setTimeout(() => {
+            // Reset health and go to StarClan
+            cat.health = 100;
+            cat.rank = 'StarClan';
+            goToStarClan();
+        }, 2000);
+    }, 2500);
 }
 
 function giveHerbsToMedicineCat() {
