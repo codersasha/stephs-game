@@ -32,6 +32,7 @@ const GameState = {
     dayStartTime: null,
     mealsToday: 0,
     drinksToday: 0,
+    stepsToday: 0,
     isGatheringNight: false,
     // Emotion/pose
     currentEmotion: 'normal',
@@ -4678,11 +4679,23 @@ function movePlayer(dx, dy) {
         maxY = 950;
     }
     
+    let moved = false;
     if (newX >= minX && newX <= maxX) {
         GameState.playerX = newX;
+        moved = true;
     }
     if (newY >= minY && newY <= maxY) {
         GameState.playerY = newY;
+        moved = true;
+    }
+    
+    // Count steps and check for night
+    if (moved && !GameState.isNight) {
+        GameState.stepsToday++;
+        if (GameState.stepsToday >= 200) {
+            showMessage('You have walked all day. Night is falling...');
+            setTimeout(() => startNight(), 1500);
+        }
     }
     
     renderGameWorld();
@@ -5887,6 +5900,7 @@ function startGameLoop() {
     if (!GameState.dayStartTime) {
         GameState.dayStartTime = Date.now();
         GameState.mealsToday = 0;
+        GameState.stepsToday = 0;
         GameState.isNight = false;
     }
     
@@ -6038,6 +6052,7 @@ function endNight() {
     GameState.dayStartTime = Date.now();
     GameState.mealsToday = 0; // Reset meal count for new day
     GameState.drinksToday = 0; // Reset drink count for new day
+    GameState.stepsToday = 0; // Reset step count for new day
     GameState.isGatheringNight = false;
     
     const cat = GameState.catData;
@@ -6243,23 +6258,38 @@ function toggleSit() {
 }
 
 function toggleRest() {
-    GameState.isSleeping = !GameState.isSleeping;
+    // Check if it's night
+    if (!GameState.isNight) {
+        showMessage('It is daytime! You can only sleep at night.');
+        return;
+    }
+    
+    // Check if in a den (or barn, twoleg house, etc.)
+    const loc = GameState.currentLocation;
+    const validSleepLocations = loc.startsWith('den_') || loc === 'barn' || loc === 'twoleg_house';
+    
+    if (!validSleepLocations) {
+        showMessage('You need to be in a den to sleep through the night!');
+        return;
+    }
+    
+    // Sleep through the night
+    GameState.isSleeping = true;
     GameState.isSitting = false;
     GameState.currentEmotion = 'normal';
     
     document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
-    if (GameState.isSleeping) {
-        document.getElementById('emote-sleep').classList.add('active');
-        showMessage('You curl up for a rest... (+5 health)');
-        // Small health boost from resting - NO aging!
-        const cat = GameState.catData;
-        cat.health = Math.min(100, cat.health + 5);
-        updateGameUI();
-        saveGameData();
-    } else {
-        showMessage('You wake up and stretch, feeling refreshed!');
-    }
+    document.getElementById('emote-sleep').classList.add('active');
+    
+    showMessage('You curl up and fall asleep...');
     renderGameWorld();
+    
+    // After a brief moment, end the night
+    setTimeout(() => {
+        GameState.isSleeping = false;
+        document.getElementById('emote-sleep').classList.remove('active');
+        endNight();
+    }, 2000);
 }
 
 function doPurr() {
