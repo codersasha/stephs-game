@@ -8135,6 +8135,12 @@ function showHostStatus(msg) {
     if (statusEl) {
         statusEl.textContent = msg;
     }
+    // Also update connection count
+    const countEl = document.getElementById('host-connection-count');
+    if (countEl) {
+        countEl.textContent = 'Connections: ' + GameState.connections.length + 
+            ' (open: ' + GameState.connections.filter(c => c.open).length + ')';
+    }
 }
 
 // Update join status on client screen
@@ -8401,42 +8407,45 @@ function cancelJoining() {
 // Start multiplayer game (host only)
 function startMultiplayerGame() {
     console.log('=== START MULTIPLAYER GAME ===');
-    console.log('Connections array:', GameState.connections);
-    console.log('Connections length:', GameState.connections.length);
     
-    alert('Starting game! Connections: ' + GameState.connections.length);
+    const totalConns = GameState.connections.length;
+    const openConns = GameState.connections.filter(c => c.open).length;
     
-    // Notify all clients FIRST (so they start transitioning)
+    // Show what we're doing
+    showHostStatus('STARTING GAME! Total: ' + totalConns + ', Open: ' + openConns);
+    
+    // Show alert so we know the function was called
+    alert('Starting game!\n\nTotal connections: ' + totalConns + '\nOpen connections: ' + openConns);
+    
+    if (openConns === 0 && totalConns > 0) {
+        alert('WARNING: Connections exist but none are open!\nThe connections may have closed.');
+    }
+    
+    // Notify all clients
     const startMessage = { type: 'startGame', clan: null };
-    
     let sentCount = 0;
-    let connectionDetails = [];
     
     GameState.connections.forEach((conn, i) => {
-        const info = `Conn ${i}: peer=${conn.peer}, open=${conn.open}`;
-        console.log(info);
-        connectionDetails.push(info);
-        
+        console.log('Connection ' + i + ':', conn.peer, 'open:', conn.open);
         if (conn.open) {
             try {
                 conn.send(startMessage);
                 sentCount++;
                 console.log('Sent startGame to', conn.peer);
             } catch (e) {
-                console.error('Failed to send to', conn.peer, e);
-                connectionDetails.push('ERROR: ' + e.message);
+                console.error('Failed to send:', e);
+                alert('ERROR sending to ' + conn.peer + ': ' + e.message);
             }
-        } else {
-            console.warn('Connection not open:', conn.peer);
         }
     });
     
-    alert('Sent to ' + sentCount + ' players.\n' + connectionDetails.join('\n'));
+    showHostStatus('Sent startGame to ' + sentCount + ' players');
+    alert('Sent startGame to ' + sentCount + ' players.\n\nGoing to clan selection...');
     
-    // Short delay to ensure messages are sent, then go to clan selection
+    // Go to clan selection
     setTimeout(() => {
         showScreen('clan');
-    }, 500);
+    }, 300);
 }
 
 // Send player position update
