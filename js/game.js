@@ -49,25 +49,83 @@ const GameState = {
     otherPlayers: {} // Other players' data keyed by peerId
 };
 
-// NPC Cats in the clan
-const CLAN_CATS = [
-    { name: 'Brambleclaw', rank: 'Warrior', furColor: '#8B4513', pattern: 'tabby' },
-    { name: 'Sandstorm', rank: 'Warrior', furColor: '#F4A460', pattern: 'solid' },
-    { name: 'Graystripe', rank: 'Warrior', furColor: '#808080', pattern: 'solid' },
-    { name: 'Dustpelt', rank: 'Warrior', furColor: '#8B7355', pattern: 'tabby' },
-    { name: 'Cloudtail', rank: 'Warrior', furColor: '#FFFFFF', pattern: 'solid' },
-    { name: 'Brightheart', rank: 'Warrior', furColor: '#FFA500', pattern: 'patched' },
-    { name: 'Leafpool', rank: 'Medicine Cat', furColor: '#D2B48C', pattern: 'tabby' },
-    { name: 'Firestar', rank: 'Leader', furColor: '#FF4500', pattern: 'solid' },
-    { name: 'Squirrelpaw', rank: 'Apprentice', furColor: '#CD853F', pattern: 'solid' },
-    { name: 'Spiderpaw', rank: 'Apprentice', furColor: '#2F2F2F', pattern: 'solid' },
-    // Kits in the nursery!
-    { name: 'Molekit', rank: 'Kit', furColor: '#8B7355', pattern: 'solid', eyeColor: '#f1c40f' },
-    { name: 'Cherrykit', rank: 'Kit', furColor: '#CD853F', pattern: 'patched', eyeColor: '#27ae60' },
-    { name: 'Lilykit', rank: 'Kit', furColor: '#D2B48C', pattern: 'tabby', eyeColor: '#3498db' },
-    { name: 'Seedkit', rank: 'Kit', furColor: '#F5DEB3', pattern: 'solid', eyeColor: '#f1c40f' },
-    { name: 'Honeykit', rank: 'Kit', furColor: '#FFD700', pattern: 'spotted', eyeColor: '#27ae60' }
-];
+// NPC Cats for each clan
+const ALL_CLAN_CATS = {
+    thunder: [
+        { name: 'Brambleclaw', rank: 'Warrior', furColor: '#8B4513', pattern: 'tabby' },
+        { name: 'Sandstorm', rank: 'Warrior', furColor: '#F4A460', pattern: 'solid' },
+        { name: 'Graystripe', rank: 'Warrior', furColor: '#808080', pattern: 'solid' },
+        { name: 'Dustpelt', rank: 'Warrior', furColor: '#8B7355', pattern: 'tabby' },
+        { name: 'Cloudtail', rank: 'Warrior', furColor: '#FFFFFF', pattern: 'solid' },
+        { name: 'Brightheart', rank: 'Warrior', furColor: '#FFA500', pattern: 'patched' },
+        { name: 'Leafpool', rank: 'Medicine Cat', furColor: '#D2B48C', pattern: 'tabby' },
+        { name: 'Firestar', rank: 'Leader', furColor: '#FF4500', pattern: 'solid' },
+        { name: 'Squirrelpaw', rank: 'Apprentice', furColor: '#CD853F', pattern: 'solid' },
+        { name: 'Spiderpaw', rank: 'Apprentice', furColor: '#2F2F2F', pattern: 'solid' },
+        { name: 'Molekit', rank: 'Kit', furColor: '#8B7355', pattern: 'solid', eyeColor: '#f1c40f' },
+        { name: 'Cherrykit', rank: 'Kit', furColor: '#CD853F', pattern: 'patched', eyeColor: '#27ae60' },
+        { name: 'Lilykit', rank: 'Kit', furColor: '#D2B48C', pattern: 'tabby', eyeColor: '#3498db' },
+        { name: 'Seedkit', rank: 'Kit', furColor: '#F5DEB3', pattern: 'solid', eyeColor: '#f1c40f' },
+        { name: 'Honeykit', rank: 'Kit', furColor: '#FFD700', pattern: 'spotted', eyeColor: '#27ae60' }
+    ],
+    river: [
+        { name: 'Leopardstar', rank: 'Leader', furColor: '#DAA520', pattern: 'spotted' },
+        { name: 'Mistyfoot', rank: 'Warrior', furColor: '#708090', pattern: 'solid' },
+        { name: 'Hawkfrost', rank: 'Warrior', furColor: '#8B4513', pattern: 'tabby' },
+        { name: 'Mothwing', rank: 'Medicine Cat', furColor: '#FFD700', pattern: 'tabby' },
+        { name: 'Stormfur', rank: 'Warrior', furColor: '#696969', pattern: 'solid' },
+        { name: 'Feathertail', rank: 'Warrior', furColor: '#C0C0C0', pattern: 'tabby' },
+        { name: 'Heavystep', rank: 'Warrior', furColor: '#5C4033', pattern: 'tabby' },
+        { name: 'Reedwhisker', rank: 'Warrior', furColor: '#1a1a1a', pattern: 'solid' },
+        { name: 'Splashpaw', rank: 'Apprentice', furColor: '#87CEEB', pattern: 'patched' },
+        { name: 'Pikepaw', rank: 'Apprentice', furColor: '#708090', pattern: 'solid' },
+        { name: 'Willowkit', rank: 'Kit', furColor: '#C0C0C0', pattern: 'tabby', eyeColor: '#3498db' },
+        { name: 'Minnowkit', rank: 'Kit', furColor: '#696969', pattern: 'solid', eyeColor: '#27ae60' },
+        { name: 'Pebblekit', rank: 'Kit', furColor: '#A0A0A0', pattern: 'spotted', eyeColor: '#f1c40f' },
+        { name: 'Tumblekit', rank: 'Kit', furColor: '#8B7355', pattern: 'solid', eyeColor: '#3498db' }
+    ],
+    wind: [
+        { name: 'Tallstar', rank: 'Leader', furColor: '#1a1a1a', pattern: 'patched' },
+        { name: 'Onewhisker', rank: 'Warrior', furColor: '#D2B48C', pattern: 'tabby' },
+        { name: 'Mudclaw', rank: 'Warrior', furColor: '#5C4033', pattern: 'tabby' },
+        { name: 'Barkface', rank: 'Medicine Cat', furColor: '#8B4513', pattern: 'solid' },
+        { name: 'Ashfoot', rank: 'Warrior', furColor: '#808080', pattern: 'solid' },
+        { name: 'Webfoot', rank: 'Warrior', furColor: '#3a3a3a', pattern: 'tabby' },
+        { name: 'Tornear', rank: 'Warrior', furColor: '#A0A0A0', pattern: 'solid' },
+        { name: 'Whitetail', rank: 'Warrior', furColor: '#FFFFFF', pattern: 'solid' },
+        { name: 'Crowpaw', rank: 'Apprentice', furColor: '#1a1a1a', pattern: 'solid' },
+        { name: 'Heatherpaw', rank: 'Apprentice', furColor: '#D2B48C', pattern: 'tabby' },
+        { name: 'Rabbitkit', rank: 'Kit', furColor: '#D2B48C', pattern: 'solid', eyeColor: '#f1c40f' },
+        { name: 'Runningkit', rank: 'Kit', furColor: '#808080', pattern: 'solid', eyeColor: '#27ae60' },
+        { name: 'Gorsekit', rank: 'Kit', furColor: '#8B7355', pattern: 'tabby', eyeColor: '#3498db' },
+        { name: 'Swiftkit', rank: 'Kit', furColor: '#1a1a1a', pattern: 'patched', eyeColor: '#f1c40f' }
+    ],
+    shadow: [
+        { name: 'Blackstar', rank: 'Leader', furColor: '#FFFFFF', pattern: 'patched' },
+        { name: 'Russetfur', rank: 'Warrior', furColor: '#8B4513', pattern: 'solid' },
+        { name: 'Tawnypelt', rank: 'Warrior', furColor: '#CD853F', pattern: 'spotted' },
+        { name: 'Littlecloud', rank: 'Medicine Cat', furColor: '#D2B48C', pattern: 'tabby' },
+        { name: 'Rowanclaw', rank: 'Warrior', furColor: '#B8860B', pattern: 'solid' },
+        { name: 'Oakfur', rank: 'Warrior', furColor: '#5C4033', pattern: 'solid' },
+        { name: 'Cedarheart', rank: 'Warrior', furColor: '#4a4a4a', pattern: 'solid' },
+        { name: 'Tallpoppy', rank: 'Warrior', furColor: '#D2B48C', pattern: 'patched' },
+        { name: 'Smokepaw', rank: 'Apprentice', furColor: '#4a4a4a', pattern: 'solid' },
+        { name: 'Ivypaw', rank: 'Apprentice', furColor: '#5C4033', pattern: 'tabby' },
+        { name: 'Tigerkit', rank: 'Kit', furColor: '#8B4513', pattern: 'tabby', eyeColor: '#f1c40f' },
+        { name: 'Flamekit', rank: 'Kit', furColor: '#FF4500', pattern: 'solid', eyeColor: '#27ae60' },
+        { name: 'Dawnkit', rank: 'Kit', furColor: '#F5DEB3', pattern: 'solid', eyeColor: '#3498db' },
+        { name: 'Nightkit', rank: 'Kit', furColor: '#1a1a1a', pattern: 'solid', eyeColor: '#f1c40f' }
+    ]
+};
+
+// Get cats for current clan (defaults to ThunderClan)
+function getClanCats() {
+    const clan = GameState.selectedClan || 'thunder';
+    return ALL_CLAN_CATS[clan] || ALL_CLAN_CATS.thunder;
+}
+
+// Backwards compatibility - CLAN_CATS references getClanCats()
+let CLAN_CATS = ALL_CLAN_CATS.thunder;
 
 // Herb types (no emojis)
 const HERBS = {
@@ -1808,7 +1866,7 @@ function renderLeaderOnHighRock() {
         return ''; // Player is rendered separately
     }
     
-    const leader = CLAN_CATS.find(c => c.rank === 'Leader');
+    const leader = getClanCats().find(c => c.rank === 'Leader');
     if (!leader) return '';
     
     const furColor = leader.furColor;
@@ -5606,8 +5664,8 @@ function warriorFindsKit() {
         return;
     }
     
-    const warriors = ['Dustpelt', 'Sandstorm', 'Cloudtail', 'Thornclaw', 'Brackenfur'];
-    const warrior = warriors[Math.floor(Math.random() * warriors.length)];
+    const clanWarriors = getClanCats().filter(c => c.rank === 'Warrior').map(c => c.name);
+    const warrior = clanWarriors[Math.floor(Math.random() * clanWarriors.length)] || 'a warrior';
     
     showSpeechBubble(warrior, 'What are you doing out here?!');
     
@@ -5712,8 +5770,8 @@ function encounterDanger(dangerType) {
             setTimeout(() => {
                 // 60% chance a warrior hears and saves you
                 if (Math.random() < 0.6) {
-                    const warriors = ['Sandstorm', 'Graystripe', 'Dustpelt', 'Cloudtail', 'Brackenfur'];
-                    const savior = warriors[Math.floor(Math.random() * warriors.length)];
+                    const clanWarriors = getClanCats().filter(c => c.rank === 'Warrior').map(c => c.name);
+                    const savior = clanWarriors[Math.floor(Math.random() * clanWarriors.length)] || 'a warrior';
                     
                     showMessage(`${savior} comes running from the camp!`);
                     
@@ -6933,8 +6991,8 @@ let kitGameScore = 0;
 let kitGamePlaymate = '';
 
 function playKitGame(game) {
-    const kits = ['Molekit', 'Cherrykit', 'Lilykit', 'Seedkit', 'Honeykit'];
-    kitGamePlaymate = kits[Math.floor(Math.random() * kits.length)];
+    const clanKits = getClanCats().filter(c => c.rank === 'Kit').map(c => c.name);
+    kitGamePlaymate = clanKits[Math.floor(Math.random() * clanKits.length)] || 'a kit';
     kitGameActive = true;
     kitGameScore = 0;
     
@@ -7459,8 +7517,8 @@ function kitAskForFood() {
 // Kit asks a warrior to take them outside
 function askWarriorToTakeOut() {
     const cat = GameState.catData;
-    const warriors = ['Sandstorm', 'Graystripe', 'Dustpelt', 'Cloudtail', 'Brackenfur', 'Thornclaw'];
-    const warrior = warriors[Math.floor(Math.random() * warriors.length)];
+    const clanWarriors = getClanCats().filter(c => c.rank === 'Warrior').map(c => c.name);
+    const warrior = clanWarriors[Math.floor(Math.random() * clanWarriors.length)] || 'a warrior';
     
     // 70% chance they say yes
     const saysYes = Math.random() < 0.7;
@@ -7670,8 +7728,11 @@ function triggerRandomNPCChat() {
         return;
     }
     
-    const npcs = ['Brambleclaw', 'Sandstorm', 'Leafpool', 'Cloudtail', 'Squirrelpaw', 'Dustpelt'];
-    const npc = npcs[Math.floor(Math.random() * npcs.length)];
+    // Get adult cats from current clan (warriors, apprentices, medicine cat)
+    const clanNpcs = getClanCats()
+        .filter(c => c.rank !== 'Kit' && c.rank !== 'Leader')
+        .map(c => c.name);
+    const npc = clanNpcs[Math.floor(Math.random() * clanNpcs.length)] || 'a cat';
     
     const randomChat = [
         'Nice weather today!',
@@ -7694,8 +7755,8 @@ function triggerRandomNPCChat() {
 
 // Kit-specific chatter
 function triggerKitChatter() {
-    const kits = ['Molekit', 'Cherrykit', 'Lilykit', 'Seedkit', 'Honeykit'];
-    const kit = kits[Math.floor(Math.random() * kits.length)];
+    const clanKits = getClanCats().filter(c => c.rank === 'Kit').map(c => c.name);
+    const kit = clanKits[Math.floor(Math.random() * clanKits.length)] || 'a kit';
     
     const kitChat = [
         'Let\'s play!',
