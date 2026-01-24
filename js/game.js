@@ -350,7 +350,18 @@ function setupEventListeners() {
     document.getElementById('emote-hide').addEventListener('click', () => toggleHide());
     document.getElementById('emote-sleep').addEventListener('click', () => toggleRest());
     document.getElementById('emote-meow').addEventListener('click', () => doMeow());
-    document.getElementById('emote-talk').addEventListener('click', () => openSpeechPopup());
+    document.getElementById('emote-talk').addEventListener('click', () => {
+        // In multiplayer, focus the chat input
+        if (GameState.isMultiplayer) {
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.focus();
+                showMessage('Type your message and press Send!');
+            }
+        } else {
+            openSpeechPopup();
+        }
+    });
     document.getElementById('emote-attack').addEventListener('click', () => doAttack());
     
     // Speech popup
