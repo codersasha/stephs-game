@@ -1823,8 +1823,9 @@ function renderDetailedNPCCat(x, y, furColor, eyeColor, name, scale = 1) {
     const patternColor = adjustColor(furColor, -45);
     
     // Determine if this cat should have stripes based on name
-    const hasStripes = ['Brambleclaw', 'Dustpelt', 'Leafpool', 'Hawkfrost', 'Onewhisker', 'Mudclaw', 'Tigerkit'].some(n => name.includes(n));
-    const isPatched = ['Brightheart', 'Tallstar', 'Blackstar', 'Tallpoppy'].some(n => name.includes(n));
+    const catName = name || '';
+    const hasStripes = ['Brambleclaw', 'Dustpelt', 'Leafpool', 'Hawkfrost', 'Onewhisker', 'Mudclaw', 'Tigerkit'].some(n => catName.includes(n));
+    const isPatched = ['Brightheart', 'Tallstar', 'Blackstar', 'Tallpoppy'].some(n => catName.includes(n));
     
     let patternMarkings = '';
     if (hasStripes) {
