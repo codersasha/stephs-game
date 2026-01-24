@@ -2620,6 +2620,113 @@ function encounterDanger(dangerType) {
     
     const info = dangerInfo[dangerType] || dangerInfo.fox;
     
+    // If with a warrior, they protect you and carry you back!
+    if (GameState.withWarrior) {
+        const warrior = GameState.withWarrior;
+        showMessage(`A ${info.name.toLowerCase()} appears!`);
+        
+        setTimeout(() => {
+            showSpeechBubble(warrior, 'Get behind me!');
+            showMessage(`${warrior} jumps in front of you to protect you!`);
+            
+            setTimeout(() => {
+                showMessage(`${warrior} hisses and slashes at the ${info.name.toLowerCase()}!`);
+                
+                setTimeout(() => {
+                    // Warrior always wins or scares it off
+                    if (Math.random() < 0.7) {
+                        showMessage(`${warrior} chases the ${info.name.toLowerCase()} away!`);
+                    } else {
+                        showMessage(`The ${info.name.toLowerCase()} runs off, scared of ${warrior}!`);
+                    }
+                    
+                    setTimeout(() => {
+                        showSpeechBubble(warrior, 'Are you okay? We need to get back to camp!');
+                        showMessage(`${warrior} quickly picks you up by your scruff.`);
+                        
+                        setTimeout(() => {
+                            showMessage(`${warrior} races back to camp, keeping you safe.`);
+                            
+                            setTimeout(() => {
+                                GameState.currentLocation = 'camp';
+                                GameState.playerX = 90;
+                                GameState.playerY = 300;
+                                GameState.withWarrior = null;
+                                renderGameWorld();
+                                
+                                showMessage(`You're safe in the nursery! ${warrior} tells everyone what happened.`);
+                                showSpeechBubble(warrior, 'That was close! Stay in camp from now on.');
+                                
+                                cat.experience += 5;
+                                updateGameUI();
+                                saveGameData();
+                            }, 2000);
+                        }, 2000);
+                    }, 2000);
+                }, 2000);
+            }, 2000);
+        }, 1500);
+        return;
+    }
+    
+    // If sneaking with a kit friend, they scream and a warrior might hear!
+    if (GameState.sneakingWithFriend && cat.rank === 'Kit') {
+        const friend = GameState.sneakingWithFriend;
+        showMessage(`A ${info.name.toLowerCase()} appears!`);
+        
+        setTimeout(() => {
+            showSpeechBubble(friend, 'HELP! A ' + info.name.toLowerCase() + '!');
+            showMessage(`${friend} screams for help!`);
+            
+            setTimeout(() => {
+                // 60% chance a warrior hears and saves you
+                if (Math.random() < 0.6) {
+                    const warriors = ['Sandstorm', 'Graystripe', 'Dustpelt', 'Cloudtail', 'Brackenfur'];
+                    const savior = warriors[Math.floor(Math.random() * warriors.length)];
+                    
+                    showMessage(`${savior} comes running from the camp!`);
+                    
+                    setTimeout(() => {
+                        showSpeechBubble(savior, 'Get away from those kits!');
+                        showMessage(`${savior} attacks the ${info.name.toLowerCase()}!`);
+                        
+                        setTimeout(() => {
+                            showMessage(`${savior} chases the ${info.name.toLowerCase()} away!`);
+                            
+                            setTimeout(() => {
+                                showSpeechBubble(savior, 'What were you two THINKING?!');
+                                showMessage(`${savior} picks you both up and carries you back to camp.`);
+                                
+                                setTimeout(() => {
+                                    GameState.currentLocation = 'camp';
+                                    GameState.playerX = 90;
+                                    GameState.playerY = 300;
+                                    GameState.sneakingWithFriend = null;
+                                    renderGameWorld();
+                                    
+                                    showMessage(`You're in big trouble... but at least you're safe!`);
+                                    updateGameUI();
+                                    saveGameData();
+                                }, 2000);
+                            }, 2000);
+                        }, 2000);
+                    }, 2000);
+                } else {
+                    // No one hears - kits are in danger!
+                    showMessage(`No one hears ${friend}'s cries...`);
+                    
+                    setTimeout(() => {
+                        showMessage(`The ${info.name.toLowerCase()} gets closer... You and ${friend} are too small!`);
+                        setTimeout(() => {
+                            catDeath(`caught by a ${info.name.toLowerCase()} with ${friend}`);
+                        }, 2000);
+                    }, 2000);
+                }
+            }, 2000);
+        }, 1500);
+        return;
+    }
+    
     // Kits die instantly to foxes and dogs - they're too small to survive!
     if (cat.rank === 'Kit' && (dangerType === 'fox' || dangerType === 'dog')) {
         showMessage(`A ${info.name.toLowerCase()} appears! You're too small to escape!`);
