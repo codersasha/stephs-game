@@ -1551,6 +1551,169 @@ function renderNPCCats() {
     return npcHTML;
 }
 
+// Get visible threats in the forest
+function getVisibleThreats() {
+    // Check if threats are stored, if not generate them
+    if (!GameState.forestThreats || GameState.forestThreats.length === 0) {
+        GameState.forestThreats = [];
+        
+        // Random chance of threats appearing
+        if (Math.random() < 0.4) { // 40% chance of a fox
+            GameState.forestThreats.push({
+                type: 'fox',
+                x: 450 + Math.random() * 80,
+                y: 150 + Math.random() * 100
+            });
+        }
+        if (Math.random() < 0.2) { // 20% chance of a dog
+            GameState.forestThreats.push({
+                type: 'dog',
+                x: 100 + Math.random() * 100,
+                y: 100 + Math.random() * 80
+            });
+        }
+        if (Math.random() < 0.15) { // 15% chance of a badger
+            GameState.forestThreats.push({
+                type: 'badger',
+                x: 300 + Math.random() * 100,
+                y: 350 + Math.random() * 80
+            });
+        }
+    }
+    
+    return GameState.forestThreats;
+}
+
+// Render a threat (fox, dog, badger)
+function renderThreat(type, x, y) {
+    let threatHTML = '';
+    
+    switch (type) {
+        case 'fox':
+            threatHTML = `
+                <g class="threat clickable" data-threat="fox" transform="translate(${x}, ${y})" style="cursor: pointer;">
+                    <!-- Fox body -->
+                    <ellipse cx="0" cy="0" rx="25" ry="15" fill="#cc6633"/>
+                    <ellipse cx="0" cy="-2" rx="22" ry="12" fill="#dd7744"/>
+                    
+                    <!-- Fox head -->
+                    <ellipse cx="22" cy="-5" rx="15" ry="12" fill="#cc6633"/>
+                    <ellipse cx="28" cy="-8" rx="8" ry="6" fill="#dd7744"/>
+                    
+                    <!-- Fox snout -->
+                    <ellipse cx="35" cy="-5" rx="8" ry="5" fill="#ffeecc"/>
+                    <circle cx="40" cy="-6" r="2" fill="#1a1a1a"/>
+                    
+                    <!-- Fox ears -->
+                    <polygon points="15,-12 18,-22 22,-10" fill="#cc6633"/>
+                    <polygon points="16,-13 18,-20 21,-11" fill="#1a1a1a"/>
+                    <polygon points="25,-10 28,-20 32,-8" fill="#cc6633"/>
+                    <polygon points="26,-11 28,-18 31,-9" fill="#1a1a1a"/>
+                    
+                    <!-- Fox eyes - menacing -->
+                    <ellipse cx="22" cy="-8" rx="3" ry="3" fill="#ffcc00"/>
+                    <ellipse cx="22" cy="-8" rx="1.5" ry="2" fill="#1a1a1a"/>
+                    
+                    <!-- Fox tail -->
+                    <path d="M-20 0 Q-35 -5 -40 5 Q-38 12 -30 8" stroke="#cc6633" stroke-width="8" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="-32" cy="6" rx="6" ry="4" fill="#ffeecc"/>
+                    
+                    <!-- Fox legs -->
+                    <rect x="-12" y="10" width="5" height="12" rx="2" fill="#cc6633"/>
+                    <rect x="5" y="10" width="5" height="12" rx="2" fill="#cc6633"/>
+                    
+                    <!-- Warning text -->
+                    <text x="0" y="35" text-anchor="middle" fill="#ff4444" font-size="11" font-weight="bold" style="text-shadow: 1px 1px 2px black;">FOX!</text>
+                </g>
+            `;
+            break;
+            
+        case 'dog':
+            threatHTML = `
+                <g class="threat clickable" data-threat="dog" transform="translate(${x}, ${y})" style="cursor: pointer;">
+                    <!-- Dog body -->
+                    <ellipse cx="0" cy="0" rx="30" ry="18" fill="#8B4513"/>
+                    <ellipse cx="0" cy="-3" rx="27" ry="15" fill="#A0522D"/>
+                    
+                    <!-- Dog head -->
+                    <ellipse cx="28" cy="-8" rx="18" ry="15" fill="#8B4513"/>
+                    <ellipse cx="32" cy="-10" rx="12" ry="10" fill="#A0522D"/>
+                    
+                    <!-- Dog snout -->
+                    <ellipse cx="45" cy="-5" rx="10" ry="7" fill="#D2691E"/>
+                    <ellipse cx="52" cy="-6" r="4" fill="#1a1a1a"/>
+                    
+                    <!-- Dog ears - floppy -->
+                    <ellipse cx="18" cy="-18" rx="8" ry="12" fill="#8B4513"/>
+                    <ellipse cx="35" cy="-20" rx="8" ry="12" fill="#8B4513"/>
+                    
+                    <!-- Dog eyes - angry -->
+                    <ellipse cx="30" cy="-12" rx="4" ry="4" fill="white"/>
+                    <ellipse cx="30" cy="-12" rx="2" ry="3" fill="#1a1a1a"/>
+                    <line x1="26" y1="-17" x2="34" y2="-15" stroke="#5a3a1a" stroke-width="2"/>
+                    
+                    <!-- Dog tail -->
+                    <path d="M-25 0 Q-35 -10 -30 -18" stroke="#8B4513" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    
+                    <!-- Dog legs -->
+                    <rect x="-15" y="12" width="7" height="15" rx="3" fill="#8B4513"/>
+                    <rect x="8" y="12" width="7" height="15" rx="3" fill="#8B4513"/>
+                    
+                    <!-- Warning text -->
+                    <text x="0" y="42" text-anchor="middle" fill="#ff0000" font-size="12" font-weight="bold" style="text-shadow: 1px 1px 2px black;">DOG!</text>
+                </g>
+            `;
+            break;
+            
+        case 'badger':
+            threatHTML = `
+                <g class="threat clickable" data-threat="badger" transform="translate(${x}, ${y})" style="cursor: pointer;">
+                    <!-- Badger body - stocky -->
+                    <ellipse cx="0" cy="0" rx="28" ry="16" fill="#333333"/>
+                    <ellipse cx="0" cy="-2" rx="25" ry="13" fill="#4a4a4a"/>
+                    
+                    <!-- Badger head -->
+                    <ellipse cx="22" cy="-4" rx="16" ry="14" fill="#333333"/>
+                    
+                    <!-- Badger face stripes -->
+                    <ellipse cx="28" cy="-6" rx="10" ry="10" fill="#1a1a1a"/>
+                    <path d="M20,-14 L35,-14" stroke="white" stroke-width="4"/>
+                    <path d="M18,0 L38,0" stroke="white" stroke-width="4"/>
+                    <ellipse cx="28" cy="-7" rx="6" ry="5" fill="#1a1a1a"/>
+                    
+                    <!-- Badger nose -->
+                    <ellipse cx="35" cy="-4" rx="4" ry="3" fill="#1a1a1a"/>
+                    
+                    <!-- Badger eyes -->
+                    <circle cx="24" cy="-10" r="3" fill="white"/>
+                    <circle cx="24" cy="-10" r="1.5" fill="#8B0000"/>
+                    <circle cx="32" cy="-10" r="3" fill="white"/>
+                    <circle cx="32" cy="-10" r="1.5" fill="#8B0000"/>
+                    
+                    <!-- Badger ears -->
+                    <ellipse cx="16" cy="-14" rx="4" ry="5" fill="#333333"/>
+                    <ellipse cx="30" cy="-16" rx="4" ry="5" fill="#333333"/>
+                    
+                    <!-- Badger legs - short and powerful -->
+                    <rect x="-15" y="10" width="8" height="10" rx="3" fill="#333333"/>
+                    <rect x="5" y="10" width="8" height="10" rx="3" fill="#333333"/>
+                    
+                    <!-- Claws -->
+                    <line x1="-14" y1="20" x2="-16" y2="25" stroke="white" stroke-width="2"/>
+                    <line x1="-11" y1="20" x2="-11" y2="25" stroke="white" stroke-width="2"/>
+                    <line x1="8" y1="20" x2="6" y2="25" stroke="white" stroke-width="2"/>
+                    <line x1="11" y1="20" x2="11" y2="25" stroke="white" stroke-width="2"/>
+                    
+                    <!-- Warning text -->
+                    <text x="0" y="38" text-anchor="middle" fill="#ff2222" font-size="11" font-weight="bold" style="text-shadow: 1px 1px 2px black;">BADGER!</text>
+                </g>
+            `;
+            break;
+    }
+    
+    return threatHTML;
+}
+
 // Render the forest (outside camp) for hunting/herb gathering
 function renderForest() {
     const gameWorld = document.getElementById('game-world');
@@ -1707,14 +1870,20 @@ function renderForest() {
         `;
     });
     
-    // Danger spot (fox den or dog area)
+    // Danger spot (fox den)
     worldHTML += `
         <g class="danger-spot" data-danger="fox">
             <ellipse cx="550" cy="80" rx="35" ry="25" fill="#3a2a1a" stroke="#5a4a3a" stroke-width="2"/>
             <ellipse cx="550" cy="85" rx="20" ry="12" fill="#1a0a0a"/>
-            <text x="550" y="120" text-anchor="middle" fill="#ff6666" font-size="10" style="text-shadow: 1px 1px 2px black;">??? Den</text>
+            <text x="550" y="120" text-anchor="middle" fill="#ff6666" font-size="10" style="text-shadow: 1px 1px 2px black;">Fox Den</text>
         </g>
     `;
+    
+    // Random visible threats in the forest!
+    const threats = getVisibleThreats();
+    threats.forEach(threat => {
+        worldHTML += renderThreat(threat.type, threat.x, threat.y);
+    });
     
     // Your camp entrance (bigger, clearer)
     const cat = GameState.catData;
@@ -1806,12 +1975,25 @@ function renderForest() {
     
     document.querySelector('.danger-spot')?.addEventListener('click', () => encounterDanger('fox'));
     
+    // Click handlers for visible threats
+    document.querySelectorAll('.threat').forEach(threat => {
+        threat.addEventListener('click', () => {
+            const threatType = threat.dataset.threat;
+            encounterDanger(threatType);
+            // Remove this threat after encounter
+            GameState.forestThreats = GameState.forestThreats.filter(t => t.type !== threatType);
+        });
+    });
+    
     document.querySelectorAll('.camp-den').forEach(den => {
         den.addEventListener('click', () => {
             if (den.dataset.location === 'camp') {
                 GameState.currentLocation = 'camp';
                 GameState.playerX = 225;
                 GameState.playerY = 250;
+                
+                // Reset forest threats when leaving
+                GameState.forestThreats = [];
                 
                 // Clear companions when returning
                 if (GameState.withWarrior) {
