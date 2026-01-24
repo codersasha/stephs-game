@@ -177,6 +177,11 @@ body {
     border-color: #9575cd;
 }
 
+.loner {
+    background: linear-gradient(135deg, #6d6d6d, #3d3d3d);
+    border-color: #8a8a8a;
+}
+
 .clan-icon {
     font-size: 2.5rem;
     margin-bottom: 5px;

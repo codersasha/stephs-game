@@ -91,7 +91,8 @@ const CLANS = {
     thunder: { name: 'ThunderClan', color: '#ff9800' },
     river: { name: 'RiverClan', color: '#2196f3' },
     wind: { name: 'WindClan', color: '#8bc34a' },
-    shadow: { name: 'ShadowClan', color: '#673ab7' }
+    shadow: { name: 'ShadowClan', color: '#673ab7' },
+    loner: { name: 'Loner', color: '#8a7a6a' }
 };
 
 // Initialize game
@@ -566,19 +567,23 @@ function beginAdventure() {
     const firstName = nameInput.value.trim();
     const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
     
+    // Check if starting as a loner
+    const isLoner = GameState.selectedClan === 'loner';
+    
     // Create new cat data with customization
     GameState.catData = {
         firstName: formattedName,
-        name: formattedName + 'kit',
-        clan: GameState.selectedClan,
-        rank: 'Kit',
-        age: 0,
+        name: isLoner ? formattedName : formattedName + 'kit',
+        clan: isLoner ? 'Loner' : GameState.selectedClan,
+        rank: isLoner ? 'Loner' : 'Kit',
+        age: isLoner ? 12 : 0, // Loners start as adults
         health: 100,
-        hunger: 100,
-        thirst: 100,
-        experience: 0,
+        hunger: isLoner ? 70 : 100, // Loners start a bit hungry
+        thirst: isLoner ? 70 : 100,
+        experience: isLoner ? 50 : 0, // Loners have some experience
         isDeputy: false,
         isLeader: false,
+        isLoner: isLoner,
         inStarClan: false,
         hasSeenTutorial: false,
         // Save customization
@@ -658,11 +663,20 @@ function startGameplay() {
     showScreen('game');
     updateGameUI();
     
-    // Initialize player position in camp
-    GameState.playerX = 225;
-    GameState.playerY = 250;
-    GameState.currentLocation = 'camp';
-    GameState.herbs = GameState.catData.herbs || [];
+    const cat = GameState.catData;
+    
+    // Loners start in the forest, clan cats start in camp
+    if (cat.isLoner) {
+        GameState.playerX = 300;
+        GameState.playerY = 250;
+        GameState.currentLocation = 'forest';
+    } else {
+        GameState.playerX = 225;
+        GameState.playerY = 250;
+        GameState.currentLocation = 'camp';
+    }
+    
+    GameState.herbs = cat.herbs || [];
     
     // Set clan-specific background
     const gameWorld = document.getElementById('game-world');
@@ -676,6 +690,11 @@ function startGameplay() {
     
     // Start game loop
     startGameLoop();
+    
+    // Welcome message for loners
+    if (cat.isLoner) {
+        showMessage('You are a loner, living free in the forest. Hunt for yourself and stay alive!');
+    }
 }
 
 // Update the game UI
@@ -1321,12 +1340,54 @@ function renderForest() {
         </g>
     `;
     
-    // Camp entrance (bigger, clearer)
+    // Your camp entrance (bigger, clearer)
+    const cat = GameState.catData;
+    const yourClan = cat?.clan || 'ThunderClan';
+    const clanColors = {
+        'ThunderClan': { bg: '#4a3a2a', accent: '#ffa500', text: 'ThunderClan' },
+        'ShadowClan': { bg: '#2a2a3a', accent: '#9966cc', text: 'ShadowClan' },
+        'RiverClan': { bg: '#2a3a4a', accent: '#4a90d9', text: 'RiverClan' },
+        'WindClan': { bg: '#3a3a2a', accent: '#c4a35a', text: 'WindClan' }
+    };
+    
+    // Only show your clan camp if you're not a loner
+    if (!cat?.isLoner) {
+        worldHTML += `
+            <g class="camp-den clickable" data-location="camp" style="cursor: pointer;">
+                <ellipse cx="35" cy="250" rx="30" ry="40" fill="${clanColors[yourClan]?.bg || '#4a3a2a'}" stroke="${clanColors[yourClan]?.accent || '#6a5a4a'}" stroke-width="3"/>
+                <polygon points="35,215 20,250 50,250" fill="#3a5a3a"/>
+                <text x="35" y="300" text-anchor="middle" fill="${clanColors[yourClan]?.accent || '#ffd700'}" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px black;">YOUR CAMP</text>
+            </g>
+        `;
+    }
+    
+    // Paths to ALL clan territories!
+    const clanPaths = [
+        { clan: 'ThunderClan', x: 35, y: 480, color: '#ffa500' },
+        { clan: 'ShadowClan', x: 200, y: 480, color: '#9966cc' },
+        { clan: 'RiverClan', x: 400, y: 480, color: '#4a90d9' },
+        { clan: 'WindClan', x: 565, y: 250, color: '#c4a35a' }
+    ];
+    
+    clanPaths.forEach(path => {
+        // Show all clans except your own (since your camp is already shown)
+        if (path.clan !== yourClan || cat?.isLoner) {
+            worldHTML += `
+                <g class="clan-path clickable" data-clan="${path.clan}" style="cursor: pointer;">
+                    <ellipse cx="${path.x}" cy="${path.y}" rx="35" ry="20" fill="#3a3a2a" stroke="${path.color}" stroke-width="2"/>
+                    <path d="M${path.x-10},${path.y-5} L${path.x},${path.y-15} L${path.x+10},${path.y-5}" fill="${path.color}" opacity="0.8"/>
+                    <text x="${path.x}" y="${path.y + 8}" text-anchor="middle" fill="${path.color}" font-size="9" font-weight="bold" style="text-shadow: 1px 1px 2px black;">${path.clan.replace('Clan', '')}</text>
+                </g>
+            `;
+        }
+    });
+    
+    // Loner's den option (if you want to become/stay a loner)
     worldHTML += `
-        <g class="camp-den clickable" data-location="camp" style="cursor: pointer;">
-            <ellipse cx="35" cy="250" rx="30" ry="40" fill="#4a3a2a" stroke="#6a5a4a" stroke-width="3"/>
-            <polygon points="35,215 20,250 50,250" fill="#3a5a3a"/>
-            <text x="35" y="300" text-anchor="middle" fill="#ffd700" font-size="12" font-weight="bold" style="text-shadow: 1px 1px 2px black;">CAMP</text>
+        <g class="loner-den clickable" data-location="loner" style="cursor: pointer;">
+            <ellipse cx="300" cy="50" rx="35" ry="25" fill="#3a2a1a" stroke="#8a7a6a" stroke-width="2"/>
+            <text x="300" y="45" text-anchor="middle" fill="#ccbbaa" font-size="9" style="text-shadow: 1px 1px 2px black;">Abandoned Den</text>
+            <text x="300" y="58" text-anchor="middle" fill="#aa9988" font-size="7" style="text-shadow: 1px 1px 2px black;">(Loner's Home)</text>
         </g>
     `;
     
@@ -1392,8 +1453,303 @@ function renderForest() {
         });
     });
     
+    // Click handlers for clan paths
+    document.querySelectorAll('.clan-path').forEach(path => {
+        path.addEventListener('click', () => {
+            const targetClan = path.dataset.clan;
+            showClanPathPopup(targetClan);
+        });
+    });
+    
+    // Loner den click handler
+    document.querySelector('.loner-den')?.addEventListener('click', () => {
+        showLonerDenPopup();
+    });
+    
     // Check for random forest events
     checkForestEvents();
+}
+
+// Show popup when clicking on a clan path
+function showClanPathPopup(targetClan) {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = `Path to ${targetClan}`;
+    
+    if (cat.isLoner) {
+        desc.textContent = `This path leads to ${targetClan} territory. As a loner, you can visit or ask to join.`;
+    } else if (targetClan === cat.clan) {
+        desc.textContent = `This is your home! The path leads back to ${targetClan} camp.`;
+    } else {
+        desc.textContent = `This path leads to ${targetClan} territory. They might not welcome trespassers!`;
+    }
+    
+    actions.innerHTML = '';
+    
+    if (cat.isLoner) {
+        addAction(actions, `Visit ${targetClan}`, () => {
+            closePopup();
+            visitOtherClan(targetClan);
+        });
+        
+        addAction(actions, `Ask to Join ${targetClan}`, () => {
+            closePopup();
+            askToJoinClan(targetClan);
+        });
+    } else if (targetClan === cat.clan) {
+        addAction(actions, 'Go to Camp', () => {
+            closePopup();
+            GameState.currentLocation = 'camp';
+            GameState.playerX = 225;
+            GameState.playerY = 250;
+            GameState.withWarrior = null;
+            GameState.sneakingWithFriend = null;
+            renderGameWorld();
+            showMessage('You returned to camp!');
+        });
+    } else {
+        addAction(actions, 'Sneak In', () => {
+            closePopup();
+            sneakIntoOtherClan(targetClan);
+        });
+        
+        if (cat.rank !== 'Kit') {
+            addAction(actions, 'Border Patrol', () => {
+                closePopup();
+                showMessage(`You patrol the border with ${targetClan}. All seems quiet...`);
+                cat.experience += 5;
+                updateGameUI();
+                saveGameData();
+            });
+        }
+    }
+    
+    addAction(actions, 'Stay Here', closePopup);
+    popup.classList.remove('hidden');
+}
+
+// Show popup for loner den
+function showLonerDenPopup() {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Abandoned Den';
+    
+    if (cat.isLoner) {
+        desc.textContent = 'This is your home now. A quiet place away from the Clans.';
+    } else {
+        desc.textContent = 'An old abandoned den. Loners and rogues sometimes live here, away from Clan life.';
+    }
+    
+    actions.innerHTML = '';
+    
+    if (cat.isLoner) {
+        addAction(actions, 'Rest Here', () => {
+            closePopup();
+            cat.health = Math.min(100, cat.health + 10);
+            showMessage('You rest in your den. (+10 health)');
+            updateGameUI();
+            saveGameData();
+        });
+        
+        addAction(actions, 'Hunt Alone', () => {
+            closePopup();
+            lonerHunt();
+        });
+    } else {
+        addAction(actions, 'Become a Loner', () => {
+            closePopup();
+            becomeLoner();
+        });
+        
+        addAction(actions, 'Just Look Around', () => {
+            closePopup();
+            showMessage('You sniff around the abandoned den. It smells of old moss and loneliness...');
+        });
+    }
+    
+    addAction(actions, 'Leave', closePopup);
+    popup.classList.remove('hidden');
+}
+
+// Become a loner!
+function becomeLoner() {
+    const cat = GameState.catData;
+    
+    showMessage('Are you sure you want to leave your Clan and become a loner?');
+    
+    setTimeout(() => {
+        const popup = document.getElementById('location-popup');
+        const title = document.getElementById('location-title');
+        const desc = document.getElementById('location-desc');
+        const actions = document.getElementById('location-actions');
+        
+        title.textContent = 'Leave Your Clan?';
+        desc.textContent = `You would be leaving ${cat.clan} forever. Life as a loner is hard and lonely, but free.`;
+        
+        actions.innerHTML = '';
+        
+        addAction(actions, 'Yes, Leave', () => {
+            closePopup();
+            cat.isLoner = true;
+            cat.previousClan = cat.clan;
+            cat.clan = 'Loner';
+            
+            // Remove rank suffix for loners
+            const baseName = cat.name.replace(/paw$|kit$|star$/i, '');
+            if (cat.rank === 'Apprentice') {
+                cat.name = baseName; // Remove -paw
+            }
+            cat.rank = 'Loner';
+            
+            showMessage(`You have left ${cat.previousClan}. You are now a loner.`);
+            setTimeout(() => {
+                showMessage('You must hunt for yourself now. Be careful out there...');
+                GameState.currentLocation = 'forest';
+                renderGameWorld();
+                updateGameUI();
+                saveGameData();
+            }, 2500);
+        });
+        
+        addAction(actions, 'No, Stay', () => {
+            closePopup();
+            showMessage('You decide to stay with your Clan.');
+        });
+        
+        popup.classList.remove('hidden');
+    }, 1500);
+}
+
+// Ask to join a clan (for loners)
+function askToJoinClan(clanName) {
+    const cat = GameState.catData;
+    
+    showMessage(`You approach the ${clanName} border and call out...`);
+    
+    setTimeout(() => {
+        // 60% chance they accept
+        if (Math.random() < 0.6) {
+            const leaders = {
+                'ThunderClan': 'Firestar',
+                'ShadowClan': 'Blackstar',
+                'RiverClan': 'Leopardstar',
+                'WindClan': 'Onestar'
+            };
+            const leader = leaders[clanName] || 'the leader';
+            
+            showMessage(`${leader} considers your request...`);
+            
+            setTimeout(() => {
+                showSpeechBubble(leader, 'We could use another cat. You may join us.');
+                showMessage(`${leader}: "We could use another cat. You may join ${clanName}!"`);
+                
+                setTimeout(() => {
+                    cat.isLoner = false;
+                    cat.clan = clanName;
+                    cat.rank = 'Warrior'; // Loners join as warriors
+                    cat.name = cat.name + 'heart'; // Give a warrior name
+                    
+                    GameState.selectedClan = clanName.toLowerCase().replace('clan', '');
+                    GameState.currentLocation = 'camp';
+                    GameState.playerX = 225;
+                    GameState.playerY = 250;
+                    
+                    showMessage(`Welcome to ${clanName}! You are now ${cat.name}!`);
+                    renderGameWorld();
+                    updateGameUI();
+                    saveGameData();
+                }, 2500);
+            }, 2000);
+        } else {
+            showMessage(`The ${clanName} cats chase you away! "We don't need rogues here!"`);
+            cat.health -= 10;
+            updateGameUI();
+            saveGameData();
+        }
+    }, 2000);
+}
+
+// Loner hunting (harder than clan hunting)
+function lonerHunt() {
+    showMessage('You stalk through the forest alone...');
+    
+    setTimeout(() => {
+        // 50% success rate for loners (no training)
+        if (Math.random() < 0.5) {
+            const cat = GameState.catData;
+            cat.hunger = Math.min(100, cat.hunger + 30);
+            showMessage('You caught a mouse! It\'s not much, but it\'s yours.');
+            updateGameUI();
+            saveGameData();
+        } else {
+            showMessage('The prey escapes. Hunting alone is hard...');
+        }
+    }, 2000);
+}
+
+// Sneak into another clan's territory
+function sneakIntoOtherClan(clanName) {
+    const cat = GameState.catData;
+    
+    showMessage(`You creep into ${clanName} territory...`);
+    
+    setTimeout(() => {
+        // 40% chance of getting caught
+        if (Math.random() < 0.4) {
+            const warriors = ['a patrol', 'enemy warriors', 'border guards'];
+            const caught = warriors[Math.floor(Math.random() * warriors.length)];
+            
+            showMessage(`You've been spotted by ${caught}!`);
+            
+            setTimeout(() => {
+                showMessage(`"Intruder! Get out of ${clanName} territory!"`);
+                cat.health -= 15;
+                showMessage('They chase you back! (-15 health)');
+                updateGameUI();
+                saveGameData();
+            }, 2000);
+        } else {
+            showMessage(`You sneak through ${clanName} territory undetected...`);
+            cat.experience += 10;
+            
+            setTimeout(() => {
+                // Small chance to find something useful
+                if (Math.random() < 0.3) {
+                    showMessage('You find some prey and steal it!');
+                    cat.hunger = Math.min(100, cat.hunger + 20);
+                }
+                updateGameUI();
+                saveGameData();
+            }, 2000);
+        }
+    }, 2000);
+}
+
+// Visit another clan (for loners - more peaceful)
+function visitOtherClan(clanName) {
+    showMessage(`You cautiously approach ${clanName} territory...`);
+    
+    setTimeout(() => {
+        showMessage(`You observe the ${clanName} cats from a distance. Clan life looks busy...`);
+        
+        setTimeout(() => {
+            const observations = [
+                'Warriors are returning from a patrol.',
+                'Kits are playing near the nursery.',
+                'The leader is speaking from a high place.',
+                'Apprentices are training nearby.'
+            ];
+            showMessage(observations[Math.floor(Math.random() * observations.length)]);
+        }, 2500);
+    }, 2000);
 }
 
 // Render the warrior companion in the forest
