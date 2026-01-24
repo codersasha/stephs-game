@@ -340,6 +340,7 @@ function setupEventListeners() {
     document.getElementById('emote-sleep').addEventListener('click', () => toggleRest());
     document.getElementById('emote-meow').addEventListener('click', () => doMeow());
     document.getElementById('emote-talk').addEventListener('click', () => openSpeechPopup());
+    document.getElementById('emote-attack').addEventListener('click', () => doAttack());
     
     // Speech popup
     document.getElementById('say-speech').addEventListener('click', () => sayPlayerSpeech());
@@ -677,6 +678,7 @@ function beginAdventure() {
         experience: experience,
         isDeputy: isDeputy,
         isLeader: isLeader,
+        lives: isLeader ? 9 : 1, // Leaders have 9 lives!
         isLoner: isLoner,
         inStarClan: false,
         hasSeenTutorial: false,
@@ -796,12 +798,29 @@ function updateGameUI() {
     const cat = GameState.catData;
     
     document.getElementById('cat-name-display').textContent = cat.name;
-    document.getElementById('cat-rank').textContent = cat.rank;
+    
+    // Show lives for leaders
+    if (cat.rank === 'Leader' && cat.lives) {
+        document.getElementById('cat-rank').textContent = `${cat.rank} (${cat.lives} lives)`;
+    } else {
+        document.getElementById('cat-rank').textContent = cat.rank;
+    }
+    
     document.getElementById('cat-age').textContent = `${cat.age} moons`;
     
     document.getElementById('health-fill').style.width = `${cat.health}%`;
     document.getElementById('hunger-fill').style.width = `${cat.hunger}%`;
     document.getElementById('thirst-fill').style.width = `${cat.thirst}%`;
+    
+    // Hide attack button for kits
+    const attackBtn = document.getElementById('emote-attack');
+    if (attackBtn) {
+        if (cat.rank === 'Kit') {
+            attackBtn.style.display = 'none';
+        } else {
+            attackBtn.style.display = '';
+        }
+    }
 }
 
 // Render the game world (camp or forest)
@@ -1105,6 +1124,13 @@ function renderDetailedNPCCat(x, y, furColor, eyeColor, name, scale = 1) {
 
 // Render the leader sitting on High Rock
 function renderLeaderOnHighRock() {
+    const cat = GameState.catData;
+    
+    // If player is the leader, don't show Firestar - player will be on high rock
+    if (cat && cat.rank === 'Leader') {
+        return ''; // Player is rendered separately
+    }
+    
     const leader = CLAN_CATS.find(c => c.rank === 'Leader');
     if (!leader) return '';
     
@@ -3013,7 +3039,16 @@ function eatFromPile() {
     }
     
     cat.hunger = Math.min(100, cat.hunger + 35);
-    showMessage(`Yummy! That was delicious! (Meals: ${GameState.mealsToday}/3)`);
+    
+    // Leaders can eat whenever - no limit message
+    if (cat.rank === 'Leader') {
+        showMessage('Yummy! As leader, you may eat whenever you wish!');
+    } else if (cat.rank === 'Kit' || cat.rank === 'Elder' || cat.rank === 'Queen') {
+        showMessage('Yummy! That was delicious!');
+    } else {
+        showMessage(`Yummy! That was delicious! (Meals: ${GameState.mealsToday}/3)`);
+    }
+    
     updateGameUI();
     saveGameData();
     checkMealsForNight();
@@ -3452,6 +3487,22 @@ function encounterDanger(dangerType) {
 
 function catDeath(cause) {
     const cat = GameState.catData;
+    
+    // Leaders have 9 lives!
+    if (cat.rank === 'Leader' && cat.lives > 1) {
+        cat.lives--;
+        cat.health = 100;
+        showMessage(`You lost a life! You have ${cat.lives} ${cat.lives === 1 ? 'life' : 'lives'} remaining.`);
+        setTimeout(() => {
+            showMessage('StarClan grants you strength. You wake up, alive again!');
+            updateGameUI();
+            saveGameData();
+            renderGameWorld();
+        }, 2500);
+        return;
+    }
+    
+    // Final death
     cat.health = 100;
     cat.rank = 'StarClan';
     goToStarClan();
@@ -3935,6 +3986,92 @@ function doHiss() {
     }, 4000);
 }
 
+function doAttack() {
+    const cat = GameState.catData;
+    
+    // Kits can't attack!
+    if (cat.rank === 'Kit') {
+        showMessage('You\'re too small to attack!');
+        return;
+    }
+    
+    // Show attack menu
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Attack!';
+    desc.textContent = 'Who do you want to attack?';
+    actions.innerHTML = '';
+    
+    if (GameState.currentLocation === 'forest') {
+        addAction(actions, 'Attack Prey', () => {
+            closePopup();
+            startHuntingGame();
+        });
+        
+        addAction(actions, 'Practice Fighting', () => {
+            closePopup();
+            practiceFighting();
+        });
+    } else {
+        // In camp
+        addAction(actions, 'Practice with a Warrior', () => {
+            closePopup();
+            practiceFighting();
+        });
+        
+        addAction(actions, 'Defend the Camp', () => {
+            closePopup();
+            if (Math.random() < 0.3) {
+                showMessage('You patrol the camp entrance, ready to defend!');
+                setTimeout(() => {
+                    showMessage('A strange cat approaches! You chase it away!');
+                    cat.experience += 15;
+                    updateGameUI();
+                    saveGameData();
+                }, 3000);
+            } else {
+                showMessage('You patrol the camp entrance. All is quiet.');
+                cat.experience += 5;
+                updateGameUI();
+                saveGameData();
+            }
+        });
+    }
+    
+    addAction(actions, 'Cancel', closePopup);
+    popup.classList.remove('hidden');
+}
+
+function practiceFighting() {
+    const cat = GameState.catData;
+    const trainers = ['Sandstorm', 'Dustpelt', 'Cloudtail', 'Brackenfur', 'Thornclaw'];
+    const trainer = trainers[Math.floor(Math.random() * trainers.length)];
+    
+    showMessage(`You practice battle moves with ${trainer}!`);
+    showSpeechBubble(trainer, 'Good form! Keep your claws sheathed!');
+    
+    setTimeout(() => {
+        const moves = [
+            'You practice the belly rake!',
+            'You learn to duck and roll!',
+            'You practice the front paw blow!',
+            'You work on your balance!',
+            'You practice pinning your opponent!'
+        ];
+        showMessage(moves[Math.floor(Math.random() * moves.length)]);
+        
+        setTimeout(() => {
+            showSpeechBubble(trainer, 'Well done!');
+            cat.experience += 10;
+            updateGameUI();
+            saveGameData();
+        }, 2000);
+    }, 2000);
+}
+
 function doSad() {
     GameState.currentEmotion = 'sad';
     GameState.isSitting = false;
@@ -4012,13 +4149,207 @@ function doMeow() {
 let activeSpeechBubbles = [];
 
 function openSpeechPopup() {
-    document.getElementById('speech-popup').classList.remove('hidden');
+    const cat = GameState.catData;
+    const popup = document.getElementById('speech-popup');
+    const buttonsContainer = popup.querySelector('.speech-quick-buttons');
+    
+    // Update buttons based on rank
+    if (cat && cat.rank === 'Leader') {
+        buttonsContainer.innerHTML = `
+            <button class="quick-speech-btn" data-text="Let all cats old enough to catch their own prey gather!">Call Meeting</button>
+            <button class="quick-speech-btn leader-patrol" data-text="patrol">Send Patrol</button>
+            <button class="quick-speech-btn leader-steal" data-text="steal">Steal a Kit</button>
+            <button class="quick-speech-btn" data-text="You have done well.">Praise</button>
+            <button class="quick-speech-btn" data-text="We must be vigilant.">Warn Clan</button>
+            <button class="quick-speech-btn" data-text="Hello!">Hello!</button>
+        `;
+        
+        // Add handlers for leader buttons
+        buttonsContainer.querySelector('.leader-patrol')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeSpeechPopup();
+            showPatrolMenu();
+        });
+        
+        buttonsContainer.querySelector('.leader-steal')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeSpeechPopup();
+            showStealKitMenu();
+        });
+    } else if (cat && cat.rank === 'Kit') {
+        buttonsContainer.innerHTML = `
+            <button class="quick-speech-btn" data-text="Hello!">Hello!</button>
+            <button class="quick-speech-btn" data-text="Let's play!">Let's play!</button>
+            <button class="quick-speech-btn" data-text="I'm hungry">I'm hungry</button>
+            <button class="quick-speech-btn" data-text="Can I go out with you?">Can I go out?</button>
+            <button class="quick-speech-btn" data-text="Good job!">Good job!</button>
+        `;
+    } else {
+        buttonsContainer.innerHTML = `
+            <button class="quick-speech-btn" data-text="Hello!">Hello!</button>
+            <button class="quick-speech-btn" data-text="Follow me!">Follow me!</button>
+            <button class="quick-speech-btn" data-text="Watch out!">Watch out!</button>
+            <button class="quick-speech-btn" data-text="Good job!">Good job!</button>
+            <button class="quick-speech-btn" data-text="Let's hunt together!">Hunt together</button>
+        `;
+    }
+    
+    // Re-add click handlers for quick speech buttons
+    buttonsContainer.querySelectorAll('.quick-speech-btn:not(.leader-patrol):not(.leader-steal)').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('speech-input').value = btn.dataset.text;
+            sayPlayerSpeech();
+        });
+    });
+    
+    popup.classList.remove('hidden');
     document.getElementById('speech-input').value = '';
     document.getElementById('speech-input').focus();
 }
 
 function closeSpeechPopup() {
     document.getElementById('speech-popup').classList.add('hidden');
+}
+
+// Leader calls a clan meeting!
+function leaderCallMeeting() {
+    const cat = GameState.catData;
+    showMessage(`${cat.name} calls from the High Rock: "Let all cats old enough to catch their own prey gather!"`);
+    
+    setTimeout(() => {
+        showMessage('The clan gathers below the High Rock, looking up at their leader...');
+        
+        setTimeout(() => {
+            const popup = document.getElementById('location-popup');
+            const title = document.getElementById('location-title');
+            const desc = document.getElementById('location-desc');
+            const actions = document.getElementById('location-actions');
+            
+            title.textContent = 'Clan Meeting';
+            desc.textContent = 'Your clan has gathered. What would you like to announce?';
+            actions.innerHTML = '';
+            
+            addAction(actions, 'Make an Announcement', () => {
+                closePopup();
+                showMessage(`${cat.name}: "I have called you here to share important news!"`);
+                setTimeout(() => {
+                    showMessage('The clan listens attentively.');
+                }, 2000);
+            });
+            
+            addAction(actions, 'Assign Patrols', () => {
+                closePopup();
+                showPatrolMenu();
+            });
+            
+            addAction(actions, 'Dismiss the Meeting', () => {
+                closePopup();
+                showMessage(`${cat.name}: "That is all. You are dismissed."`);
+            });
+            
+            popup.classList.remove('hidden');
+        }, 2000);
+    }, 2000);
+}
+
+// Leader sends a patrol
+function showPatrolMenu() {
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Send a Patrol';
+    desc.textContent = 'Choose a warrior to lead the patrol:';
+    actions.innerHTML = '';
+    
+    const patrolLeaders = ['Sandstorm', 'Graystripe', 'Dustpelt', 'Brackenfur', 'Cloudtail'];
+    const patrolMembers = ['Brambleclaw', 'Spiderleg', 'Thornclaw', 'Brightheart', 'Ferncloud'];
+    
+    patrolLeaders.forEach(leader => {
+        addAction(actions, leader, () => {
+            closePopup();
+            // Pick 2 random patrol members
+            const shuffled = patrolMembers.sort(() => 0.5 - Math.random());
+            const member1 = shuffled[0];
+            const member2 = shuffled[1];
+            
+            const cat = GameState.catData;
+            showMessage(`${cat.name}: "${leader}, you lead a patrol with ${member1} and ${member2}!"`);
+            showSpeechBubble(leader, 'Yes, ' + cat.name + '!');
+            
+            setTimeout(() => {
+                showMessage(`${leader}, ${member1}, and ${member2} head out of camp...`);
+                
+                // They return after some time with prey
+                setTimeout(() => {
+                    showMessage(`${leader}'s patrol has returned!`);
+                    setTimeout(() => {
+                        const prey = ['mouse', 'vole', 'rabbit', 'squirrel', 'thrush'];
+                        const caught = prey[Math.floor(Math.random() * prey.length)];
+                        showSpeechBubble(leader, 'We caught a ' + caught + '!');
+                        showMessage(`The patrol caught a ${caught} for the fresh-kill pile!`);
+                    }, 1500);
+                }, 10000); // 10 seconds
+            }, 2000);
+        });
+    });
+    
+    addAction(actions, 'Cancel', closePopup);
+    popup.classList.remove('hidden');
+}
+
+// Leader orders a cat to steal a kit
+function showStealKitMenu() {
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Steal a Kit';
+    desc.textContent = 'Choose a warrior to send:';
+    actions.innerHTML = '';
+    
+    const warriors = ['Brightheart', 'Sandstorm', 'Dustpelt', 'Cloudtail', 'Thornclaw'];
+    const clans = ['ShadowClan', 'RiverClan', 'WindClan'];
+    
+    warriors.forEach(warrior => {
+        addAction(actions, warrior, () => {
+            closePopup();
+            const targetClan = clans[Math.floor(Math.random() * clans.length)];
+            const cat = GameState.catData;
+            
+            showMessage(`${cat.name}: "${warrior}, go steal a kit from ${targetClan}!"`);
+            showSpeechBubble(warrior, 'I will do my best!');
+            
+            setTimeout(() => {
+                showMessage(`${warrior} sneaks toward ${targetClan} territory...`);
+                
+                setTimeout(() => {
+                    // 60% chance of success
+                    if (Math.random() < 0.6) {
+                        const kitNames = ['Fernkit', 'Oakkit', 'Willowkit', 'Stonekit', 'Dawnkit'];
+                        const stolenKit = kitNames[Math.floor(Math.random() * kitNames.length)];
+                        
+                        showMessage(`${warrior} returns with a kit!`);
+                        setTimeout(() => {
+                            showSpeechBubble(warrior, 'I got ' + stolenKit + '!');
+                            showMessage(`${stolenKit} from ${targetClan} has been brought to your clan!`);
+                        }, 1500);
+                    } else {
+                        showMessage(`${warrior} returns empty-pawed.`);
+                        setTimeout(() => {
+                            showSpeechBubble(warrior, 'They saw me coming...');
+                            showMessage(`${targetClan} was too well guarded.`);
+                        }, 1500);
+                    }
+                }, 8000); // 8 seconds
+            }, 2000);
+        });
+    });
+    
+    addAction(actions, 'Cancel', closePopup);
+    popup.classList.remove('hidden');
 }
 
 function sayPlayerSpeech() {
@@ -4056,6 +4387,20 @@ function sayPlayerSpeech() {
                 closeSpeechPopup();
                 setTimeout(() => {
                     askWarriorToTakeOut();
+                }, 1000);
+                return;
+            }
+        }
+        
+        // Leader special commands
+        if (cat && cat.rank === 'Leader') {
+            const lowerText = text.toLowerCase();
+            
+            // Call a clan meeting
+            if (lowerText.includes("all cats") && lowerText.includes("gather")) {
+                closeSpeechPopup();
+                setTimeout(() => {
+                    leaderCallMeeting();
                 }, 1000);
                 return;
             }
