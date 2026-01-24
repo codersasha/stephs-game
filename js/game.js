@@ -906,7 +906,7 @@ function renderDetailedNPCCat(x, y, furColor, eyeColor, name, scale = 1) {
     const lighterFur = adjustColor(furColor, 15);
     
     return `
-        <g class="npc-cat" transform="translate(${x}, ${y}) scale(${scale})">
+        <g class="npc-cat" transform="translate(${x}, ${y}) scale(${scale})" style="pointer-events: none;">
             <!-- Shadow -->
             <ellipse cx="0" cy="12" rx="14" ry="4" fill="rgba(0,0,0,0.25)"/>
             
@@ -1519,7 +1519,7 @@ function renderPlayerCat() {
     
     return `
         <!-- Player cat with improved graphics -->
-        <g id="player-cat" transform="translate(${x}, ${y}) scale(${scale})" filter="url(#softShadow)" opacity="${hideOpacity}">
+        <g id="player-cat" transform="translate(${x}, ${y}) scale(${scale})" filter="url(#softShadow)" opacity="${hideOpacity}" style="pointer-events: none;">
             <!-- Ground shadow -->
             <ellipse cx="0" cy="22" rx="22" ry="6" fill="rgba(0,0,0,0.35)"/>
             
@@ -3712,7 +3712,7 @@ function renderSpeechBubbles() {
         const displayText = bubble.text.length > 25 ? bubble.text.substring(0, 22) + '...' : bubble.text;
         
         bubblesHTML += `
-            <g class="speech-bubble" transform="translate(${x}, ${y})">
+            <g class="speech-bubble" transform="translate(${x}, ${y})" style="pointer-events: none;">
                 <!-- Bubble background -->
                 <rect x="-50" y="-25" width="100" height="30" rx="10" fill="white" stroke="#333" stroke-width="1"/>
                 <!-- Pointer -->
