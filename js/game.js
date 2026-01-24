@@ -2483,7 +2483,23 @@ function endHuntingGame(caught) {
 function checkForestEvents() {
     const cat = GameState.catData;
     
-    // Kits in forest - warriors might find them!
+    // If with a warrior, they protect you!
+    if (GameState.withWarrior) {
+        // Warrior keeps you safe - no danger events
+        // Small chance warrior points something out
+        if (Math.random() < 0.02) {
+            const observations = [
+                `${GameState.withWarrior}: "See those tracks? A rabbit passed by here."`,
+                `${GameState.withWarrior}: "Listen... can you hear the birds?"`,
+                `${GameState.withWarrior}: "Smell that? The wind is changing."`,
+                `${GameState.withWarrior}: "This is where we hunt for mice."`
+            ];
+            showMessage(observations[Math.floor(Math.random() * observations.length)]);
+        }
+        return; // No danger when with a warrior!
+    }
+    
+    // Kits in forest ALONE - warriors might find them!
     if (cat.rank === 'Kit' && !GameState.isHiding) {
         // 20% chance per render a warrior finds you
         if (Math.random() < 0.2) {
@@ -3233,6 +3249,15 @@ function sayPlayerSpeech() {
                 }, 1000);
                 return;
             }
+            
+            // "Can I go out with you?" - ask a warrior to take you out
+            if (lowerText.includes("go out") || lowerText.includes("take me out") || lowerText.includes("outside")) {
+                closeSpeechPopup();
+                setTimeout(() => {
+                    askWarriorToTakeOut();
+                }, 1000);
+                return;
+            }
         }
         
         // NPCs might respond!
@@ -3811,6 +3836,85 @@ function kitAskForFood() {
             }, 2000);
         }, 3000);
     }, 2000);
+}
+
+// Kit asks a warrior to take them outside
+function askWarriorToTakeOut() {
+    const cat = GameState.catData;
+    const warriors = ['Sandstorm', 'Graystripe', 'Dustpelt', 'Cloudtail', 'Brackenfur', 'Thornclaw'];
+    const warrior = warriors[Math.floor(Math.random() * warriors.length)];
+    
+    // 70% chance they say yes
+    const saysYes = Math.random() < 0.7;
+    
+    if (saysYes) {
+        const yesResponses = [
+            `"Alright little one, you can come with me. But stay close!"`,
+            `"Want to see the forest? Okay, but hold on tight!"`,
+            `"I suppose a little trip won't hurt. Come on then!"`,
+            `"You're curious, aren't you? Fine, I'll take you out."`
+        ];
+        
+        showSpeechBubble(warrior, yesResponses[Math.floor(Math.random() * yesResponses.length)].replace(/"/g, ''));
+        showMessage(`${warrior}: ${yesResponses[Math.floor(Math.random() * yesResponses.length)]}`);
+        
+        setTimeout(() => {
+            showMessage(`${warrior} picks you up gently by your scruff...`);
+            setTimeout(() => {
+                showMessage(`${warrior} carries you through the camp entrance!`);
+                setTimeout(() => {
+                    // Take the kit to the forest!
+                    GameState.currentLocation = 'forest';
+                    GameState.playerX = 100;
+                    GameState.playerY = 300;
+                    GameState.withWarrior = warrior;
+                    renderGameWorld();
+                    
+                    showMessage(`${warrior} sets you down in the forest. "Stay where I can see you!"`);
+                    showSpeechBubble(warrior, 'Stay close to me!');
+                    
+                    // Warrior watches over you - no fox/dog danger!
+                    setTimeout(() => {
+                        showMessage(`${warrior} keeps a watchful eye on you as you explore.`);
+                    }, 3000);
+                    
+                    // After some time, warrior takes you back
+                    setTimeout(() => {
+                        if (GameState.currentLocation === 'forest' && GameState.withWarrior === warrior) {
+                            showSpeechBubble(warrior, 'Time to go back now.');
+                            showMessage(`${warrior}: "That's enough adventure for today, little one."`);
+                            
+                            setTimeout(() => {
+                                showMessage(`${warrior} picks you up and carries you back to camp.`);
+                                setTimeout(() => {
+                                    GameState.currentLocation = 'camp';
+                                    GameState.playerX = 90;
+                                    GameState.playerY = 300;
+                                    GameState.withWarrior = null;
+                                    renderGameWorld();
+                                    showMessage('You\'re back in the nursery, safe and sound!');
+                                    cat.experience += 10;
+                                    updateGameUI();
+                                    saveGameData();
+                                }, 2000);
+                            }, 2000);
+                        }
+                    }, 30000); // 30 seconds of forest time
+                    
+                }, 2000);
+            }, 2000);
+        }, 2000);
+    } else {
+        const noResponses = [
+            `"Not now, little one. It's too dangerous out there."`,
+            `"Maybe when you're older. The forest is no place for kits."`,
+            `"I'm busy right now. Ask someone else."`,
+            `"Your mother would never forgive me! Stay in camp."`
+        ];
+        
+        showSpeechBubble(warrior, noResponses[Math.floor(Math.random() * noResponses.length)].replace(/"/g, ''));
+        showMessage(`${warrior}: ${noResponses[Math.floor(Math.random() * noResponses.length)]}`);
+    }
 }
 
 function showSpeechBubble(speaker, text) {
