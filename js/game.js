@@ -460,16 +460,18 @@ function updateNamePreview() {
     const preview = document.getElementById('full-name-preview');
     const startBtn = document.getElementById('start-game-btn');
     const suffix = document.getElementById('name-suffix');
+    const isLoner = GameState.selectedClan === 'loner';
     
     const firstName = nameInput.value.trim();
     
     if (firstName.length > 0) {
         // Capitalize first letter
         const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-        preview.textContent = formattedName + suffix.textContent;
+        // Loners can pick any name - no suffix added!
+        preview.textContent = isLoner ? formattedName : formattedName + suffix.textContent;
         startBtn.disabled = false;
     } else {
-        preview.textContent = '___' + suffix.textContent;
+        preview.textContent = isLoner ? '(Your choice!)' : '___' + suffix.textContent;
         startBtn.disabled = true;
     }
 }
@@ -590,9 +592,31 @@ function initNameScreen() {
         btn.classList.toggle('selected', btn.dataset.color === '#2ecc71');
     });
     
+    // Check if loner - they can pick ANY name!
+    const isLoner = GameState.selectedClan === 'loner';
+    const nameInput = document.getElementById('cat-name-input');
+    const nameSuffix = document.getElementById('name-suffix');
+    const nameInstruction = document.querySelector('.name-instruction');
+    
+    if (isLoner) {
+        // Loners pick their whole name!
+        nameSuffix.style.display = 'none';
+        nameInput.placeholder = 'Enter your full name...';
+        if (nameInstruction) {
+            nameInstruction.textContent = "Choose any name you like!";
+        }
+    } else {
+        // Clan cats get suffixes
+        nameSuffix.style.display = '';
+        nameInput.placeholder = 'Enter name...';
+        if (nameInstruction) {
+            nameInstruction.textContent = "What's your cat's name?";
+        }
+    }
+    
     // Clear name input
-    document.getElementById('cat-name-input').value = '';
-    document.getElementById('full-name-preview').textContent = '___kit';
+    nameInput.value = '';
+    document.getElementById('full-name-preview').textContent = isLoner ? '(Your choice!)' : '___kit';
     document.getElementById('start-game-btn').disabled = true;
     
     // Render preview
@@ -672,7 +696,8 @@ function beginAdventure() {
         }
     }
     
-    const fullName = (isLoner || isStarClan) ? formattedName + nameSuffix : formattedName + nameSuffix;
+    // Loners can choose any name they want!
+    const fullName = isLoner ? formattedName : formattedName + nameSuffix;
     
     // Create new cat data with customization
     GameState.catData = {
