@@ -381,6 +381,9 @@ function showScreen(screenName) {
     });
     document.getElementById(`${screenName}-screen`).classList.add('active');
     GameState.currentScreen = screenName;
+    
+    // Update multiplayer chat visibility
+    updateMultiplayerChatVisibility();
 }
 
 // Start the game (from home screen)
@@ -1671,6 +1674,9 @@ function renderCamp() {
     // Add some NPC cats around camp
     worldHTML += renderNPCCats();
     
+    // Add other players (multiplayer)
+    worldHTML += renderOtherPlayers();
+    
     // Add player cat
     worldHTML += renderPlayerCat();
     
@@ -2556,6 +2562,9 @@ function renderForest() {
     if (GameState.sneakingWithFriend) {
         worldHTML += renderKitFriend();
     }
+    
+    // Add other players (multiplayer)
+    worldHTML += renderOtherPlayers();
     
     // Add player cat
     worldHTML += renderPlayerCat();
@@ -3627,6 +3636,9 @@ function renderBackyard() {
             </g>
     `;
     
+    // Add other players (multiplayer)
+    yardHTML += renderOtherPlayers();
+    
     // Add player cat
     yardHTML += renderPlayerCat();
     
@@ -3687,18 +3699,13 @@ function renderBackyard() {
 
 // Show popup when going through fence hole
 function showFenceHolePopup() {
-    alert('Fence hole clicked!'); // Debug
-    
     const cat = GameState.catData;
     const popup = document.getElementById('location-popup');
     const title = document.getElementById('location-title');
     const desc = document.getElementById('location-desc');
     const actions = document.getElementById('location-actions');
     
-    if (!popup) {
-        alert('ERROR: popup element not found!');
-        return;
-    }
+    if (!popup) return;
     
     title.textContent = 'The Fence Hole';
     desc.textContent = 'Through this hole in the fence, you can see the wild forest! It looks exciting... but maybe dangerous too.';
@@ -8279,6 +8286,12 @@ function setupMultiplayerListeners() {
     document.getElementById('join-code-input')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') joinGame();
     });
+    
+    // Chat input handlers
+    document.getElementById('chat-send-btn')?.addEventListener('click', sendChatMessage);
+    document.getElementById('chat-input')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendChatMessage();
+    });
 }
 
 // Generate a fun room code
@@ -8451,8 +8464,18 @@ function handlePeerData(peerId, data) {
             break;
             
         case 'chat':
-            // Show chat message as speech bubble
+            // Show chat message in chat box and as speech bubble
+            addChatMessage(data.senderName || 'Player', data.message);
             showOtherPlayerSpeech(data.peerId, data.message);
+            
+            // If host, broadcast to all other clients
+            if (GameState.isHost) {
+                GameState.connections.forEach(conn => {
+                    if (conn.peer !== peerId && conn.open) {
+                        conn.send(data);
+                    }
+                });
+            }
             break;
             
         case 'startGame':
@@ -8800,4 +8823,90 @@ function renderOtherPlayerCatSVG(player) {
             <path d="M-22 0 Q-35 -10 -30 -25" stroke="${furColor}" stroke-width="6" fill="none" stroke-linecap="round"/>
         </g>
     `;
+}
+
+// Send a chat message to other players
+function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    const cat = GameState.catData;
+    const senderName = cat?.name || 'Player';
+    
+    // Add to local chat
+    addChatMessage(senderName + ' (You)', message);
+    
+    // Show as speech bubble on our cat
+    showPlayerSpeech(message);
+    
+    // Send to other players
+    const chatData = {
+        type: 'chat',
+        senderName: senderName,
+        message: message,
+        peerId: GameState.peer?.id
+    };
+    
+    if (GameState.isHost) {
+        broadcastToAll(chatData);
+    } else if (GameState.hostConnection?.open) {
+        GameState.hostConnection.send(chatData);
+    }
+    
+    // Clear input
+    input.value = '';
+}
+
+// Add a message to the chat UI
+function addChatMessage(sender, message, isSystem = false) {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return;
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'chat-message' + (isSystem ? ' system' : '');
+    
+    if (isSystem) {
+        msgDiv.textContent = message;
+    } else {
+        msgDiv.innerHTML = `<span class="sender">${sender}:</span> ${message}`;
+    }
+    
+    chatMessages.appendChild(msgDiv);
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Keep only last 50 messages
+    while (chatMessages.children.length > 50) {
+        chatMessages.removeChild(chatMessages.firstChild);
+    }
+}
+
+// Show/hide multiplayer chat based on game state
+function updateMultiplayerChatVisibility() {
+    const chatBox = document.getElementById('multiplayer-chat');
+    if (chatBox) {
+        if (GameState.isMultiplayer && GameState.currentScreen === 'gameplay') {
+            chatBox.classList.remove('hidden');
+        } else {
+            chatBox.classList.add('hidden');
+        }
+    }
+}
+
+// Show player speech bubble (for chat messages)
+function showPlayerSpeech(message) {
+    GameState.playerSpeech = message;
+    GameState.speechTime = Date.now();
+    renderGameWorld();
+    
+    // Clear speech after 5 seconds
+    setTimeout(() => {
+        if (GameState.speechTime && Date.now() - GameState.speechTime >= 5000) {
+            GameState.playerSpeech = null;
+            renderGameWorld();
+        }
+    }, 5000);
 }
