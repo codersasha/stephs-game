@@ -8151,7 +8151,7 @@ function renderStarClanForest() {
             <!-- Back to Camp button -->
             <g class="starclan-camp-exit clickable" style="cursor: pointer;">
                 <rect x="10" y="10" width="80" height="35" rx="5" fill="#5a3a8a" stroke="#e1bee7" stroke-width="2"/>
-                <text x="50" y="32" text-anchor="middle" fill="#e1bee7" font-size="11" font-weight="bold"><- Camp</text>
+                <text x="50" y="32" text-anchor="middle" fill="#e1bee7" font-size="11" font-weight="bold">← Camp</text>
             </g>
     `;
     
