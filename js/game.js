@@ -2983,7 +2983,8 @@ function renderForest() {
     document.querySelectorAll('.threat').forEach(threat => {
         threat.addEventListener('click', () => {
             const threatType = threat.dataset.threat;
-            encounterDanger(threatType);
+            // Use the new battle system!
+            startBattle(threatType);
             // Remove this threat after encounter
             GameState.forestThreats = GameState.forestThreats.filter(t => t.type !== threatType);
         });
@@ -6028,7 +6029,8 @@ function randomDangerEncounter() {
     const dangers = ['fox', 'dog', 'badger'];
     const danger = dangers[Math.floor(Math.random() * dangers.length)];
     
-    encounterDanger(danger);
+    // Use the new battle system!
+    startBattle(danger);
 }
 
 function encounterDanger(dangerType) {
@@ -6234,6 +6236,546 @@ function encounterDanger(dangerType) {
     });
     
     popup.classList.remove('hidden');
+}
+
+// ============= BATTLE SYSTEM =============
+// Battle state
+if (!window.battleState) {
+    window.battleState = null;
+}
+
+// Start a battle encounter
+function startBattle(threatType) {
+    const cat = GameState.catData;
+    
+    const threatInfo = {
+        fox: { name: 'Fox', health: 80, damage: 15, color: '#cc6633', speed: 5 },
+        dog: { name: 'Dog', health: 100, damage: 20, color: '#8B4513', speed: 4 },
+        badger: { name: 'Badger', health: 90, damage: 18, color: '#333333', speed: 3 }
+    };
+    
+    const info = threatInfo[threatType] || threatInfo.fox;
+    
+    // If with a warrior, they protect you
+    if (GameState.withWarrior) {
+        encounterDanger(threatType);
+        return;
+    }
+    
+    // If sneaking with friend
+    if (GameState.sneakingWithFriend && cat.rank === 'Kit') {
+        encounterDanger(threatType);
+        return;
+    }
+    
+    // Kits die instantly to foxes/dogs
+    if (cat.rank === 'Kit' && (threatType === 'fox' || threatType === 'dog')) {
+        encounterDanger(threatType);
+        return;
+    }
+    
+    // Initialize battle state
+    window.battleState = {
+        threatType: threatType,
+        threatName: info.name,
+        threatHealth: info.health,
+        threatMaxHealth: info.health,
+        threatDamage: info.damage,
+        threatColor: info.color,
+        threatSpeed: info.speed,
+        playerHealth: cat.health,
+        playerMaxHealth: 100,
+        turn: 'player',
+        message: `A wild ${info.name} appears!`,
+        battleOver: false
+    };
+    
+    renderBattleScreen();
+}
+
+// Render the battle screen
+function renderBattleScreen() {
+    const gameWorld = document.getElementById('game-world');
+    const battle = window.battleState;
+    const cat = GameState.catData;
+    
+    if (!battle) return;
+    
+    const playerHealthPercent = (battle.playerHealth / battle.playerMaxHealth) * 100;
+    const threatHealthPercent = (battle.threatHealth / battle.threatMaxHealth) * 100;
+    
+    let battleHTML = `
+        <div class="battle-screen" style="
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #1a2a1a 0%, #2a3a2a 50%, #1a2a1a 100%);
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+        ">
+            <!-- Battle Arena -->
+            <svg viewBox="0 0 400 250" style="flex: 1; max-height: 60%;">
+                <defs>
+                    <radialGradient id="battleGlow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#4a5a4a"/>
+                        <stop offset="100%" stop-color="#1a2a1a"/>
+                    </radialGradient>
+                    <filter id="battleShadow">
+                        <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="rgba(0,0,0,0.5)"/>
+                    </filter>
+                </defs>
+                
+                <!-- Background -->
+                <rect x="0" y="0" width="400" height="250" fill="url(#battleGlow)"/>
+                
+                <!-- Ground -->
+                <ellipse cx="200" cy="220" rx="180" ry="30" fill="#3a4a3a"/>
+                
+                <!-- Trees in background -->
+                <g opacity="0.5">
+                    <path d="M50,180 L60,100 L70,180 Z" fill="#2a4a2a"/>
+                    <path d="M330,180 L345,90 L360,180 Z" fill="#2a4a2a"/>
+                    <path d="M380,185 L390,120 L400,185 Z" fill="#2a4a2a"/>
+                </g>
+                
+                <!-- Threat (enemy) on the right -->
+                <g transform="translate(300, 160)" filter="url(#battleShadow)">
+                    ${renderBattleThreat(battle.threatType, battle.threatHealth <= battle.threatMaxHealth * 0.3)}
+                </g>
+                
+                <!-- Player cat on the left -->
+                <g transform="translate(80, 170)" filter="url(#battleShadow)">
+                    ${renderBattlePlayerCat(battle.playerHealth <= 30)}
+                </g>
+                
+                <!-- Health Bars -->
+                <!-- Player health bar -->
+                <g transform="translate(20, 15)">
+                    <rect x="0" y="0" width="120" height="25" rx="5" fill="#2a2a2a" stroke="#4a4a4a"/>
+                    <rect x="3" y="3" width="${114 * playerHealthPercent / 100}" height="19" rx="3" 
+                          fill="${playerHealthPercent > 50 ? '#4CAF50' : playerHealthPercent > 25 ? '#ff9800' : '#f44336'}"/>
+                    <text x="60" y="17" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">
+                        ${cat.name} ${Math.ceil(battle.playerHealth)}/${battle.playerMaxHealth}
+                    </text>
+                </g>
+                
+                <!-- Threat health bar -->
+                <g transform="translate(260, 15)">
+                    <rect x="0" y="0" width="120" height="25" rx="5" fill="#2a2a2a" stroke="#4a4a4a"/>
+                    <rect x="3" y="3" width="${114 * threatHealthPercent / 100}" height="19" rx="3" 
+                          fill="${threatHealthPercent > 50 ? '#c44' : threatHealthPercent > 25 ? '#ff9800' : '#4CAF50'}"/>
+                    <text x="60" y="17" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">
+                        ${battle.threatName} ${Math.ceil(battle.threatHealth)}/${battle.threatMaxHealth}
+                    </text>
+                </g>
+                
+                <!-- VS text -->
+                <text x="200" y="35" text-anchor="middle" fill="#ffd700" font-size="16" font-weight="bold" 
+                      style="text-shadow: 2px 2px 4px black;">VS</text>
+            </svg>
+            
+            <!-- Battle Message -->
+            <div class="battle-message" style="
+                background: rgba(0,0,0,0.7);
+                color: #fff;
+                padding: 10px;
+                text-align: center;
+                font-size: 14px;
+                border-radius: 5px;
+                margin: 5px 0;
+                min-height: 40px;
+            ">${battle.message}</div>
+            
+            <!-- Action Buttons -->
+            <div class="battle-actions" style="
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                padding: 5px;
+            ">
+                ${battle.battleOver ? `
+                    <button class="battle-btn continue-btn" style="
+                        grid-column: span 2;
+                        padding: 15px;
+                        font-size: 16px;
+                        background: linear-gradient(180deg, #4CAF50, #2E7D32);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                    ">Continue</button>
+                ` : `
+                    <button class="battle-btn scratch-btn" style="
+                        padding: 12px;
+                        font-size: 14px;
+                        background: linear-gradient(180deg, #ff6b6b, #c44);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                    ">Scratch (${10 + Math.floor(cat.experience / 50)} dmg)</button>
+                    
+                    <button class="battle-btn bite-btn" style="
+                        padding: 12px;
+                        font-size: 14px;
+                        background: linear-gradient(180deg, #ff9800, #e65100);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                    ">Bite (${15 + Math.floor(cat.experience / 40)} dmg)</button>
+                    
+                    <button class="battle-btn leap-btn" style="
+                        padding: 12px;
+                        font-size: 14px;
+                        background: linear-gradient(180deg, #9c27b0, #6a1b9a);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                    ">Leap Attack (${20 + Math.floor(cat.experience / 30)} dmg)</button>
+                    
+                    <button class="battle-btn hiss-btn" style="
+                        padding: 12px;
+                        font-size: 14px;
+                        background: linear-gradient(180deg, #2196F3, #1565C0);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                    ">Hiss (Scare)</button>
+                    
+                    <button class="battle-btn run-btn" style="
+                        grid-column: span 2;
+                        padding: 12px;
+                        font-size: 14px;
+                        background: linear-gradient(180deg, #607D8B, #455A64);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                    ">Run Away!</button>
+                `}
+            </div>
+        </div>
+    `;
+    
+    gameWorld.innerHTML = battleHTML;
+    
+    // Add event listeners
+    if (battle.battleOver) {
+        document.querySelector('.continue-btn')?.addEventListener('click', () => {
+            window.battleState = null;
+            renderGameWorld();
+        });
+    } else {
+        document.querySelector('.scratch-btn')?.addEventListener('click', () => battleAttack('scratch'));
+        document.querySelector('.bite-btn')?.addEventListener('click', () => battleAttack('bite'));
+        document.querySelector('.leap-btn')?.addEventListener('click', () => battleAttack('leap'));
+        document.querySelector('.hiss-btn')?.addEventListener('click', () => battleAttack('hiss'));
+        document.querySelector('.run-btn')?.addEventListener('click', () => battleRun());
+        
+        // Touch support
+        document.querySelector('.scratch-btn')?.addEventListener('touchend', (e) => { e.preventDefault(); battleAttack('scratch'); });
+        document.querySelector('.bite-btn')?.addEventListener('touchend', (e) => { e.preventDefault(); battleAttack('bite'); });
+        document.querySelector('.leap-btn')?.addEventListener('touchend', (e) => { e.preventDefault(); battleAttack('leap'); });
+        document.querySelector('.hiss-btn')?.addEventListener('touchend', (e) => { e.preventDefault(); battleAttack('hiss'); });
+        document.querySelector('.run-btn')?.addEventListener('touchend', (e) => { e.preventDefault(); battleRun(); });
+    }
+}
+
+// Render threat in battle
+function renderBattleThreat(type, isHurt) {
+    const hurtShake = isHurt ? 'style="animation: shake 0.3s infinite;"' : '';
+    
+    if (type === 'fox') {
+        return `
+            <g ${hurtShake}>
+                <!-- Body -->
+                <ellipse cx="0" cy="0" rx="40" ry="25" fill="#cc6633"/>
+                <ellipse cx="0" cy="5" rx="35" ry="18" fill="#d4884a"/>
+                <!-- Head -->
+                <ellipse cx="-45" cy="-10" rx="25" ry="20" fill="#cc6633"/>
+                <!-- Snout -->
+                <ellipse cx="-65" cy="-5" rx="12" ry="8" fill="#fff"/>
+                <circle cx="-75" cy="-5" r="4" fill="#1a1a1a"/>
+                <!-- Eyes -->
+                <ellipse cx="-50" cy="-18" rx="5" ry="6" fill="#fff"/>
+                <circle cx="-50" cy="-17" r="3" fill="#ffd700"/>
+                <circle cx="-50" cy="-17" r="1.5" fill="#1a1a1a"/>
+                <!-- Ears -->
+                <path d="M-35,-30 L-30,-50 L-25,-30" fill="#cc6633"/>
+                <path d="M-50,-30 L-55,-50 L-60,-30" fill="#cc6633"/>
+                <path d="M-37,-32 L-30,-45 L-27,-32" fill="#d4884a"/>
+                <!-- Tail -->
+                <path d="M40,0 Q70,-20 60,10 Q50,25 40,5" fill="#cc6633"/>
+                <path d="M55,5 Q60,15 50,10" fill="#fff"/>
+                <!-- Legs -->
+                <rect x="-25" y="20" width="8" height="20" rx="3" fill="#cc6633"/>
+                <rect x="15" y="20" width="8" height="20" rx="3" fill="#cc6633"/>
+            </g>
+        `;
+    } else if (type === 'dog') {
+        return `
+            <g ${hurtShake}>
+                <!-- Body -->
+                <ellipse cx="0" cy="0" rx="45" ry="30" fill="#8B4513"/>
+                <ellipse cx="0" cy="8" rx="38" ry="22" fill="#a0522d"/>
+                <!-- Head -->
+                <circle cx="-50" cy="-10" r="28" fill="#8B4513"/>
+                <!-- Snout -->
+                <ellipse cx="-75" cy="0" rx="18" ry="12" fill="#a0522d"/>
+                <ellipse cx="-88" cy="-2" r="5" fill="#1a1a1a"/>
+                <!-- Mouth -->
+                <path d="M-85,5 Q-75,15 -65,5" stroke="#1a1a1a" stroke-width="2" fill="none"/>
+                <!-- Teeth -->
+                <path d="M-80,5 L-80,10 M-70,5 L-70,10" stroke="#fff" stroke-width="2"/>
+                <!-- Eyes -->
+                <circle cx="-55" cy="-18" r="6" fill="#fff"/>
+                <circle cx="-55" cy="-17" r="4" fill="#4a3a2a"/>
+                <circle cx="-55" cy="-17" r="2" fill="#1a1a1a"/>
+                <!-- Ears -->
+                <ellipse cx="-35" cy="-35" rx="10" ry="15" fill="#6B3513"/>
+                <ellipse cx="-65" cy="-35" rx="10" ry="15" fill="#6B3513"/>
+                <!-- Tail -->
+                <path d="M45,0 Q65,5 55,25" stroke="#8B4513" stroke-width="10" fill="none" stroke-linecap="round"/>
+                <!-- Legs -->
+                <rect x="-30" y="25" width="12" height="25" rx="4" fill="#8B4513"/>
+                <rect x="15" y="25" width="12" height="25" rx="4" fill="#8B4513"/>
+            </g>
+        `;
+    } else {
+        // Badger
+        return `
+            <g ${hurtShake}>
+                <!-- Body -->
+                <ellipse cx="0" cy="0" rx="35" ry="22" fill="#333"/>
+                <ellipse cx="0" cy="5" rx="30" ry="16" fill="#4a4a4a"/>
+                <!-- Head -->
+                <ellipse cx="-40" cy="-5" rx="22" ry="18" fill="#333"/>
+                <!-- White stripe -->
+                <path d="M-60,-20 Q-40,-25 -20,-20 L-20,-5 Q-40,0 -60,-5 Z" fill="#fff"/>
+                <!-- Snout -->
+                <ellipse cx="-58" cy="0" rx="10" ry="7" fill="#333"/>
+                <circle cx="-65" cy="-2" r="3" fill="#1a1a1a"/>
+                <!-- Eyes -->
+                <circle cx="-45" cy="-12" r="4" fill="#fff"/>
+                <circle cx="-45" cy="-11" r="2" fill="#1a1a1a"/>
+                <!-- Ears -->
+                <circle cx="-30" cy="-20" r="6" fill="#333"/>
+                <circle cx="-55" cy="-20" r="6" fill="#333"/>
+                <!-- Claws -->
+                <g fill="#888">
+                    <rect x="-25" y="35" width="3" height="8" rx="1"/>
+                    <rect x="-20" y="35" width="3" height="8" rx="1"/>
+                    <rect x="12" y="35" width="3" height="8" rx="1"/>
+                    <rect x="17" y="35" width="3" height="8" rx="1"/>
+                </g>
+                <!-- Legs -->
+                <rect x="-25" y="18" width="12" height="18" rx="4" fill="#333"/>
+                <rect x="10" y="18" width="12" height="18" rx="4" fill="#333"/>
+            </g>
+        `;
+    }
+}
+
+// Render player cat in battle
+function renderBattlePlayerCat(isHurt) {
+    const cat = GameState.catData;
+    const hurtShake = isHurt ? 'style="animation: shake 0.3s infinite;"' : '';
+    
+    return `
+        <g transform="scale(-1, 1)" ${hurtShake}>
+            <!-- Shadow -->
+            <ellipse cx="0" cy="40" rx="25" ry="8" fill="rgba(0,0,0,0.3)"/>
+            <!-- Tail -->
+            <path d="M25,10 Q50,0 45,25 Q40,35 30,20" fill="${cat.furColor}" stroke="${cat.furColor}" stroke-width="8" stroke-linecap="round"/>
+            <!-- Body -->
+            <ellipse cx="0" cy="10" rx="30" ry="22" fill="${cat.furColor}"/>
+            <!-- Chest -->
+            <ellipse cx="-10" cy="15" rx="15" ry="12" fill="${cat.furColor}" opacity="0.8"/>
+            <!-- Head -->
+            <circle cx="-30" cy="-5" r="20" fill="${cat.furColor}"/>
+            <!-- Ears -->
+            <path d="M-45,-22 L-42,-40 L-35,-22" fill="${cat.furColor}"/>
+            <path d="M-20,-22 L-18,-40 L-10,-22" fill="${cat.furColor}"/>
+            <path d="M-43,-24 L-42,-35 L-37,-24" fill="#ffb6c1"/>
+            <path d="M-18,-24 L-18,-35 L-12,-24" fill="#ffb6c1"/>
+            <!-- Eyes (battle ready!) -->
+            <ellipse cx="-38" cy="-8" rx="6" ry="7" fill="#fff"/>
+            <ellipse cx="-22" cy="-8" rx="6" ry="7" fill="#fff"/>
+            <circle cx="-38" cy="-7" r="4" fill="${cat.eyeColor}"/>
+            <circle cx="-22" cy="-7" r="4" fill="${cat.eyeColor}"/>
+            <ellipse cx="-38" cy="-7" rx="2" ry="4" fill="#1a1a1a"/>
+            <ellipse cx="-22" cy="-7" rx="2" ry="4" fill="#1a1a1a"/>
+            <!-- Nose -->
+            <path d="M-33,2 L-30,5 L-27,2" fill="#ffb6c1"/>
+            <!-- Mouth (hissing) -->
+            <path d="M-35,8 Q-30,12 -25,8" stroke="#333" stroke-width="1.5" fill="none"/>
+            <!-- Whiskers -->
+            <g stroke="#888" stroke-width="0.5">
+                <line x1="-45" y1="0" x2="-55" y2="-3"/>
+                <line x1="-45" y1="3" x2="-55" y2="3"/>
+                <line x1="-15" y1="0" x2="-5" y2="-3"/>
+                <line x1="-15" y1="3" x2="-5" y2="3"/>
+            </g>
+            <!-- Front legs (ready to fight) -->
+            <rect x="-20" y="25" width="8" height="18" rx="3" fill="${cat.furColor}"/>
+            <rect x="5" y="25" width="8" height="18" rx="3" fill="${cat.furColor}"/>
+        </g>
+    `;
+}
+
+// Handle battle attack
+function battleAttack(attackType) {
+    const battle = window.battleState;
+    const cat = GameState.catData;
+    
+    if (!battle || battle.battleOver || battle.turn !== 'player') return;
+    
+    let damage = 0;
+    let hitChance = 0.8;
+    let message = '';
+    
+    switch (attackType) {
+        case 'scratch':
+            damage = 10 + Math.floor(cat.experience / 50);
+            hitChance = 0.9;
+            message = `You scratch the ${battle.threatName}!`;
+            break;
+        case 'bite':
+            damage = 15 + Math.floor(cat.experience / 40);
+            hitChance = 0.75;
+            message = `You bite the ${battle.threatName}!`;
+            break;
+        case 'leap':
+            damage = 20 + Math.floor(cat.experience / 30);
+            hitChance = 0.6;
+            message = `You leap at the ${battle.threatName}!`;
+            break;
+        case 'hiss':
+            damage = 0;
+            hitChance = 0.5;
+            message = `You hiss loudly at the ${battle.threatName}!`;
+            break;
+    }
+    
+    if (Math.random() < hitChance) {
+        if (attackType === 'hiss') {
+            // Hiss can scare enemy away
+            if (Math.random() < 0.4) {
+                battle.message = `You hiss fiercely! The ${battle.threatName} is scared and runs away!`;
+                battle.battleOver = true;
+                cat.experience += 15;
+                renderBattleScreen();
+                return;
+            } else {
+                battle.message = `You hiss but the ${battle.threatName} isn't scared!`;
+            }
+        } else {
+            battle.threatHealth -= damage;
+            battle.message = `${message} (-${damage} damage!)`;
+            
+            if (battle.threatHealth <= 0) {
+                battle.threatHealth = 0;
+                battle.message = `You defeated the ${battle.threatName}! You are victorious!`;
+                battle.battleOver = true;
+                cat.experience += 30;
+                cat.health = battle.playerHealth;
+                updateGameUI();
+                saveGameData();
+                renderBattleScreen();
+                return;
+            }
+        }
+    } else {
+        battle.message = `You missed! The ${battle.threatName} dodged your attack!`;
+    }
+    
+    // Enemy's turn
+    battle.turn = 'enemy';
+    renderBattleScreen();
+    
+    setTimeout(() => {
+        enemyAttack();
+    }, 1000);
+}
+
+// Enemy attacks
+function enemyAttack() {
+    const battle = window.battleState;
+    const cat = GameState.catData;
+    
+    if (!battle || battle.battleOver) return;
+    
+    const hitChance = 0.7;
+    
+    if (Math.random() < hitChance) {
+        const damage = battle.threatDamage + Math.floor(Math.random() * 5);
+        battle.playerHealth -= damage;
+        battle.message = `The ${battle.threatName} attacks you! (-${damage} damage!)`;
+        
+        if (battle.playerHealth <= 0) {
+            battle.playerHealth = 0;
+            battle.message = `The ${battle.threatName} defeated you!`;
+            battle.battleOver = true;
+            cat.health = 0;
+            renderBattleScreen();
+            
+            setTimeout(() => {
+                window.battleState = null;
+                catDeath(`killed by a ${battle.threatName.toLowerCase()}`);
+            }, 2000);
+            return;
+        }
+    } else {
+        battle.message = `The ${battle.threatName} misses!`;
+    }
+    
+    cat.health = battle.playerHealth;
+    battle.turn = 'player';
+    updateGameUI();
+    saveGameData();
+    renderBattleScreen();
+}
+
+// Run away from battle
+function battleRun() {
+    const battle = window.battleState;
+    const cat = GameState.catData;
+    
+    if (!battle || battle.battleOver) return;
+    
+    const escapeChance = cat.rank === 'Kit' ? 0.4 : 0.7;
+    
+    if (Math.random() < escapeChance) {
+        battle.message = `You escaped from the ${battle.threatName}!`;
+        battle.battleOver = true;
+        renderBattleScreen();
+    } else {
+        // Failed to escape, enemy attacks
+        const damage = Math.floor(battle.threatDamage * 0.5);
+        battle.playerHealth -= damage;
+        battle.message = `You couldn't escape! The ${battle.threatName} scratches you! (-${damage})`;
+        
+        if (battle.playerHealth <= 0) {
+            battle.playerHealth = 0;
+            cat.health = 0;
+            renderBattleScreen();
+            
+            setTimeout(() => {
+                window.battleState = null;
+                catDeath(`killed by a ${battle.threatName.toLowerCase()} while trying to escape`);
+            }, 2000);
+            return;
+        }
+        
+        cat.health = battle.playerHealth;
+        updateGameUI();
+        saveGameData();
+        renderBattleScreen();
+    }
 }
 
 function catDeath(cause) {
