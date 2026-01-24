@@ -2477,17 +2477,9 @@ function encounterDanger(dangerType) {
 
 function catDeath(cause) {
     const cat = GameState.catData;
-    showMessage(`${cat.name} was ${cause}...`);
-    
-    setTimeout(() => {
-        showMessage('You see a bright light... StarClan awaits...');
-        setTimeout(() => {
-            // Reset health and go to StarClan
-            cat.health = 100;
-            cat.rank = 'StarClan';
-            goToStarClan();
-        }, 2000);
-    }, 2500);
+    cat.health = 100;
+    cat.rank = 'StarClan';
+    goToStarClan();
 }
 
 function giveHerbsToMedicineCat() {
