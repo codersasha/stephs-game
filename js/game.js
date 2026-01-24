@@ -902,51 +902,90 @@ function renderCamp() {
 
 // Helper function to render a detailed NPC cat
 function renderDetailedNPCCat(x, y, furColor, eyeColor, name, scale = 1) {
-    const darkerFur = adjustColor(furColor, -25);
-    const lighterFur = adjustColor(furColor, 15);
+    const darkerFur = adjustColor(furColor, -30);
+    const lighterFur = adjustColor(furColor, 20);
+    const veryDarkFur = adjustColor(furColor, -50);
+    const chestFur = adjustColor(furColor, 35);
     
     return `
         <g class="npc-cat" transform="translate(${x}, ${y}) scale(${scale})" style="pointer-events: none;">
-            <!-- Shadow -->
-            <ellipse cx="0" cy="12" rx="14" ry="4" fill="rgba(0,0,0,0.25)"/>
+            <!-- Ground shadow -->
+            <ellipse cx="0" cy="16" rx="18" ry="5" fill="rgba(0,0,0,0.3)"/>
             
-            <!-- Tail -->
-            <path d="M-12 2 Q-20 -2 -18 -12" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <!-- Fluffy tail with curve -->
+            <path d="M-14 4 Q-24 2 -26 -8 Q-28 -14 -22 -16" stroke="${darkerFur}" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <path d="M-14 4 Q-23 2 -25 -7 Q-26 -12 -21 -14" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <path d="M-22 -14 Q-20 -16 -18 -14" stroke="${lighterFur}" stroke-width="2" fill="none" stroke-linecap="round"/>
             
-            <!-- Body -->
-            <ellipse cx="0" cy="2" rx="14" ry="9" fill="${darkerFur}"/>
-            <ellipse cx="0" cy="1" rx="12" ry="7" fill="${furColor}"/>
-            <ellipse cx="0" cy="-1" rx="8" ry="4" fill="${lighterFur}" opacity="0.25"/>
+            <!-- Back legs -->
+            <ellipse cx="-8" cy="10" rx="5" ry="7" fill="${darkerFur}"/>
+            <ellipse cx="-8" cy="14" rx="3" ry="3" fill="${veryDarkFur}"/>
             
-            <!-- Legs -->
-            <rect x="-10" y="6" width="4" height="8" rx="2" fill="${darkerFur}"/>
-            <rect x="6" y="6" width="4" height="8" rx="2" fill="${furColor}"/>
+            <!-- Body - more cat-like shape -->
+            <ellipse cx="0" cy="4" rx="16" ry="11" fill="${darkerFur}"/>
+            <ellipse cx="2" cy="2" rx="14" ry="9" fill="${furColor}"/>
+            <!-- Fur texture on body -->
+            <ellipse cx="0" cy="0" rx="10" ry="6" fill="${lighterFur}" opacity="0.2"/>
+            <path d="M-6 -2 Q-4 2 -6 5" stroke="${darkerFur}" stroke-width="0.5" fill="none" opacity="0.4"/>
+            <path d="M2 -3 Q4 1 2 4" stroke="${darkerFur}" stroke-width="0.5" fill="none" opacity="0.4"/>
             
-            <!-- Head -->
-            <circle cx="12" cy="-4" r="9" fill="${furColor}"/>
-            <circle cx="12" cy="-5" r="7" fill="${lighterFur}" opacity="0.2"/>
+            <!-- Front legs -->
+            <rect x="-4" y="8" width="5" height="10" rx="2" fill="${darkerFur}"/>
+            <rect x="6" y="8" width="5" height="10" rx="2" fill="${furColor}"/>
+            <!-- Paws -->
+            <ellipse cx="-1.5" cy="17" rx="3" ry="2" fill="${darkerFur}"/>
+            <ellipse cx="8.5" cy="17" rx="3" ry="2" fill="${furColor}"/>
             
-            <!-- Ears -->
-            <polygon points="5,-9 6,-17 11,-11" fill="${furColor}"/>
-            <polygon points="6,-10 7,-15 10,-11" fill="#e8b4b8" opacity="0.7"/>
-            <polygon points="17,-11 22,-17 19,-9" fill="${furColor}"/>
-            <polygon points="18,-10 20,-15 18,-10" fill="#e8b4b8" opacity="0.7"/>
+            <!-- Chest fluff -->
+            <ellipse cx="10" cy="4" rx="5" ry="6" fill="${chestFur}" opacity="0.6"/>
             
-            <!-- Eyes -->
-            <ellipse cx="9" cy="-5" rx="2.5" ry="3" fill="white"/>
-            <ellipse cx="15" cy="-5" rx="2.5" ry="3" fill="white"/>
-            <ellipse cx="9" cy="-5" rx="1.5" ry="2.5" fill="${eyeColor}"/>
-            <ellipse cx="15" cy="-5" rx="1.5" ry="2.5" fill="${eyeColor}"/>
-            <ellipse cx="9" cy="-5" rx="0.8" ry="2" fill="#1a1a2e"/>
-            <ellipse cx="15" cy="-5" rx="0.8" ry="2" fill="#1a1a2e"/>
-            <circle cx="8" cy="-6.5" r="0.6" fill="white" opacity="0.8"/>
-            <circle cx="14" cy="-6.5" r="0.6" fill="white" opacity="0.8"/>
+            <!-- Neck -->
+            <ellipse cx="12" cy="-2" rx="6" ry="7" fill="${furColor}"/>
             
-            <!-- Nose -->
-            <ellipse cx="12" cy="-1" rx="1.5" ry="1" fill="#e8a0a8"/>
+            <!-- Head - more feline shape -->
+            <ellipse cx="16" cy="-8" rx="10" ry="9" fill="${furColor}"/>
+            <ellipse cx="17" cy="-9" rx="8" ry="7" fill="${lighterFur}" opacity="0.15"/>
             
-            <!-- Name -->
-            <text x="3" y="24" text-anchor="middle" fill="#e8e0d0" font-size="7" style="text-shadow: 1px 1px 1px rgba(0,0,0,0.8)">${name}</text>
+            <!-- Ears - tall and pointed like a cat -->
+            <polygon points="8,-12 10,-24 16,-14" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="10,-13 11,-21 14,-14" fill="#e8b4b8" opacity="0.6"/>
+            <polygon points="20,-14 26,-24 24,-12" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="21,-14 24,-21 23,-14" fill="#e8b4b8" opacity="0.6"/>
+            
+            <!-- Face markings -->
+            <ellipse cx="16" cy="-4" rx="5" ry="4" fill="${chestFur}" opacity="0.4"/>
+            
+            <!-- Eyes - almond shaped like real cats -->
+            <ellipse cx="12" cy="-9" rx="3" ry="3.5" fill="white"/>
+            <ellipse cx="20" cy="-9" rx="3" ry="3.5" fill="white"/>
+            <ellipse cx="12" cy="-9" rx="2" ry="3" fill="${eyeColor}"/>
+            <ellipse cx="20" cy="-9" rx="2" ry="3" fill="${eyeColor}"/>
+            <!-- Pupils -->
+            <ellipse cx="12" cy="-9" rx="1" ry="2.5" fill="#0a0a0a"/>
+            <ellipse cx="20" cy="-9" rx="1" ry="2.5" fill="#0a0a0a"/>
+            <!-- Eye shine -->
+            <circle cx="11" cy="-10.5" r="0.8" fill="white" opacity="0.9"/>
+            <circle cx="19" cy="-10.5" r="0.8" fill="white" opacity="0.9"/>
+            
+            <!-- Nose - pink triangle -->
+            <path d="M15,-4 L17,-4 L16,-2 Z" fill="#d88a90"/>
+            <ellipse cx="16" cy="-3.5" rx="1.2" ry="0.8" fill="#c87a80"/>
+            
+            <!-- Mouth -->
+            <path d="M14,-2 Q16,-1 18,-2" stroke="${veryDarkFur}" stroke-width="0.5" fill="none"/>
+            
+            <!-- Whiskers -->
+            <g stroke="#d8d8d8" stroke-width="0.4" opacity="0.7">
+                <line x1="9" y1="-4" x2="2" y2="-6"/>
+                <line x1="9" y1="-3" x2="2" y2="-3"/>
+                <line x1="9" y1="-2" x2="2" y2="0"/>
+                <line x1="23" y1="-4" x2="30" y2="-6"/>
+                <line x1="23" y1="-3" x2="30" y2="-3"/>
+                <line x1="23" y1="-2" x2="30" y2="0"/>
+            </g>
+            
+            <!-- Name tag -->
+            <text x="8" y="28" text-anchor="middle" fill="#f0e6d2" font-size="8" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.9)">${name}</text>
         </g>
     `;
 }
@@ -957,60 +996,76 @@ function renderLeaderOnHighRock() {
     if (!leader) return '';
     
     const furColor = leader.furColor;
-    const darkerFur = adjustColor(furColor, -25);
-    const lighterFur = adjustColor(furColor, 15);
+    const darkerFur = adjustColor(furColor, -30);
+    const lighterFur = adjustColor(furColor, 20);
+    const chestFur = adjustColor(furColor, 40);
     
     return `
-        <g id="leader-cat" transform="translate(218, 168)">
+        <g id="leader-cat" transform="translate(215, 165)">
             <!-- Leader sitting proudly on high rock -->
             <!-- Shadow on rock -->
-            <ellipse cx="8" cy="18" rx="12" ry="4" fill="rgba(0,0,0,0.3)"/>
+            <ellipse cx="10" cy="22" rx="16" ry="5" fill="rgba(0,0,0,0.35)"/>
             
-            <!-- Tail curled around -->
-            <path d="M-8 8 Q-15 5 -12 -5 Q-8 -10 -3 -8" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <!-- Majestic tail curled around -->
+            <path d="M-10 12 Q-20 8 -18 -2 Q-15 -12 -8 -14 Q-2 -15 0 -10" stroke="${darkerFur}" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <path d="M-9 11 Q-18 7 -16 -1 Q-14 -10 -8 -12 Q-3 -13 -1 -9" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
             
-            <!-- Body (sitting pose) -->
-            <ellipse cx="5" cy="10" rx="12" ry="10" fill="${darkerFur}"/>
-            <ellipse cx="5" cy="8" rx="10" ry="8" fill="${furColor}"/>
-            <ellipse cx="5" cy="5" rx="6" ry="5" fill="${lighterFur}" opacity="0.2"/>
+            <!-- Body (sitting pose - proud posture) -->
+            <ellipse cx="8" cy="12" rx="14" ry="12" fill="${darkerFur}"/>
+            <ellipse cx="8" cy="10" rx="12" ry="10" fill="${furColor}"/>
+            <!-- Chest fluff -->
+            <ellipse cx="12" cy="6" rx="7" ry="8" fill="${chestFur}" opacity="0.5"/>
+            <ellipse cx="8" cy="4" rx="6" ry="5" fill="${lighterFur}" opacity="0.2"/>
             
-            <!-- Front paws -->
-            <ellipse cx="-2" cy="16" rx="4" ry="3" fill="${furColor}"/>
-            <ellipse cx="8" cy="16" rx="4" ry="3" fill="${furColor}"/>
+            <!-- Front paws - neat and together -->
+            <ellipse cx="0" cy="18" rx="5" ry="4" fill="${furColor}"/>
+            <ellipse cx="12" cy="18" rx="5" ry="4" fill="${furColor}"/>
+            <ellipse cx="0" cy="20" rx="4" ry="2" fill="${darkerFur}"/>
+            <ellipse cx="12" cy="20" rx="4" ry="2" fill="${darkerFur}"/>
             
-            <!-- Head (looking out over camp) -->
-            <circle cx="12" cy="-2" r="10" fill="${furColor}"/>
-            <circle cx="12" cy="-4" r="8" fill="${lighterFur}" opacity="0.15"/>
+            <!-- Neck fur -->
+            <ellipse cx="14" cy="0" rx="8" ry="10" fill="${furColor}"/>
+            <ellipse cx="16" cy="-2" rx="5" ry="6" fill="${chestFur}" opacity="0.4"/>
             
-            <!-- Ears -->
-            <polygon points="4,-8 4,-18 11,-10" fill="${furColor}"/>
-            <polygon points="5,-9 5,-15 10,-10" fill="#e8b4b8" opacity="0.6"/>
-            <polygon points="18,-10 24,-18 21,-8" fill="${furColor}"/>
-            <polygon points="19,-9 22,-15 20,-9" fill="#e8b4b8" opacity="0.6"/>
+            <!-- Head (noble expression) -->
+            <ellipse cx="18" cy="-8" rx="12" ry="11" fill="${furColor}"/>
+            <ellipse cx="19" cy="-10" rx="10" ry="9" fill="${lighterFur}" opacity="0.15"/>
             
-            <!-- Eyes (wise leader eyes) -->
-            <ellipse cx="8" cy="-3" rx="3" ry="3.5" fill="white"/>
-            <ellipse cx="16" cy="-3" rx="3" ry="3.5" fill="white"/>
-            <ellipse cx="8" cy="-3" rx="2" ry="3" fill="#27ae60"/>
-            <ellipse cx="16" cy="-3" rx="2" ry="3" fill="#27ae60"/>
-            <ellipse cx="8" cy="-3" rx="1" ry="2.5" fill="#1a1a2e"/>
-            <ellipse cx="16" cy="-3" rx="1" ry="2.5" fill="#1a1a2e"/>
-            <circle cx="7" cy="-5" r="0.8" fill="white" opacity="0.9"/>
-            <circle cx="15" cy="-5" r="0.8" fill="white" opacity="0.9"/>
+            <!-- Ears - tall and alert -->
+            <polygon points="8,-14 8,-28 17,-16" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="10,-15 10,-25 15,-17" fill="#e8b4b8" opacity="0.5"/>
+            <polygon points="24,-16 32,-28 28,-14" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="26,-16 30,-25 27,-16" fill="#e8b4b8" opacity="0.5"/>
+            
+            <!-- Wise leader eyes - green like Firestar -->
+            <ellipse cx="13" cy="-9" rx="3.5" ry="4" fill="white"/>
+            <ellipse cx="23" cy="-9" rx="3.5" ry="4" fill="white"/>
+            <ellipse cx="13" cy="-9" rx="2.5" ry="3.5" fill="#27ae60"/>
+            <ellipse cx="23" cy="-9" rx="2.5" ry="3.5" fill="#27ae60"/>
+            <ellipse cx="13" cy="-9" rx="1.2" ry="3" fill="#0a0a0a"/>
+            <ellipse cx="23" cy="-9" rx="1.2" ry="3" fill="#0a0a0a"/>
+            <circle cx="12" cy="-11" r="1" fill="white" opacity="0.9"/>
+            <circle cx="22" cy="-11" r="1" fill="white" opacity="0.9"/>
             
             <!-- Nose -->
-            <ellipse cx="12" cy="2" rx="2" ry="1.5" fill="#e8a0a8"/>
+            <path d="M17,-3 L19,-3 L18,-1 Z" fill="#d88a90"/>
+            <ellipse cx="18" cy="-2.5" rx="1.5" ry="1" fill="#c87a80"/>
+            
+            <!-- Mouth -->
+            <path d="M16,0 Q18,1 20,0" stroke="${darkerFur}" stroke-width="0.5" fill="none"/>
             
             <!-- Whiskers -->
-            <g stroke="#d0d0d0" stroke-width="0.4" opacity="0.6">
-                <line x1="5" y1="1" x2="-4" y2="-1"/>
-                <line x1="5" y1="3" x2="-4" y2="3"/>
-                <line x1="19" y1="1" x2="28" y2="-1"/>
-                <line x1="19" y1="3" x2="28" y2="3"/>
+            <g stroke="#d8d8d8" stroke-width="0.5" opacity="0.7">
+                <line x1="10" y1="-2" x2="0" y2="-4"/>
+                <line x1="10" y1="-1" x2="0" y2="-1"/>
+                <line x1="10" y1="0" x2="0" y2="2"/>
+                <line x1="26" y1="-2" x2="36" y2="-4"/>
+                <line x1="26" y1="-1" x2="36" y2="-1"/>
+                <line x1="26" y1="0" x2="36" y2="2"/>
             </g>
             
-            <!-- Leader name label -->
-            <text x="10" y="30" text-anchor="middle" fill="#ffd700" font-size="8" font-weight="bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.9)">${leader.name}</text>
+            <!-- Leader name with star -->
+            <text x="12" y="34" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="bold" style="text-shadow: 1px 1px 3px rgba(0,0,0,1)">${leader.name}</text>
         </g>
     `;
 }
