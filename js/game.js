@@ -14,7 +14,11 @@ const GameState = {
         furColorName: 'orange',
         pattern: 'solid',
         eyeColor: '#2ecc71',
-        eyeColorName: 'green'
+        eyeColorName: 'green',
+        startingRank: 'kit',
+        nameSuffix: 'kit',
+        startingAge: 0,
+        randomSuffix: ''
     },
     // Player position in camp
     playerX: 200,
@@ -261,6 +265,38 @@ function setupEventListeners() {
             GameState.customization.eyeColor = btn.dataset.color;
             GameState.customization.eyeColorName = btn.dataset.name;
             updateCatPreview();
+        });
+    });
+
+    // Rank selection
+    document.querySelectorAll('.rank-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            GameState.customization.startingRank = btn.dataset.rank;
+            GameState.customization.nameSuffix = btn.dataset.suffix;
+            GameState.customization.startingAge = parseInt(btn.dataset.age);
+            
+            // Update the name suffix display
+            const suffixSpan = document.getElementById('name-suffix');
+            const nameInput = document.getElementById('cat-name-input');
+            const fullNamePreview = document.getElementById('full-name-preview');
+            
+            if (btn.dataset.suffix) {
+                suffixSpan.textContent = btn.dataset.suffix;
+                suffixSpan.style.display = 'inline';
+            } else {
+                // Warriors, Medicine Cats, Queens, Elders get random suffix
+                const suffixes = ['storm', 'tail', 'heart', 'fur', 'claw', 'stripe', 'pelt', 'leaf', 'flower', 'wing'];
+                const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+                GameState.customization.randomSuffix = randomSuffix;
+                suffixSpan.textContent = randomSuffix;
+                suffixSpan.style.display = 'inline';
+            }
+            
+            // Update the full name preview
+            const firstName = nameInput.value.trim() || '___';
+            fullNamePreview.textContent = firstName + suffixSpan.textContent;
         });
     });
 
@@ -570,19 +606,77 @@ function beginAdventure() {
     // Check if starting as a loner
     const isLoner = GameState.selectedClan === 'loner';
     
+    // Get the selected starting rank
+    const startingRank = GameState.customization.startingRank || 'kit';
+    const startingAge = GameState.customization.startingAge || 0;
+    
+    // Determine the name suffix and proper rank name
+    let nameSuffix = '';
+    let rankName = 'Kit';
+    let experience = 0;
+    let isDeputy = false;
+    let isLeader = false;
+    
+    if (isLoner) {
+        nameSuffix = '';
+        rankName = 'Loner';
+        experience = 50;
+    } else {
+        switch (startingRank) {
+            case 'kit':
+                nameSuffix = 'kit';
+                rankName = 'Kit';
+                experience = 0;
+                break;
+            case 'apprentice':
+                nameSuffix = 'paw';
+                rankName = 'Apprentice';
+                experience = 20;
+                break;
+            case 'warrior':
+                nameSuffix = GameState.customization.randomSuffix || 'heart';
+                rankName = 'Warrior';
+                experience = 100;
+                break;
+            case 'medicine':
+                nameSuffix = GameState.customization.randomSuffix || 'leaf';
+                rankName = 'Medicine Cat';
+                experience = 150;
+                break;
+            case 'queen':
+                nameSuffix = GameState.customization.randomSuffix || 'flower';
+                rankName = 'Queen';
+                experience = 80;
+                break;
+            case 'elder':
+                nameSuffix = GameState.customization.randomSuffix || 'fur';
+                rankName = 'Elder';
+                experience = 200;
+                break;
+            case 'leader':
+                nameSuffix = 'star';
+                rankName = 'Leader';
+                experience = 500;
+                isLeader = true;
+                break;
+        }
+    }
+    
+    const fullName = isLoner ? formattedName : formattedName + nameSuffix;
+    
     // Create new cat data with customization
     GameState.catData = {
         firstName: formattedName,
-        name: isLoner ? formattedName : formattedName + 'kit',
+        name: fullName,
         clan: isLoner ? 'Loner' : GameState.selectedClan,
-        rank: isLoner ? 'Loner' : 'Kit',
-        age: isLoner ? 12 : 0, // Loners start as adults
+        rank: rankName,
+        age: isLoner ? 12 : startingAge,
         health: 100,
-        hunger: isLoner ? 70 : 100, // Loners start a bit hungry
+        hunger: isLoner ? 70 : 100,
         thirst: isLoner ? 70 : 100,
-        experience: isLoner ? 50 : 0, // Loners have some experience
-        isDeputy: false,
-        isLeader: false,
+        experience: experience,
+        isDeputy: isDeputy,
+        isLeader: isLeader,
         isLoner: isLoner,
         inStarClan: false,
         hasSeenTutorial: false,

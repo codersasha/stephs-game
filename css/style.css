@@ -479,6 +479,36 @@ body {
     background: rgba(255, 215, 0, 0.1);
 }
 
+.rank-picker {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.rank-btn {
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    border-radius: 15px;
+    color: #aaa;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.rank-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.rank-btn.selected {
+    border-color: #ffd700;
+    color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+}
+
 .start-game-btn {
     padding: 15px 40px;
     background: linear-gradient(135deg, #ffd700, #ff9800);
