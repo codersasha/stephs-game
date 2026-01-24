@@ -6380,6 +6380,14 @@ function doAttack() {
         });
     }
     
+    // Attack other players in multiplayer!
+    if (GameState.isMultiplayer) {
+        addAction(actions, 'Attack a Player!', () => {
+            closePopup();
+            showAttackPlayerMenu();
+        });
+    }
+    
     addAction(actions, 'Cancel', closePopup);
     popup.classList.remove('hidden');
 }
@@ -8489,6 +8497,26 @@ function handlePeerData(peerId, data) {
             showScreen('clan');
             showMessage('The game is starting! Choose your clan.');
             break;
+            
+        case 'attack':
+            // Another player is attacking us!
+            receiveAttackFromPlayer(data.attackerName, data.damage);
+            
+            // If host, broadcast to all other clients
+            if (GameState.isHost) {
+                GameState.connections.forEach(conn => {
+                    if (conn.peer !== peerId && conn.open) {
+                        conn.send(data);
+                    }
+                });
+            }
+            break;
+            
+        case 'playerDied':
+            // A player died - show message
+            addChatMessage('', `${data.playerName} has been killed!`, true);
+            showMessage(`${data.playerName} has been killed!`);
+            break;
     }
 }
 
@@ -8918,4 +8946,141 @@ function showPlayerSpeech(message) {
             renderGameWorld();
         }
     }, 5000);
+}
+
+// Attack another player in multiplayer
+function attackOtherPlayer(targetPeerId, targetName) {
+    const cat = GameState.catData;
+    if (!cat) return;
+    
+    // Calculate damage (10-30 based on rank)
+    let damage = 15;
+    if (cat.rank === 'Warrior' || cat.rank === 'Deputy') damage = 25;
+    if (cat.rank === 'Leader') damage = 30;
+    if (cat.rank === 'Kit') damage = 5;
+    if (cat.rank === 'Apprentice') damage = 15;
+    
+    // Send attack message
+    const attackData = {
+        type: 'attack',
+        attackerName: cat.name,
+        attackerPeerId: GameState.peer?.id,
+        targetPeerId: targetPeerId,
+        damage: damage
+    };
+    
+    if (GameState.isHost) {
+        broadcastToAll(attackData);
+    } else if (GameState.hostConnection?.open) {
+        GameState.hostConnection.send(attackData);
+    }
+    
+    // Show attack message locally
+    showMessage(`You attack ${targetName}!`);
+    addChatMessage('', `${cat.name} attacks ${targetName}!`, true);
+    
+    // Play attack animation
+    GameState.currentEmotion = 'mad';
+    renderGameWorld();
+    setTimeout(() => {
+        GameState.currentEmotion = null;
+        renderGameWorld();
+    }, 1000);
+}
+
+// Receive an attack from another player
+function receiveAttackFromPlayer(attackerName, damage) {
+    const cat = GameState.catData;
+    if (!cat) return;
+    
+    // Take damage
+    cat.health = Math.max(0, cat.health - damage);
+    
+    showMessage(`${attackerName} attacks you! -${damage} health!`);
+    addChatMessage('', `${attackerName} attacked you for ${damage} damage!`, true);
+    
+    // Flash red
+    GameState.currentEmotion = 'mad';
+    updateGameUI();
+    saveGameData();
+    
+    // Check if dead
+    if (cat.health <= 0) {
+        // Notify others of death
+        const deathData = {
+            type: 'playerDied',
+            playerName: cat.name,
+            peerId: GameState.peer?.id
+        };
+        
+        if (GameState.isHost) {
+            broadcastToAll(deathData);
+        } else if (GameState.hostConnection?.open) {
+            GameState.hostConnection.send(deathData);
+        }
+        
+        // Go to StarClan
+        setTimeout(() => {
+            catDeath(`${attackerName}`);
+        }, 500);
+    } else {
+        renderGameWorld();
+        setTimeout(() => {
+            GameState.currentEmotion = null;
+            renderGameWorld();
+        }, 1000);
+    }
+}
+
+// Show attack menu for other players
+function showAttackPlayerMenu() {
+    if (!GameState.isMultiplayer) {
+        showMessage('You can only attack other players in multiplayer!');
+        return;
+    }
+    
+    const cat = GameState.catData;
+    const nearbyPlayers = [];
+    
+    // Find players in the same location
+    Object.entries(GameState.otherPlayers).forEach(([peerId, player]) => {
+        if (player.location === GameState.currentLocation) {
+            // Check if close enough (within 150 units)
+            const distance = Math.sqrt(
+                Math.pow((player.x || 200) - GameState.playerX, 2) +
+                Math.pow((player.y || 200) - GameState.playerY, 2)
+            );
+            if (distance < 150) {
+                nearbyPlayers.push({ peerId, player, distance });
+            }
+        }
+    });
+    
+    if (nearbyPlayers.length === 0) {
+        showMessage('No players nearby to attack! Get closer to someone.');
+        return;
+    }
+    
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Attack a Player';
+    desc.textContent = 'Choose who to attack! Warning: They might fight back!';
+    
+    actions.innerHTML = '';
+    
+    nearbyPlayers.forEach(({ peerId, player }) => {
+        addAction(actions, `Attack ${player.name || 'Player'}`, () => {
+            closePopup();
+            attackOtherPlayer(peerId, player.name || 'Player');
+        });
+    });
+    
+    addAction(actions, 'Cancel', () => {
+        closePopup();
+    });
+    
+    popup.classList.add('active');
 }
