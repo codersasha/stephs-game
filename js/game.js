@@ -2608,9 +2608,33 @@ function closeSpeechPopup() {
 function sayPlayerSpeech() {
     const input = document.getElementById('speech-input');
     const text = input.value.trim();
+    const cat = GameState.catData;
     
     if (text) {
         showSpeechBubble('player', text);
+        
+        // Special kit actions!
+        if (cat && cat.rank === 'Kit') {
+            const lowerText = text.toLowerCase();
+            
+            // "Let's play!" opens games menu
+            if (lowerText.includes("let's play") || lowerText.includes("lets play") || lowerText.includes("wanna play")) {
+                closeSpeechPopup();
+                setTimeout(() => {
+                    showKitGamesMenu();
+                }, 1000);
+                return;
+            }
+            
+            // "I'm hungry" makes a cat bring food
+            if (lowerText.includes("hungry") || lowerText.includes("food")) {
+                closeSpeechPopup();
+                setTimeout(() => {
+                    kitAskForFood();
+                }, 1000);
+                return;
+            }
+        }
         
         // NPCs might respond!
         if (Math.random() > 0.4) {
@@ -2621,6 +2645,171 @@ function sayPlayerSpeech() {
     }
     
     closeSpeechPopup();
+}
+
+// Kit games menu
+function showKitGamesMenu() {
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Pick a Game!';
+    desc.textContent = 'What do you want to play?';
+    actions.innerHTML = '';
+    
+    addAction(actions, 'Moss-ball', () => {
+        closePopup();
+        playKitGame('mossball');
+    });
+    addAction(actions, 'Chase', () => {
+        closePopup();
+        playKitGame('chase');
+    });
+    addAction(actions, 'Hide and Seek', () => {
+        closePopup();
+        playKitGame('hideseek');
+    });
+    addAction(actions, 'Play Fight', () => {
+        closePopup();
+        playKitGame('fight');
+    });
+    addAction(actions, 'Pounce Practice', () => {
+        closePopup();
+        playKitGame('pounce');
+    });
+    addAction(actions, 'Never mind', closePopup);
+    
+    popup.classList.remove('hidden');
+}
+
+function playKitGame(game) {
+    const cat = GameState.catData;
+    const kits = ['Molekit', 'Cherrykit', 'Lilykit', 'Seedkit', 'Honeykit'];
+    const playmate = kits[Math.floor(Math.random() * kits.length)];
+    
+    switch(game) {
+        case 'mossball':
+            showSpeechBubble(playmate, 'I\'ll get the moss-ball!');
+            setTimeout(() => {
+                showMessage('You play moss-ball together! You bat it back and forth...');
+                setTimeout(() => {
+                    if (Math.random() > 0.5) {
+                        showMessage('You win! Great catch!');
+                        cat.experience += 5;
+                    } else {
+                        showMessage(`${playmate} wins this round! Good game!`);
+                        cat.experience += 3;
+                    }
+                    updateGameUI();
+                    saveGameData();
+                }, 3000);
+            }, 2000);
+            break;
+            
+        case 'chase':
+            showSpeechBubble(playmate, 'You can\'t catch me!');
+            setTimeout(() => {
+                showMessage(`You chase ${playmate} around the nursery!`);
+                setTimeout(() => {
+                    if (Math.random() > 0.5) {
+                        showMessage('You caught them! Tag!');
+                        cat.experience += 5;
+                    } else {
+                        showMessage(`${playmate} is too fast! They got away!`);
+                        cat.experience += 3;
+                    }
+                    updateGameUI();
+                    saveGameData();
+                }, 3000);
+            }, 2000);
+            break;
+            
+        case 'hideseek':
+            showSpeechBubble(playmate, 'I\'ll count! Go hide!');
+            setTimeout(() => {
+                showMessage('You find a great hiding spot...');
+                GameState.isHiding = true;
+                renderGameWorld();
+                setTimeout(() => {
+                    if (Math.random() > 0.4) {
+                        showMessage(`${playmate} can't find you! You win!`);
+                        showSpeechBubble(playmate, 'Where are you?!');
+                        cat.experience += 5;
+                    } else {
+                        showMessage(`${playmate} found you! Good try!`);
+                        showSpeechBubble(playmate, 'Found you!');
+                        cat.experience += 3;
+                    }
+                    GameState.isHiding = false;
+                    renderGameWorld();
+                    updateGameUI();
+                    saveGameData();
+                }, 4000);
+            }, 2000);
+            break;
+            
+        case 'fight':
+            showSpeechBubble(playmate, 'I\'m gonna get you!');
+            setTimeout(() => {
+                showMessage(`You and ${playmate} play fight! Tumbling around...`);
+                setTimeout(() => {
+                    if (Math.random() > 0.5) {
+                        showMessage('You pinned them! Great warrior moves!');
+                        showSpeechBubble(playmate, 'Okay, you win!');
+                        cat.experience += 5;
+                    } else {
+                        showMessage(`${playmate} got you! They're strong!`);
+                        showSpeechBubble(playmate, 'I\'m the best!');
+                        cat.experience += 3;
+                    }
+                    updateGameUI();
+                    saveGameData();
+                }, 3000);
+            }, 2000);
+            break;
+            
+        case 'pounce':
+            showSpeechBubble(playmate, 'Watch me pounce on that leaf!');
+            setTimeout(() => {
+                showMessage('You practice pouncing on leaves together...');
+                setTimeout(() => {
+                    if (Math.random() > 0.4) {
+                        showMessage('Perfect pounce! You\'ll be a great hunter!');
+                        cat.experience += 6;
+                    } else {
+                        showMessage('The leaf got away! Keep practicing!');
+                        cat.experience += 3;
+                    }
+                    updateGameUI();
+                    saveGameData();
+                }, 3000);
+            }, 2000);
+            break;
+    }
+}
+
+// Kit asks for food
+function kitAskForFood() {
+    const cat = GameState.catData;
+    const helpers = ['Sandstorm', 'Ferncloud', 'Graystripe', 'Dustpelt'];
+    const helper = helpers[Math.floor(Math.random() * helpers.length)];
+    
+    showSpeechBubble(helper, 'Are you hungry, little one? I\'ll get you something!');
+    
+    setTimeout(() => {
+        showMessage(`${helper} goes to the fresh-kill pile...`);
+        setTimeout(() => {
+            showMessage(`${helper} comes back with a tasty mouse!`);
+            showSpeechBubble(helper, 'Here you go! Eat up!');
+            setTimeout(() => {
+                cat.hunger = Math.min(100, cat.hunger + 40);
+                showMessage('Yummy! That was delicious!');
+                updateGameUI();
+                saveGameData();
+            }, 2000);
+        }, 3000);
+    }, 2000);
 }
 
 function showSpeechBubble(speaker, text) {
