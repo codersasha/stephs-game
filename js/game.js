@@ -1615,23 +1615,70 @@ function renderCamp() {
             <!-- Camp ground with gradient -->
             <rect x="0" y="0" width="450" height="400" fill="url(#campGround)"/>
             
-            <!-- Ground texture - scattered leaves and grass -->
-            <g opacity="0.3">
-                <circle cx="50" cy="180" r="3" fill="#2d5a2d"/>
-                <circle cx="380" cy="250" r="2" fill="#2d5a2d"/>
-                <circle cx="120" cy="350" r="4" fill="#3d6a3d"/>
-                <circle cx="300" cy="120" r="2" fill="#2d5a2d"/>
-                <circle cx="180" cy="280" r="3" fill="#3d6a3d"/>
-                <ellipse cx="350" cy="180" rx="5" ry="2" fill="#4a7a4a"/>
-                <ellipse cx="100" cy="250" rx="4" ry="2" fill="#3d6a3d"/>
+            <!-- Ground texture - scattered leaves, grass, and pebbles (Warrior Cats style) -->
+            <g opacity="0.4">
+                <!-- Fallen leaves -->
+                <ellipse cx="50" cy="180" rx="4" ry="2" fill="#8B4513" transform="rotate(25 50 180)"/>
+                <ellipse cx="380" cy="250" rx="3" ry="1.5" fill="#CD853F" transform="rotate(-15 380 250)"/>
+                <ellipse cx="120" cy="350" rx="5" ry="2" fill="#A0522D" transform="rotate(40 120 350)"/>
+                <ellipse cx="300" cy="120" rx="3" ry="1.5" fill="#8B4513" transform="rotate(-30 300 120)"/>
+                <ellipse cx="180" cy="280" rx="4" ry="2" fill="#CD853F" transform="rotate(10 180 280)"/>
+                <!-- Grass tufts -->
+                <path d="M60,195 Q62,188 65,195" stroke="#3d6a3d" stroke-width="1.5" fill="none"/>
+                <path d="M62,195 Q64,185 68,195" stroke="#4a7a4a" stroke-width="1" fill="none"/>
+                <path d="M200,340 Q203,333 206,340" stroke="#3d6a3d" stroke-width="1.5" fill="none"/>
+                <path d="M320,160 Q323,153 326,160" stroke="#4a7a4a" stroke-width="1.5" fill="none"/>
+                <path d="M270,280 Q273,273 276,280" stroke="#3d6a3d" stroke-width="1" fill="none"/>
+                <!-- Small pebbles -->
+                <circle cx="150" cy="200" r="2" fill="#808080"/>
+                <circle cx="280" cy="300" r="1.5" fill="#606060"/>
+                <circle cx="100" cy="160" r="2" fill="#707070"/>
+                <!-- Tiny flowers -->
+                <circle cx="70" cy="320" r="2" fill="#ffaaff" opacity="0.6"/>
+                <circle cx="350" cy="140" r="1.5" fill="#ffffaa" opacity="0.5"/>
+                <circle cx="250" cy="350" r="2" fill="#aaffff" opacity="0.5"/>
             </g>
             
-            <!-- Bushes around camp edge -->
+            <!-- Bramble wall around camp (Warrior Cats style) -->
             <g filter="url(#softShadow)">
-                <ellipse cx="20" cy="100" rx="25" ry="20" fill="#2d6a2d"/>
-                <ellipse cx="430" cy="280" rx="30" ry="22" fill="#2d6a2d"/>
-                <ellipse cx="15" cy="350" rx="22" ry="18" fill="#3d7a3d"/>
-                <ellipse cx="440" cy="100" rx="20" ry="16" fill="#3d7a3d"/>
+                <!-- Left wall brambles -->
+                <ellipse cx="10" cy="80" rx="20" ry="25" fill="#2d5a2d"/>
+                <ellipse cx="15" cy="85" rx="15" ry="20" fill="#3d6a3d"/>
+                <path d="M5,60 Q10,50 15,60 Q20,55 25,65" stroke="#4a7a4a" stroke-width="2" fill="none"/>
+                
+                <ellipse cx="8" cy="180" rx="18" ry="22" fill="#2d5a2d"/>
+                <ellipse cx="12" cy="175" rx="14" ry="18" fill="#3d6a3d"/>
+                
+                <ellipse cx="12" cy="280" rx="22" ry="28" fill="#2d5a2d"/>
+                <ellipse cx="16" cy="275" rx="18" ry="22" fill="#3d6a3d"/>
+                <path d="M8,255 Q15,245 22,258" stroke="#4a7a4a" stroke-width="2" fill="none"/>
+                
+                <!-- Right wall brambles -->
+                <ellipse cx="440" cy="130" rx="20" ry="25" fill="#2d5a2d"/>
+                <ellipse cx="435" cy="135" rx="16" ry="20" fill="#3d6a3d"/>
+                
+                <ellipse cx="438" cy="230" rx="22" ry="28" fill="#2d5a2d"/>
+                <ellipse cx="433" cy="225" rx="18" ry="22" fill="#3d6a3d"/>
+                
+                <ellipse cx="442" cy="340" rx="20" ry="25" fill="#2d5a2d"/>
+                <ellipse cx="437" cy="335" rx="16" ry="20" fill="#3d6a3d"/>
+                
+                <!-- Top wall brambles -->
+                <ellipse cx="80" cy="15" rx="30" ry="18" fill="#2d5a2d"/>
+                <ellipse cx="180" cy="12" rx="25" ry="15" fill="#2d6a2d"/>
+                <ellipse cx="280" cy="18" rx="35" ry="20" fill="#2d5a2d"/>
+                <ellipse cx="370" cy="15" rx="28" ry="16" fill="#2d6a2d"/>
+                
+                <!-- Bottom brambles -->
+                <ellipse cx="180" cy="395" rx="40" ry="12" fill="#2d5a2d"/>
+                <ellipse cx="280" cy="392" rx="35" ry="10" fill="#2d6a2d"/>
+                
+                <!-- Fern fronds near dens -->
+                <g opacity="0.8">
+                    <path d="M40,300 Q50,290 45,280 Q55,285 50,275 Q60,280 55,270" stroke="#3d7a3d" stroke-width="2" fill="none"/>
+                    <path d="M400,160 Q410,150 405,140 Q415,145 410,135" stroke="#4a8a4a" stroke-width="2" fill="none"/>
+                    <path d="M140,100 Q150,90 145,80 Q155,85 150,75" stroke="#3d7a3d" stroke-width="1.5" fill="none"/>
+                </g>
             </g>
             
             <!-- Dens with improved graphics -->
@@ -1767,88 +1814,140 @@ function renderCamp() {
     });
 }
 
-// Helper function to render a detailed NPC cat
+// Helper function to render a detailed NPC cat (Warrior Cats book style)
 function renderDetailedNPCCat(x, y, furColor, eyeColor, name, scale = 1) {
     const darkerFur = adjustColor(furColor, -30);
     const lighterFur = adjustColor(furColor, 20);
     const veryDarkFur = adjustColor(furColor, -50);
     const chestFur = adjustColor(furColor, 35);
+    const patternColor = adjustColor(furColor, -45);
+    
+    // Determine if this cat should have stripes based on name
+    const hasStripes = ['Brambleclaw', 'Dustpelt', 'Leafpool', 'Hawkfrost', 'Onewhisker', 'Mudclaw', 'Tigerkit'].some(n => name.includes(n));
+    const isPatched = ['Brightheart', 'Tallstar', 'Blackstar', 'Tallpoppy'].some(n => name.includes(n));
+    
+    let patternMarkings = '';
+    if (hasStripes) {
+        patternMarkings = `
+            <path d="M-8 -1 Q-5 2 -8 5" stroke="${patternColor}" stroke-width="1.5" fill="none" opacity="0.7"/>
+            <path d="M-2 -2 Q1 1 -2 4" stroke="${patternColor}" stroke-width="1.5" fill="none" opacity="0.7"/>
+            <path d="M4 -1 Q7 2 4 5" stroke="${patternColor}" stroke-width="1.5" fill="none" opacity="0.7"/>
+            <path d="M12 -12 L14 -8" stroke="${patternColor}" stroke-width="1" fill="none" opacity="0.6"/>
+            <path d="M18 -13 L20 -9" stroke="${patternColor}" stroke-width="1" fill="none" opacity="0.6"/>
+        `;
+    } else if (isPatched) {
+        patternMarkings = `
+            <ellipse cx="-4" cy="2" rx="6" ry="5" fill="${patternColor}" opacity="0.7"/>
+            <ellipse cx="8" cy="0" rx="5" ry="4" fill="${patternColor}" opacity="0.6"/>
+        `;
+    }
     
     return `
         <g class="npc-cat" transform="translate(${x}, ${y}) scale(${scale})" style="pointer-events: none;">
             <!-- Ground shadow -->
-            <ellipse cx="0" cy="16" rx="18" ry="5" fill="rgba(0,0,0,0.3)"/>
+            <ellipse cx="0" cy="18" rx="20" ry="6" fill="rgba(0,0,0,0.35)"/>
             
-            <!-- Fluffy tail with curve -->
-            <path d="M-14 4 Q-24 2 -26 -8 Q-28 -14 -22 -16" stroke="${darkerFur}" stroke-width="6" fill="none" stroke-linecap="round"/>
-            <path d="M-14 4 Q-23 2 -25 -7 Q-26 -12 -21 -14" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
-            <path d="M-22 -14 Q-20 -16 -18 -14" stroke="${lighterFur}" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <!-- Fluffy tail with fur texture -->
+            <path d="M-14 4 Q-26 0 -30 -10 Q-32 -18 -24 -22" stroke="${veryDarkFur}" stroke-width="8" fill="none" stroke-linecap="round"/>
+            <path d="M-14 4 Q-25 1 -28 -9 Q-30 -16 -23 -20" stroke="${darkerFur}" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <path d="M-13 4 Q-24 2 -26 -8 Q-28 -14 -22 -18" stroke="${furColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <!-- Tail tip fur -->
+            <ellipse cx="-23" cy="-19" rx="4" ry="3" fill="${furColor}"/>
+            <path d="M-25 -20 Q-23 -23 -21 -20" stroke="${lighterFur}" stroke-width="1.5" fill="none"/>
             
-            <!-- Back legs -->
-            <ellipse cx="-8" cy="10" rx="5" ry="7" fill="${darkerFur}"/>
-            <ellipse cx="-8" cy="14" rx="3" ry="3" fill="${veryDarkFur}"/>
+            <!-- Back legs with muscle definition -->
+            <ellipse cx="-10" cy="8" rx="6" ry="9" fill="${darkerFur}"/>
+            <ellipse cx="-10" cy="6" rx="5" ry="7" fill="${furColor}"/>
+            <ellipse cx="-10" cy="15" rx="4" ry="4" fill="${veryDarkFur}"/>
             
-            <!-- Body - more cat-like shape -->
-            <ellipse cx="0" cy="4" rx="16" ry="11" fill="${darkerFur}"/>
-            <ellipse cx="2" cy="2" rx="14" ry="9" fill="${furColor}"/>
-            <!-- Fur texture on body -->
-            <ellipse cx="0" cy="0" rx="10" ry="6" fill="${lighterFur}" opacity="0.2"/>
-            <path d="M-6 -2 Q-4 2 -6 5" stroke="${darkerFur}" stroke-width="0.5" fill="none" opacity="0.4"/>
-            <path d="M2 -3 Q4 1 2 4" stroke="${darkerFur}" stroke-width="0.5" fill="none" opacity="0.4"/>
+            <!-- Body with fur layers -->
+            <ellipse cx="0" cy="4" rx="18" ry="13" fill="${veryDarkFur}"/>
+            <ellipse cx="1" cy="2" rx="16" ry="11" fill="${darkerFur}"/>
+            <ellipse cx="2" cy="0" rx="14" ry="9" fill="${furColor}"/>
+            <!-- Fur texture strokes -->
+            <g opacity="0.5">
+                <path d="M-10 -2 Q-8 1 -10 4" stroke="${darkerFur}" stroke-width="0.8" fill="none"/>
+                <path d="M-5 -3 Q-3 0 -5 3" stroke="${darkerFur}" stroke-width="0.6" fill="none"/>
+                <path d="M0 -2 Q2 1 0 4" stroke="${darkerFur}" stroke-width="0.8" fill="none"/>
+                <path d="M5 -3 Q7 0 5 3" stroke="${darkerFur}" stroke-width="0.6" fill="none"/>
+            </g>
+            ${patternMarkings}
             
-            <!-- Front legs -->
-            <rect x="-4" y="8" width="5" height="10" rx="2" fill="${darkerFur}"/>
-            <rect x="6" y="8" width="5" height="10" rx="2" fill="${furColor}"/>
-            <!-- Paws -->
-            <ellipse cx="-1.5" cy="17" rx="3" ry="2" fill="${darkerFur}"/>
-            <ellipse cx="8.5" cy="17" rx="3" ry="2" fill="${furColor}"/>
+            <!-- Highlight on back -->
+            <ellipse cx="0" cy="-2" rx="10" ry="5" fill="${lighterFur}" opacity="0.25"/>
             
-            <!-- Chest fluff -->
-            <ellipse cx="10" cy="4" rx="5" ry="6" fill="${chestFur}" opacity="0.6"/>
+            <!-- Front legs with paw detail -->
+            <path d="M-2 8 L-4 16" stroke="${darkerFur}" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <path d="M8 8 L10 16" stroke="${furColor}" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <!-- Paws with toe beans -->
+            <ellipse cx="-4" cy="17" rx="4" ry="2.5" fill="${darkerFur}"/>
+            <ellipse cx="10" cy="17" rx="4" ry="2.5" fill="${furColor}"/>
+            <g opacity="0.6">
+                <circle cx="-5" cy="17" r="0.8" fill="${veryDarkFur}"/>
+                <circle cx="-3" cy="17" r="0.8" fill="${veryDarkFur}"/>
+                <circle cx="9" cy="17" r="0.8" fill="${darkerFur}"/>
+                <circle cx="11" cy="17" r="0.8" fill="${darkerFur}"/>
+            </g>
             
-            <!-- Neck -->
-            <ellipse cx="12" cy="-2" rx="6" ry="7" fill="${furColor}"/>
+            <!-- Fluffy chest -->
+            <ellipse cx="12" cy="2" rx="7" ry="8" fill="${chestFur}" opacity="0.7"/>
+            <path d="M8 -2 Q10 -4 12 -2 Q14 -4 16 -2" stroke="${lighterFur}" stroke-width="1" fill="none" opacity="0.5"/>
+            <path d="M9 0 Q11 -1 13 0" stroke="${lighterFur}" stroke-width="0.8" fill="none" opacity="0.4"/>
             
-            <!-- Head - more feline shape -->
-            <ellipse cx="16" cy="-8" rx="10" ry="9" fill="${furColor}"/>
-            <ellipse cx="17" cy="-9" rx="8" ry="7" fill="${lighterFur}" opacity="0.15"/>
+            <!-- Neck with ruff -->
+            <ellipse cx="14" cy="-4" rx="7" ry="9" fill="${furColor}"/>
+            <ellipse cx="15" cy="-5" rx="5" ry="6" fill="${lighterFur}" opacity="0.2"/>
             
-            <!-- Ears - tall and pointed like a cat -->
-            <polygon points="8,-12 10,-24 16,-14" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
-            <polygon points="10,-13 11,-21 14,-14" fill="#e8b4b8" opacity="0.6"/>
-            <polygon points="20,-14 26,-24 24,-12" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
-            <polygon points="21,-14 24,-21 23,-14" fill="#e8b4b8" opacity="0.6"/>
+            <!-- Head - refined feline shape -->
+            <ellipse cx="18" cy="-10" rx="11" ry="10" fill="${furColor}"/>
+            <ellipse cx="19" cy="-11" rx="9" ry="8" fill="${lighterFur}" opacity="0.15"/>
             
-            <!-- Face markings -->
-            <ellipse cx="16" cy="-4" rx="5" ry="4" fill="${chestFur}" opacity="0.4"/>
+            <!-- Ears - tall, pointed, with fur tufts -->
+            <polygon points="9,-14 12,-28 18,-16" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="11,-15 12,-24 16,-16" fill="#e8b4b8" opacity="0.5"/>
+            <path d="M11 -26 Q12 -30 13 -26" stroke="${darkerFur}" stroke-width="1" fill="none"/>
             
-            <!-- Eyes - almond shaped like real cats -->
-            <ellipse cx="12" cy="-9" rx="3" ry="3.5" fill="white"/>
-            <ellipse cx="20" cy="-9" rx="3" ry="3.5" fill="white"/>
-            <ellipse cx="12" cy="-9" rx="2" ry="3" fill="${eyeColor}"/>
-            <ellipse cx="20" cy="-9" rx="2" ry="3" fill="${eyeColor}"/>
-            <!-- Pupils -->
-            <ellipse cx="12" cy="-9" rx="1" ry="2.5" fill="#0a0a0a"/>
-            <ellipse cx="20" cy="-9" rx="1" ry="2.5" fill="#0a0a0a"/>
+            <polygon points="22,-16 30,-28 28,-14" fill="${furColor}" stroke="${darkerFur}" stroke-width="0.5"/>
+            <polygon points="24,-16 28,-24 27,-16" fill="#e8b4b8" opacity="0.5"/>
+            <path d="M29 -26 Q30 -30 31 -26" stroke="${darkerFur}" stroke-width="1" fill="none"/>
+            
+            <!-- Face fur pattern -->
+            <ellipse cx="18" cy="-6" rx="6" ry="5" fill="${chestFur}" opacity="0.5"/>
+            
+            <!-- Eyes - beautiful almond cat eyes -->
+            <ellipse cx="13" cy="-11" rx="3.5" ry="4" fill="white"/>
+            <ellipse cx="23" cy="-11" rx="3.5" ry="4" fill="white"/>
+            <!-- Iris with detail -->
+            <ellipse cx="13" cy="-11" rx="2.5" ry="3.5" fill="${eyeColor}"/>
+            <ellipse cx="23" cy="-11" rx="2.5" ry="3.5" fill="${eyeColor}"/>
+            <ellipse cx="13.5" cy="-11.5" rx="1.5" ry="2" fill="${adjustColor(eyeColor, 20)}" opacity="0.5"/>
+            <ellipse cx="23.5" cy="-11.5" rx="1.5" ry="2" fill="${adjustColor(eyeColor, 20)}" opacity="0.5"/>
+            <!-- Vertical pupils -->
+            <ellipse cx="13" cy="-11" rx="1" ry="3" fill="#0a0a0a"/>
+            <ellipse cx="23" cy="-11" rx="1" ry="3" fill="#0a0a0a"/>
             <!-- Eye shine -->
-            <circle cx="11" cy="-10.5" r="0.8" fill="white" opacity="0.9"/>
-            <circle cx="19" cy="-10.5" r="0.8" fill="white" opacity="0.9"/>
+            <circle cx="12" cy="-12.5" r="1" fill="white" opacity="0.95"/>
+            <circle cx="22" cy="-12.5" r="1" fill="white" opacity="0.95"/>
+            <circle cx="14" cy="-9.5" r="0.5" fill="white" opacity="0.6"/>
+            <circle cx="24" cy="-9.5" r="0.5" fill="white" opacity="0.6"/>
             
-            <!-- Nose - pink triangle -->
-            <path d="M15,-4 L17,-4 L16,-2 Z" fill="#d88a90"/>
-            <ellipse cx="16" cy="-3.5" rx="1.2" ry="0.8" fill="#c87a80"/>
+            <!-- Nose - detailed pink -->
+            <path d="M16,-5 L20,-5 L18,-2 Z" fill="#d88a90"/>
+            <ellipse cx="18" cy="-4" rx="1.5" ry="1" fill="#c87a80"/>
+            <circle cx="18" cy="-4.5" r="0.4" fill="#f0a0a0" opacity="0.6"/>
             
-            <!-- Mouth -->
-            <path d="M14,-2 Q16,-1 18,-2" stroke="${veryDarkFur}" stroke-width="0.5" fill="none"/>
+            <!-- Mouth and chin -->
+            <path d="M16,-2 Q18,0 20,-2" stroke="${veryDarkFur}" stroke-width="0.6" fill="none"/>
+            <ellipse cx="18" cy="0" rx="3" ry="2" fill="${chestFur}" opacity="0.3"/>
             
-            <!-- Whiskers -->
-            <g stroke="#d8d8d8" stroke-width="0.4" opacity="0.7">
-                <line x1="9" y1="-4" x2="2" y2="-6"/>
-                <line x1="9" y1="-3" x2="2" y2="-3"/>
-                <line x1="9" y1="-2" x2="2" y2="0"/>
-                <line x1="23" y1="-4" x2="30" y2="-6"/>
-                <line x1="23" y1="-3" x2="30" y2="-3"/>
-                <line x1="23" y1="-2" x2="30" y2="0"/>
+            <!-- Whiskers - fine and detailed -->
+            <g stroke="#e8e8e8" stroke-width="0.5" opacity="0.8">
+                <line x1="10" y1="-5" x2="0" y2="-8"/>
+                <line x1="10" y1="-4" x2="0" y2="-4"/>
+                <line x1="10" y1="-3" x2="1" y2="0"/>
+                <line x1="26" y1="-5" x2="36" y2="-8"/>
+                <line x1="26" y1="-4" x2="36" y2="-4"/>
+                <line x1="26" y1="-3" x2="35" y2="0"/>
             </g>
             
             <!-- Name tag -->
