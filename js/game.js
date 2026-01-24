@@ -826,8 +826,21 @@ function beginAdventure() {
         eyeColor: GameState.customization.eyeColor,
         eyeColorName: GameState.customization.eyeColorName,
         // Your kits!
-        kits: []
+        kits: [],
+        // Mentor (for apprentices)
+        mentor: null
     };
+    
+    // Assign mentor if starting as an apprentice
+    if (rankName === 'Apprentice' && !isLoner && !isKittypet) {
+        const clanWarriors = getClanCats().filter(c => c.rank === 'Warrior');
+        if (clanWarriors.length > 0) {
+            const mentor = clanWarriors[Math.floor(Math.random() * clanWarriors.length)];
+            GameState.catData.mentor = mentor.name;
+        } else {
+            GameState.catData.mentor = 'Graystripe'; // Fallback
+        }
+    }
     
     saveGameData();
     
@@ -961,6 +974,17 @@ function updateGameUI() {
     }
     
     document.getElementById('cat-age').textContent = `${cat.age} moons`;
+    
+    // Show mentor for apprentices
+    const mentorEl = document.getElementById('cat-mentor');
+    if (mentorEl) {
+        if (cat.rank === 'Apprentice' && cat.mentor) {
+            mentorEl.textContent = `Mentor: ${cat.mentor}`;
+            mentorEl.style.display = '';
+        } else {
+            mentorEl.style.display = 'none';
+        }
+    }
     
     document.getElementById('health-fill').style.width = `${cat.health}%`;
     document.getElementById('hunger-fill').style.width = `${cat.hunger}%`;
@@ -7075,6 +7099,16 @@ function checkRankUp() {
     if (cat.rank === 'Kit' && cat.age >= 6) {
         cat.rank = 'Apprentice';
         cat.name = cat.firstName + 'paw';
+        
+        // Assign a random warrior as mentor!
+        const clanWarriors = getClanCats().filter(c => c.rank === 'Warrior');
+        if (clanWarriors.length > 0) {
+            const mentor = clanWarriors[Math.floor(Math.random() * clanWarriors.length)];
+            cat.mentor = mentor.name;
+        } else {
+            cat.mentor = 'Graystripe'; // Fallback
+        }
+        
         holdClanMeeting('apprentice', cat.name);
     }
     // Apprentice to Warrior with enough experience
@@ -7112,9 +7146,19 @@ function holdClanMeeting(ceremonyType, catName) {
     setTimeout(() => {
         switch (ceremonyType) {
             case 'apprentice':
+                const mentorName = cat.mentor || 'a warrior';
                 showMessage(`"${catName}, you have reached six moons. From this day forward, you will be known as ${catName}!"`);
                 setTimeout(() => {
-                    showMessage(`The clan chants: "${catName}! ${catName}!"`);
+                    showMessage(`"${mentorName}, you are ready for an apprentice. You will be mentor to ${catName}."`);
+                    setTimeout(() => {
+                        showSpeechBubble(mentorName, `I'm honored to be your mentor, ${catName}!`);
+                        setTimeout(() => {
+                            showMessage(`${mentorName} touches noses with you. The clan chants: "${catName}! ${catName}!"`);
+                            setTimeout(() => {
+                                showMessage(`${mentorName} is now your mentor! They will teach you to hunt and fight.`);
+                            }, 2500);
+                        }, 2500);
+                    }, 3000);
                 }, 3000);
                 break;
             case 'warrior':
