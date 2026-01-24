@@ -2500,6 +2500,102 @@ function renderForest() {
             <ellipse cx="850" cy="850" rx="25" ry="15" fill="#2d5d26"/>
             <ellipse cx="1100" cy="850" rx="28" ry="16" fill="#1e4d1b"/>
             
+            <!-- CLAN TERRITORY MARKERS - All four clans visible! -->
+            
+            <!-- ThunderClan Territory (center-left, oak forest) -->
+            <g class="territory-thunderclan">
+                <rect x="50" y="200" width="350" height="350" fill="#3a5a2a" opacity="0.15" rx="20"/>
+                <text x="225" y="230" text-anchor="middle" fill="#ff9800" font-size="16" font-weight="bold" opacity="0.8" style="text-shadow: 2px 2px 4px black;">ThunderClan Territory</text>
+                <!-- Oak trees -->
+                <circle cx="120" cy="320" r="40" fill="#2d5a2d" opacity="0.5"/>
+                <circle cx="280" cy="380" r="50" fill="#3d6a3d" opacity="0.4"/>
+                <circle cx="180" cy="450" r="35" fill="#2d5a2d" opacity="0.5"/>
+            </g>
+            ${clan === 'thunder' ? `
+                <g class="camp-entrance clickable" data-action="enter-camp" style="cursor: pointer;">
+                    <ellipse cx="200" cy="300" rx="35" ry="25" fill="#4a3a2a" stroke="#8a7a5a" stroke-width="3"/>
+                    <ellipse cx="200" cy="295" rx="25" ry="18" fill="#2a1a10"/>
+                    <text x="200" y="340" text-anchor="middle" fill="#ffd700" font-size="12" font-weight="bold">Your Camp</text>
+                </g>
+            ` : ''}
+            
+            <!-- RiverClan Territory (bottom, near water) -->
+            <g class="territory-riverclan">
+                <rect x="400" y="700" width="400" height="280" fill="#2a4a6a" opacity="0.15" rx="20"/>
+                <text x="600" y="730" text-anchor="middle" fill="#2196f3" font-size="16" font-weight="bold" opacity="0.8" style="text-shadow: 2px 2px 4px black;">RiverClan Territory</text>
+                <!-- Water and reeds -->
+                <ellipse cx="500" cy="820" rx="80" ry="40" fill="#4a8acc" opacity="0.4"/>
+                <ellipse cx="700" cy="850" rx="60" ry="30" fill="#5a9add" opacity="0.35"/>
+                <line x1="480" y1="780" x2="485" y2="750" stroke="#6a9a6a" stroke-width="3"/>
+                <line x1="520" y1="785" x2="525" y2="755" stroke="#6a9a6a" stroke-width="3"/>
+                <line x1="680" y1="810" x2="685" y2="780" stroke="#6a9a6a" stroke-width="3"/>
+            </g>
+            ${clan === 'river' ? `
+                <g class="camp-entrance clickable" data-action="enter-camp" style="cursor: pointer;">
+                    <ellipse cx="600" cy="800" rx="35" ry="25" fill="#3a4a5a" stroke="#6a9acc" stroke-width="3"/>
+                    <ellipse cx="600" cy="795" rx="25" ry="18" fill="#1a2a3a"/>
+                    <text x="600" y="840" text-anchor="middle" fill="#ffd700" font-size="12" font-weight="bold">Your Camp</text>
+                </g>
+            ` : ''}
+            
+            <!-- ShadowClan Territory (right side, dark pines) -->
+            <g class="territory-shadowclan">
+                <rect x="850" y="200" width="330" height="400" fill="#2a2a3a" opacity="0.2" rx="20"/>
+                <text x="1015" y="230" text-anchor="middle" fill="#9c27b0" font-size="16" font-weight="bold" opacity="0.8" style="text-shadow: 2px 2px 4px black;">ShadowClan Territory</text>
+                <!-- Dark misty atmosphere -->
+                <ellipse cx="950" cy="350" rx="100" ry="60" fill="#1a1a2a" opacity="0.3"/>
+                <ellipse cx="1050" cy="450" rx="80" ry="50" fill="#2a2a3a" opacity="0.25"/>
+            </g>
+            ${clan === 'shadow' ? `
+                <g class="camp-entrance clickable" data-action="enter-camp" style="cursor: pointer;">
+                    <ellipse cx="950" cy="350" rx="35" ry="25" fill="#3a2a3a" stroke="#7a5a8a" stroke-width="3"/>
+                    <ellipse cx="950" cy="345" rx="25" ry="18" fill="#1a0a1a"/>
+                    <text x="950" y="390" text-anchor="middle" fill="#ffd700" font-size="12" font-weight="bold">Your Camp</text>
+                </g>
+            ` : ''}
+            
+            <!-- WindClan Territory (top, open moorland) -->
+            <g class="territory-windclan">
+                <rect x="500" y="80" width="400" height="250" fill="#4a5a3a" opacity="0.15" rx="20"/>
+                <text x="700" y="110" text-anchor="middle" fill="#8bc34a" font-size="16" font-weight="bold" opacity="0.8" style="text-shadow: 2px 2px 4px black;">WindClan Territory</text>
+                <!-- Open moorland - rolling hills -->
+                <ellipse cx="600" cy="180" rx="120" ry="40" fill="#5a7a4a" opacity="0.25"/>
+                <ellipse cx="750" cy="220" rx="100" ry="35" fill="#4a6a3a" opacity="0.2"/>
+                <!-- Wind-swept grass -->
+                <line x1="550" y1="200" x2="580" y2="190" stroke="#7a9a6a" stroke-width="2"/>
+                <line x1="650" y1="210" x2="680" y2="200" stroke="#7a9a6a" stroke-width="2"/>
+                <line x1="750" y1="250" x2="780" y2="240" stroke="#7a9a6a" stroke-width="2"/>
+            </g>
+            ${clan === 'wind' ? `
+                <g class="camp-entrance clickable" data-action="enter-camp" style="cursor: pointer;">
+                    <ellipse cx="700" cy="200" rx="35" ry="25" fill="#4a5a3a" stroke="#8a9a7a" stroke-width="3"/>
+                    <ellipse cx="700" cy="195" rx="25" ry="18" fill="#2a3a1a"/>
+                    <text x="700" y="240" text-anchor="middle" fill="#ffd700" font-size="12" font-weight="bold">Your Camp</text>
+                </g>
+            ` : ''}
+            
+            <!-- Fourtrees / The Island (center gathering place) -->
+            <g class="fourtrees">
+                <ellipse cx="600" cy="500" rx="60" ry="50" fill="#3a4a3a" opacity="0.4"/>
+                <polygon points="570,520 585,450 600,520" fill="#4a7a4a"/>
+                <polygon points="600,520 615,450 630,520" fill="#3a6a3a"/>
+                <polygon points="585,510 600,440 615,510" fill="#5a8a5a"/>
+                <polygon points="575,515 590,445 605,515" fill="#4a7a4a"/>
+                <text x="600" y="560" text-anchor="middle" fill="#ffd700" font-size="11" font-weight="bold" opacity="0.9">Fourtrees</text>
+            </g>
+            
+            <!-- Borders between territories -->
+            <g stroke="#5a5a5a" stroke-width="2" stroke-dasharray="10,10" opacity="0.4">
+                <!-- Thunder-Wind border -->
+                <path d="M400,200 Q450,350 400,500" fill="none"/>
+                <!-- Wind-Shadow border -->
+                <path d="M850,100 L850,600" fill="none"/>
+                <!-- Thunder-River border -->
+                <path d="M100,550 Q350,600 500,700" fill="none"/>
+                <!-- Shadow-River border -->
+                <path d="M850,600 Q800,750 1000,900" fill="none"/>
+            </g>
+            
             <!-- Stream for RiverClan territory - LONG winding river -->
             ${clan === 'river' ? `
             <path d="M0,250 Q200,200 400,280 Q600,350 800,300 Q1000,250 1200,320" stroke="#4a8aaa" stroke-width="30" fill="none" opacity="0.7"/>
@@ -2773,6 +2869,24 @@ function renderForest() {
             // Remove this threat after encounter
             GameState.forestThreats = GameState.forestThreats.filter(t => t.type !== threatType);
         });
+    });
+    
+    // Camp entrance in your territory
+    document.querySelector('.camp-entrance')?.addEventListener('click', () => {
+        GameState.currentLocation = 'camp';
+        GameState.playerX = 225;
+        GameState.playerY = 250;
+        GameState.forestThreats = [];
+        if (GameState.withWarrior) {
+            showMessage(`${GameState.withWarrior} brought you back to camp!`);
+            GameState.withWarrior = null;
+        } else if (GameState.sneakingWithFriend) {
+            showMessage(`You and ${GameState.sneakingWithFriend} made it back to camp!`);
+            GameState.sneakingWithFriend = null;
+        } else {
+            showMessage('You enter your camp.');
+        }
+        renderGameWorld();
     });
     
     document.querySelectorAll('.camp-den').forEach(den => {
