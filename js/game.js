@@ -96,7 +96,8 @@ const CLANS = {
     river: { name: 'RiverClan', color: '#2196f3' },
     wind: { name: 'WindClan', color: '#8bc34a' },
     shadow: { name: 'ShadowClan', color: '#673ab7' },
-    loner: { name: 'Loner', color: '#8a7a6a' }
+    loner: { name: 'Loner', color: '#8a7a6a' },
+    star: { name: 'StarClan', color: '#ffd700' }
 };
 
 // Initialize game
@@ -607,6 +608,9 @@ function beginAdventure() {
     // Check if starting as a loner
     const isLoner = GameState.selectedClan === 'loner';
     
+    // Check if starting as StarClan
+    const isStarClan = GameState.selectedClan === 'star';
+    
     // Get the selected starting rank
     const startingRank = GameState.customization.startingRank || 'kit';
     const startingAge = GameState.customization.startingAge || 0;
@@ -618,7 +622,12 @@ function beginAdventure() {
     let isDeputy = false;
     let isLeader = false;
     
-    if (isLoner) {
+    if (isStarClan) {
+        // StarClan cats use their rank's suffix
+        nameSuffix = GameState.customization.randomSuffix || 'spirit';
+        rankName = 'StarClan Warrior';
+        experience = 1000; // Ancient wisdom
+    } else if (isLoner) {
         nameSuffix = '';
         rankName = 'Loner';
         experience = 50;
@@ -663,24 +672,25 @@ function beginAdventure() {
         }
     }
     
-    const fullName = isLoner ? formattedName : formattedName + nameSuffix;
+    const fullName = (isLoner || isStarClan) ? formattedName + nameSuffix : formattedName + nameSuffix;
     
     // Create new cat data with customization
     GameState.catData = {
         firstName: formattedName,
         name: fullName,
-        clan: isLoner ? 'Loner' : GameState.selectedClan,
+        clan: isStarClan ? 'StarClan' : (isLoner ? 'Loner' : GameState.selectedClan),
         rank: rankName,
-        age: isLoner ? 12 : startingAge,
+        age: isStarClan ? 100 : (isLoner ? 12 : startingAge), // StarClan cats are ancient
         health: 100,
-        hunger: isLoner ? 70 : 100,
-        thirst: isLoner ? 70 : 100,
+        hunger: isStarClan ? 100 : (isLoner ? 70 : 100), // StarClan cats don't need food
+        thirst: isStarClan ? 100 : (isLoner ? 70 : 100),
         experience: experience,
         isDeputy: isDeputy,
         isLeader: isLeader,
         lives: isLeader ? 9 : 1, // Leaders have 9 lives!
         isLoner: isLoner,
-        inStarClan: false,
+        isStarClanCat: isStarClan, // Permanently a StarClan cat
+        inStarClan: isStarClan, // Start in StarClan
         hasSeenTutorial: false,
         // Save customization
         furColor: GameState.customization.furColor,
@@ -691,6 +701,14 @@ function beginAdventure() {
     };
     
     saveGameData();
+    
+    // StarClan cats skip tutorial and go straight to StarClan
+    if (isStarClan) {
+        GameState.inStarClan = true;
+        showScreen('starclan');
+        showMessage('Welcome to StarClan, ' + fullName + '! You walk among the stars...');
+        return;
+    }
     
     // Show tutorial for new players
     GameState.isNewGame = true;
