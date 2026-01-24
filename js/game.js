@@ -3119,110 +3119,505 @@ function showKitGamesMenu() {
     popup.classList.remove('hidden');
 }
 
+// Kit game variables
+let kitGameActive = false;
+let kitGameInterval = null;
+let kitGameTimeout = null;
+let kitGameScore = 0;
+let kitGamePlaymate = '';
+
 function playKitGame(game) {
-    const cat = GameState.catData;
     const kits = ['Molekit', 'Cherrykit', 'Lilykit', 'Seedkit', 'Honeykit'];
-    const playmate = kits[Math.floor(Math.random() * kits.length)];
+    kitGamePlaymate = kits[Math.floor(Math.random() * kits.length)];
+    kitGameActive = true;
+    kitGameScore = 0;
     
     switch(game) {
         case 'mossball':
-            showSpeechBubble(playmate, 'I\'ll get the moss-ball!');
-            setTimeout(() => {
-                showMessage('You play moss-ball together! You bat it back and forth...');
-                setTimeout(() => {
-                    if (Math.random() > 0.5) {
-                        showMessage('You win! Great catch!');
-                        cat.experience += 5;
-                    } else {
-                        showMessage(`${playmate} wins this round! Good game!`);
-                        cat.experience += 3;
-                    }
-                    updateGameUI();
-                    saveGameData();
-                }, 3000);
-            }, 2000);
+            startMossballGame();
             break;
-            
         case 'chase':
-            showSpeechBubble(playmate, 'You can\'t catch me!');
-            setTimeout(() => {
-                showMessage(`You chase ${playmate} around the nursery!`);
-                setTimeout(() => {
-                    if (Math.random() > 0.5) {
-                        showMessage('You caught them! Tag!');
-                        cat.experience += 5;
-                    } else {
-                        showMessage(`${playmate} is too fast! They got away!`);
-                        cat.experience += 3;
-                    }
-                    updateGameUI();
-                    saveGameData();
-                }, 3000);
-            }, 2000);
+            startChaseGame();
             break;
-            
         case 'hideseek':
-            showSpeechBubble(playmate, 'I\'ll count! Go hide!');
-            setTimeout(() => {
-                showMessage('You find a great hiding spot...');
-                GameState.isHiding = true;
-                renderGameWorld();
-                setTimeout(() => {
-                    if (Math.random() > 0.4) {
-                        showMessage(`${playmate} can't find you! You win!`);
-                        showSpeechBubble(playmate, 'Where are you?!');
-                        cat.experience += 5;
-                    } else {
-                        showMessage(`${playmate} found you! Good try!`);
-                        showSpeechBubble(playmate, 'Found you!');
-                        cat.experience += 3;
-                    }
-                    GameState.isHiding = false;
-                    renderGameWorld();
-                    updateGameUI();
-                    saveGameData();
-                }, 4000);
-            }, 2000);
+            startHideSeekGame();
             break;
-            
         case 'fight':
-            showSpeechBubble(playmate, 'I\'m gonna get you!');
-            setTimeout(() => {
-                showMessage(`You and ${playmate} play fight! Tumbling around...`);
-                setTimeout(() => {
-                    if (Math.random() > 0.5) {
-                        showMessage('You pinned them! Great warrior moves!');
-                        showSpeechBubble(playmate, 'Okay, you win!');
-                        cat.experience += 5;
-                    } else {
-                        showMessage(`${playmate} got you! They're strong!`);
-                        showSpeechBubble(playmate, 'I\'m the best!');
-                        cat.experience += 3;
-                    }
-                    updateGameUI();
-                    saveGameData();
-                }, 3000);
-            }, 2000);
+            startPlayFightGame();
             break;
-            
         case 'pounce':
-            showSpeechBubble(playmate, 'Watch me pounce on that leaf!');
-            setTimeout(() => {
-                showMessage('You practice pouncing on leaves together...');
-                setTimeout(() => {
-                    if (Math.random() > 0.4) {
-                        showMessage('Perfect pounce! You\'ll be a great hunter!');
-                        cat.experience += 6;
-                    } else {
-                        showMessage('The leaf got away! Keep practicing!');
-                        cat.experience += 3;
-                    }
-                    updateGameUI();
-                    saveGameData();
-                }, 3000);
-            }, 2000);
+            startPounceGame();
             break;
     }
+}
+
+// MOSS-BALL GAME - Click the ball to hit it back!
+let mossballPosition = { x: 300, y: 200 };
+let mossballVelocity = { x: 3, y: 2 };
+let mossballHits = 0;
+
+function startMossballGame() {
+    mossballHits = 0;
+    mossballPosition = { x: 300, y: 200 };
+    mossballVelocity = { x: 4, y: 3 };
+    
+    showMessage(`${kitGamePlaymate}: "Let's play moss-ball! Hit it 5 times to win!"`);
+    
+    renderMossballGame();
+    
+    kitGameInterval = setInterval(() => {
+        if (kitGameActive) {
+            // Move the ball
+            mossballPosition.x += mossballVelocity.x;
+            mossballPosition.y += mossballVelocity.y;
+            
+            // Bounce off walls
+            if (mossballPosition.x < 50 || mossballPosition.x > 550) {
+                mossballVelocity.x *= -1;
+            }
+            if (mossballPosition.y < 50 || mossballPosition.y > 350) {
+                mossballVelocity.y *= -1;
+            }
+            
+            renderMossballGame();
+        }
+    }, 50);
+    
+    // Time limit
+    kitGameTimeout = setTimeout(() => {
+        if (kitGameActive) {
+            endKitGame(mossballHits >= 5, 'mossball');
+        }
+    }, 15000);
+}
+
+function renderMossballGame() {
+    const gameWorld = document.getElementById('game-world');
+    
+    gameWorld.innerHTML = `
+        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <radialGradient id="nurseryGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#4a4a3a"/>
+                    <stop offset="100%" stop-color="#2a2a2a"/>
+                </radialGradient>
+            </defs>
+            
+            <!-- Nursery background -->
+            <rect x="0" y="0" width="600" height="400" fill="url(#nurseryGlow)"/>
+            <text x="300" y="30" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold">MOSS-BALL! Hit it ${5 - mossballHits} more times!</text>
+            <text x="300" y="380" text-anchor="middle" fill="#aaa" font-size="14">Click the moss-ball to hit it!</text>
+            
+            <!-- The moss-ball -->
+            <g id="mossball" class="clickable" style="cursor: pointer;">
+                <circle cx="${mossballPosition.x}" cy="${mossballPosition.y}" r="25" fill="#5a8a3a"/>
+                <circle cx="${mossballPosition.x - 5}" cy="${mossballPosition.y - 5}" r="8" fill="#4a7a2a"/>
+                <circle cx="${mossballPosition.x + 8}" cy="${mossballPosition.y + 5}" r="6" fill="#6a9a4a"/>
+                <circle cx="${mossballPosition.x - 8}" cy="${mossballPosition.y + 8}" r="5" fill="#3a6a1a"/>
+            </g>
+            
+            <!-- Score -->
+            <text x="50" y="60" fill="white" font-size="16">Hits: ${mossballHits}/5</text>
+            
+            <!-- Quit button -->
+            <g id="quit-game" class="clickable" style="cursor: pointer;">
+                <rect x="500" y="10" width="80" height="30" rx="5" fill="#6a4a4a" stroke="#8a6a6a" stroke-width="2"/>
+                <text x="540" y="30" text-anchor="middle" fill="white" font-size="12">Quit</text>
+            </g>
+        </svg>
+    `;
+    
+    document.getElementById('mossball')?.addEventListener('click', () => {
+        mossballHits++;
+        // Ball bounces away when hit
+        mossballVelocity.x = (Math.random() - 0.5) * 10;
+        mossballVelocity.y = (Math.random() - 0.5) * 8;
+        
+        if (mossballHits >= 5) {
+            endKitGame(true, 'mossball');
+        }
+    });
+    
+    document.getElementById('quit-game')?.addEventListener('click', () => {
+        endKitGame(false, 'mossball');
+    });
+}
+
+// CHASE GAME - Click the running kit to catch them!
+let chasePosition = { x: 300, y: 200 };
+
+function startChaseGame() {
+    chasePosition = { x: 300, y: 200 };
+    
+    showMessage(`${kitGamePlaymate}: "You can't catch me!"`);
+    
+    renderChaseGame();
+    
+    // Kit runs away every 0.6 seconds
+    kitGameInterval = setInterval(() => {
+        if (kitGameActive) {
+            chasePosition.x = 80 + Math.random() * 440;
+            chasePosition.y = 80 + Math.random() * 280;
+            renderChaseGame();
+        }
+    }, 600);
+    
+    // Time limit - 10 seconds to catch
+    kitGameTimeout = setTimeout(() => {
+        if (kitGameActive) {
+            endKitGame(false, 'chase');
+        }
+    }, 10000);
+}
+
+function renderChaseGame() {
+    const gameWorld = document.getElementById('game-world');
+    
+    gameWorld.innerHTML = `
+        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <rect x="0" y="0" width="600" height="400" fill="#3a4a3a"/>
+            <text x="300" y="30" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold">CHASE! Click ${kitGamePlaymate} to catch them!</text>
+            
+            <!-- The running kit -->
+            <g id="running-kit" class="clickable" style="cursor: pointer;">
+                <ellipse cx="${chasePosition.x}" cy="${chasePosition.y}" rx="20" ry="12" fill="#c4a882"/>
+                <circle cx="${chasePosition.x - 12}" cy="${chasePosition.y - 8}" r="10" fill="#c4a882"/>
+                <polygon points="${chasePosition.x - 18},${chasePosition.y - 14} ${chasePosition.x - 14},${chasePosition.y - 22} ${chasePosition.x - 10},${chasePosition.y - 14}" fill="#c4a882"/>
+                <polygon points="${chasePosition.x - 8},${chasePosition.y - 14} ${chasePosition.x - 4},${chasePosition.y - 22} ${chasePosition.x},${chasePosition.y - 14}" fill="#c4a882"/>
+                <circle cx="${chasePosition.x - 15}" cy="${chasePosition.y - 10}" r="2" fill="#2ecc71"/>
+                <circle cx="${chasePosition.x - 9}" cy="${chasePosition.y - 10}" r="2" fill="#2ecc71"/>
+                <ellipse cx="${chasePosition.x + 25}" cy="${chasePosition.y}" rx="10" ry="4" fill="#c4a882"/>
+                <text x="${chasePosition.x}" y="${chasePosition.y + 35}" text-anchor="middle" fill="white" font-size="12">${kitGamePlaymate}</text>
+            </g>
+            
+            <text x="300" y="380" text-anchor="middle" fill="#aaa" font-size="14">Quick! They're getting away!</text>
+            
+            <!-- Quit button -->
+            <g id="quit-game" class="clickable" style="cursor: pointer;">
+                <rect x="500" y="10" width="80" height="30" rx="5" fill="#6a4a4a"/>
+                <text x="540" y="30" text-anchor="middle" fill="white" font-size="12">Quit</text>
+            </g>
+        </svg>
+    `;
+    
+    document.getElementById('running-kit')?.addEventListener('click', () => {
+        endKitGame(true, 'chase');
+    });
+    
+    document.getElementById('quit-game')?.addEventListener('click', () => {
+        endKitGame(false, 'chase');
+    });
+}
+
+// HIDE AND SEEK - Pick a hiding spot!
+let hideSpotChosen = -1;
+let seekerLooking = false;
+
+function startHideSeekGame() {
+    hideSpotChosen = -1;
+    seekerLooking = false;
+    
+    showMessage(`${kitGamePlaymate}: "I'll count to ten! Go hide!"`);
+    
+    renderHideSeekGame();
+}
+
+function renderHideSeekGame() {
+    const gameWorld = document.getElementById('game-world');
+    
+    if (!seekerLooking) {
+        // Choosing phase
+        gameWorld.innerHTML = `
+            <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                <rect x="0" y="0" width="600" height="400" fill="#2a3a2a"/>
+                <text x="300" y="30" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold">HIDE AND SEEK! Pick a hiding spot!</text>
+                <text x="300" y="60" text-anchor="middle" fill="#aaa" font-size="14">${kitGamePlaymate} is counting... "1... 2... 3..."</text>
+                
+                <!-- Hiding spots -->
+                <g id="spot-0" class="clickable" style="cursor: pointer;">
+                    <ellipse cx="100" cy="200" rx="50" ry="35" fill="#4a6a3a"/>
+                    <text x="100" y="250" text-anchor="middle" fill="white" font-size="12">Bush</text>
+                </g>
+                
+                <g id="spot-1" class="clickable" style="cursor: pointer;">
+                    <rect x="230" y="150" width="80" height="80" fill="#5a4a3a" rx="5"/>
+                    <rect x="260" y="180" width="20" height="50" fill="#2a1a0a"/>
+                    <text x="270" y="250" text-anchor="middle" fill="white" font-size="12">Nest</text>
+                </g>
+                
+                <g id="spot-2" class="clickable" style="cursor: pointer;">
+                    <polygon points="420,230 450,140 480,230" fill="#6a5a4a"/>
+                    <rect x="440" y="180" width="20" height="50" fill="#4a3a2a"/>
+                    <text x="450" y="250" text-anchor="middle" fill="white" font-size="12">Rock pile</text>
+                </g>
+                
+                <g id="spot-3" class="clickable" style="cursor: pointer;">
+                    <rect x="520" y="280" width="60" height="50" fill="#3a3a4a"/>
+                    <text x="550" y="350" text-anchor="middle" fill="white" font-size="12">Shadow</text>
+                </g>
+                
+                <!-- Quit button -->
+                <g id="quit-game" class="clickable" style="cursor: pointer;">
+                    <rect x="500" y="10" width="80" height="30" rx="5" fill="#6a4a4a"/>
+                    <text x="540" y="30" text-anchor="middle" fill="white" font-size="12">Quit</text>
+                </g>
+            </svg>
+        `;
+        
+        for (let i = 0; i < 4; i++) {
+            document.getElementById(`spot-${i}`)?.addEventListener('click', () => {
+                hideSpotChosen = i;
+                seekerLooking = true;
+                showMessage('You hide! "...8... 9... 10! Ready or not, here I come!"');
+                setTimeout(() => {
+                    checkHideSeekResult();
+                }, 3000);
+            });
+        }
+    }
+    
+    document.getElementById('quit-game')?.addEventListener('click', () => {
+        endKitGame(false, 'hideseek');
+    });
+}
+
+function checkHideSeekResult() {
+    // Seeker checks random spots
+    const seekerChoice = Math.floor(Math.random() * 4);
+    const found = seekerChoice === hideSpotChosen;
+    
+    const spotNames = ['the bush', 'the nest', 'the rock pile', 'the shadow'];
+    
+    showMessage(`${kitGamePlaymate} looks in ${spotNames[seekerChoice]}...`);
+    
+    setTimeout(() => {
+        endKitGame(!found, 'hideseek');
+    }, 2000);
+}
+
+// PLAY FIGHT - Click the action buttons when they appear!
+let fightRound = 0;
+let fightScore = 0;
+let fightAction = '';
+
+function startPlayFightGame() {
+    fightRound = 0;
+    fightScore = 0;
+    
+    showMessage(`${kitGamePlaymate}: "Let's play fight! Click the right move!"`);
+    
+    setTimeout(() => {
+        nextFightRound();
+    }, 1500);
+}
+
+function nextFightRound() {
+    fightRound++;
+    if (fightRound > 5) {
+        endKitGame(fightScore >= 3, 'fight');
+        return;
+    }
+    
+    const actions = ['POUNCE!', 'DODGE!', 'SWIPE!', 'ROLL!'];
+    fightAction = actions[Math.floor(Math.random() * actions.length)];
+    
+    renderFightGame();
+    
+    // Time limit for each round
+    kitGameTimeout = setTimeout(() => {
+        fightRound++;
+        if (fightRound > 5) {
+            endKitGame(fightScore >= 3, 'fight');
+        } else {
+            nextFightRound();
+        }
+    }, 2000);
+}
+
+function renderFightGame() {
+    const gameWorld = document.getElementById('game-world');
+    
+    gameWorld.innerHTML = `
+        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <rect x="0" y="0" width="600" height="400" fill="#4a3a3a"/>
+            <text x="300" y="30" text-anchor="middle" fill="#ffd700" font-size="18">PLAY FIGHT! Round ${fightRound}/5 - Score: ${fightScore}</text>
+            
+            <text x="300" y="120" text-anchor="middle" fill="#ff6666" font-size="40" font-weight="bold">${fightAction}</text>
+            
+            <!-- Action buttons -->
+            <g id="action-pounce" class="clickable" style="cursor: pointer;">
+                <rect x="50" y="200" width="120" height="60" rx="10" fill="${fightAction === 'POUNCE!' ? '#4a8a4a' : '#4a4a6a'}"/>
+                <text x="110" y="238" text-anchor="middle" fill="white" font-size="18">POUNCE!</text>
+            </g>
+            
+            <g id="action-dodge" class="clickable" style="cursor: pointer;">
+                <rect x="180" y="200" width="120" height="60" rx="10" fill="${fightAction === 'DODGE!' ? '#4a8a4a' : '#4a4a6a'}"/>
+                <text x="240" y="238" text-anchor="middle" fill="white" font-size="18">DODGE!</text>
+            </g>
+            
+            <g id="action-swipe" class="clickable" style="cursor: pointer;">
+                <rect x="310" y="200" width="120" height="60" rx="10" fill="${fightAction === 'SWIPE!' ? '#4a8a4a' : '#4a4a6a'}"/>
+                <text x="370" y="238" text-anchor="middle" fill="white" font-size="18">SWIPE!</text>
+            </g>
+            
+            <g id="action-roll" class="clickable" style="cursor: pointer;">
+                <rect x="440" y="200" width="120" height="60" rx="10" fill="${fightAction === 'ROLL!' ? '#4a8a4a' : '#4a4a6a'}"/>
+                <text x="500" y="238" text-anchor="middle" fill="white" font-size="18">ROLL!</text>
+            </g>
+            
+            <text x="300" y="320" text-anchor="middle" fill="#aaa" font-size="14">Click the matching action quickly!</text>
+            
+            <!-- Quit button -->
+            <g id="quit-game" class="clickable" style="cursor: pointer;">
+                <rect x="500" y="10" width="80" height="30" rx="5" fill="#6a4a4a"/>
+                <text x="540" y="30" text-anchor="middle" fill="white" font-size="12">Quit</text>
+            </g>
+        </svg>
+    `;
+    
+    const actionMap = {
+        'action-pounce': 'POUNCE!',
+        'action-dodge': 'DODGE!',
+        'action-swipe': 'SWIPE!',
+        'action-roll': 'ROLL!'
+    };
+    
+    for (const [id, action] of Object.entries(actionMap)) {
+        document.getElementById(id)?.addEventListener('click', () => {
+            if (kitGameTimeout) clearTimeout(kitGameTimeout);
+            if (action === fightAction) {
+                fightScore++;
+                showMessage('Nice move!');
+            } else {
+                showMessage('Wrong move!');
+            }
+            setTimeout(() => nextFightRound(), 800);
+        });
+    }
+    
+    document.getElementById('quit-game')?.addEventListener('click', () => {
+        endKitGame(false, 'fight');
+    });
+}
+
+// POUNCE PRACTICE - Click the falling leaf!
+let leafPosition = { x: 300, y: 50 };
+let pouncesCaught = 0;
+
+function startPounceGame() {
+    pouncesCaught = 0;
+    leafPosition = { x: 100 + Math.random() * 400, y: 50 };
+    
+    showMessage(`${kitGamePlaymate}: "Catch 3 leaves to win!"`);
+    
+    renderPounceGame();
+    
+    kitGameInterval = setInterval(() => {
+        if (kitGameActive) {
+            // Leaf falls down
+            leafPosition.y += 4;
+            // Leaf sways side to side
+            leafPosition.x += Math.sin(leafPosition.y / 20) * 3;
+            
+            // If leaf reaches bottom, reset
+            if (leafPosition.y > 380) {
+                leafPosition = { x: 100 + Math.random() * 400, y: 50 };
+            }
+            
+            renderPounceGame();
+        }
+    }, 50);
+    
+    // Time limit
+    kitGameTimeout = setTimeout(() => {
+        if (kitGameActive) {
+            endKitGame(pouncesCaught >= 3, 'pounce');
+        }
+    }, 20000);
+}
+
+function renderPounceGame() {
+    const gameWorld = document.getElementById('game-world');
+    
+    gameWorld.innerHTML = `
+        <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <rect x="0" y="0" width="600" height="400" fill="#2a4a3a"/>
+            <text x="300" y="30" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold">POUNCE! Catch ${3 - pouncesCaught} more leaves!</text>
+            
+            <!-- The falling leaf -->
+            <g id="falling-leaf" class="clickable" style="cursor: pointer;">
+                <ellipse cx="${leafPosition.x}" cy="${leafPosition.y}" rx="20" ry="12" fill="#CD853F" transform="rotate(${leafPosition.y * 2}, ${leafPosition.x}, ${leafPosition.y})"/>
+                <line x1="${leafPosition.x}" y1="${leafPosition.y}" x2="${leafPosition.x}" y2="${leafPosition.y + 8}" stroke="#8B4513" stroke-width="2"/>
+            </g>
+            
+            <!-- Score -->
+            <text x="50" y="60" fill="white" font-size="16">Caught: ${pouncesCaught}/3</text>
+            
+            <text x="300" y="380" text-anchor="middle" fill="#aaa" font-size="14">Click the leaf to pounce on it!</text>
+            
+            <!-- Quit button -->
+            <g id="quit-game" class="clickable" style="cursor: pointer;">
+                <rect x="500" y="10" width="80" height="30" rx="5" fill="#6a4a4a"/>
+                <text x="540" y="30" text-anchor="middle" fill="white" font-size="12">Quit</text>
+            </g>
+        </svg>
+    `;
+    
+    document.getElementById('falling-leaf')?.addEventListener('click', () => {
+        pouncesCaught++;
+        leafPosition = { x: 100 + Math.random() * 400, y: 50 };
+        if (pouncesCaught >= 3) {
+            endKitGame(true, 'pounce');
+        }
+    });
+    
+    document.getElementById('quit-game')?.addEventListener('click', () => {
+        endKitGame(false, 'pounce');
+    });
+}
+
+// End any kit game
+function endKitGame(won, gameType) {
+    kitGameActive = false;
+    if (kitGameInterval) clearInterval(kitGameInterval);
+    if (kitGameTimeout) clearTimeout(kitGameTimeout);
+    
+    const cat = GameState.catData;
+    
+    const winMessages = {
+        'mossball': `You won moss-ball against ${kitGamePlaymate}!`,
+        'chase': `You caught ${kitGamePlaymate}! Tag, you're it!`,
+        'hideseek': `${kitGamePlaymate} couldn't find you! Great hiding spot!`,
+        'fight': `You beat ${kitGamePlaymate} in the play fight!`,
+        'pounce': 'Amazing pouncing! You\'ll be a great hunter!'
+    };
+    
+    const loseMessages = {
+        'mossball': `${kitGamePlaymate} won this round. Good game!`,
+        'chase': `${kitGamePlaymate} got away! They're too fast!`,
+        'hideseek': `${kitGamePlaymate} found you! "Got you!"`,
+        'fight': `${kitGamePlaymate} pinned you! "I win!"`,
+        'pounce': 'The leaves were too tricky. Keep practicing!'
+    };
+    
+    if (won) {
+        showMessage(winMessages[gameType]);
+        cat.experience += 8;
+    } else {
+        showMessage(loseMessages[gameType]);
+        cat.experience += 3;
+    }
+    
+    updateGameUI();
+    saveGameData();
+    
+    // Return to camp
+    setTimeout(() => {
+        GameState.currentLocation = 'camp';
+        GameState.playerX = 200;
+        GameState.playerY = 280;
+        renderGameWorld();
+    }, 2000);
 }
 
 // Kit asks for food
