@@ -3968,14 +3968,170 @@ function goToStarClan() {
     showScreen('starclan');
 }
 
-// Stay in StarClan
+// Stay in StarClan - show a peaceful starry scene
 function stayInStarClan() {
-    showMessage('✨ You rest among the stars...');
+    const starclanScreen = document.getElementById('starclan-screen');
+    
+    starclanScreen.innerHTML = `
+        <div class="starclan-bg"></div>
+        <div class="starclan-view">
+            <h2>StarClan</h2>
+            <p class="starclan-message">You rest peacefully among your warrior ancestors...</p>
+            <div class="starclan-stars-view">
+                <svg viewBox="0 0 400 300" style="width: 100%; max-width: 400px;">
+                    <!-- Starry sky -->
+                    <rect x="0" y="0" width="400" height="300" fill="#1a0a2e"/>
+                    <!-- Big stars -->
+                    <circle cx="50" cy="50" r="3" fill="#ffd700" opacity="0.9"/>
+                    <circle cx="150" cy="80" r="4" fill="#fff" opacity="0.8"/>
+                    <circle cx="300" cy="40" r="3" fill="#e1bee7" opacity="0.9"/>
+                    <circle cx="350" cy="120" r="2" fill="#fff" opacity="0.7"/>
+                    <circle cx="80" cy="150" r="3" fill="#ffd700" opacity="0.8"/>
+                    <circle cx="200" cy="100" r="5" fill="#fff" opacity="1"/>
+                    <circle cx="250" cy="180" r="3" fill="#e1bee7" opacity="0.9"/>
+                    <circle cx="100" cy="220" r="2" fill="#fff" opacity="0.7"/>
+                    <circle cx="320" cy="250" r="4" fill="#ffd700" opacity="0.8"/>
+                    <circle cx="180" cy="260" r="3" fill="#fff" opacity="0.9"/>
+                    <!-- Small twinkling stars -->
+                    <circle cx="30" cy="100" r="1" fill="#fff" opacity="0.5"/>
+                    <circle cx="380" cy="80" r="1" fill="#fff" opacity="0.6"/>
+                    <circle cx="220" cy="30" r="1" fill="#fff" opacity="0.5"/>
+                    <circle cx="270" cy="280" r="1" fill="#fff" opacity="0.4"/>
+                    <!-- Silverpelt (milky way) -->
+                    <ellipse cx="200" cy="150" rx="180" ry="30" fill="url(#silverpelt)" opacity="0.3"/>
+                    <defs>
+                        <linearGradient id="silverpelt" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="transparent"/>
+                            <stop offset="50%" stop-color="#e1bee7"/>
+                            <stop offset="100%" stop-color="transparent"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Your ancestor -->
+                    <text x="200" y="290" text-anchor="middle" fill="#e1bee7" font-size="12">The stars of your ancestors watch over you...</text>
+                </svg>
+            </div>
+            <button class="starclan-btn" id="back-to-starclan-menu">Go Back</button>
+        </div>
+    `;
+    
+    document.getElementById('back-to-starclan-menu')?.addEventListener('click', () => {
+        showScreen('starclan');
+        // Restore the original StarClan screen
+        starclanScreen.innerHTML = `
+            <div class="starclan-bg"></div>
+            <h2>Welcome to StarClan</h2>
+            <p class="starclan-message">You have joined your warrior ancestors among the stars.</p>
+            <div class="starclan-options">
+                <button class="starclan-btn" id="stay-starclan">Stay in StarClan</button>
+                <button class="starclan-btn" id="visit-dreams">Visit a Cat's Dream</button>
+                <button class="starclan-btn portal-btn" id="restart-portal">Portal to New Life</button>
+            </div>
+        `;
+        // Re-add event listeners
+        document.getElementById('stay-starclan')?.addEventListener('click', stayInStarClan);
+        document.getElementById('visit-dreams')?.addEventListener('click', visitDreams);
+        document.getElementById('restart-portal')?.addEventListener('click', restartGame);
+    });
 }
 
-// Visit dreams
+// Visit dreams - talk to a random living cat!
 function visitDreams() {
-    showMessage('🌙 You visit a young cat\'s dream and give them guidance...');
+    const livingCats = [
+        { name: 'Firestar', role: 'leader' },
+        { name: 'Sandstorm', role: 'warrior' },
+        { name: 'Graystripe', role: 'warrior' },
+        { name: 'Leafpool', role: 'medicine cat' },
+        { name: 'Brambleclaw', role: 'deputy' },
+        { name: 'Squirrelflight', role: 'warrior' },
+        { name: 'Cinderpelt', role: 'medicine cat' },
+        { name: 'Dustpelt', role: 'warrior' }
+    ];
+    
+    const cat = livingCats[Math.floor(Math.random() * livingCats.length)];
+    
+    const starclanScreen = document.getElementById('starclan-screen');
+    starclanScreen.innerHTML = `
+        <div class="starclan-bg"></div>
+        <div class="starclan-view">
+            <h2>Visiting ${cat.name}'s Dream</h2>
+            <p class="starclan-message">${cat.name} is sleeping... You appear in their dream as a starry spirit.</p>
+            <div class="dream-chat">
+                <p class="dream-cat-says">"${cat.name} looks up at you with wonder..."</p>
+                <p class="dream-cat-says" style="color: #aaa; font-style: italic;">"A StarClan cat! Do you have a message for me?"</p>
+            </div>
+            <div class="dream-options">
+                <button class="starclan-btn dream-choice" data-msg="warning">Give a Warning</button>
+                <button class="starclan-btn dream-choice" data-msg="encouragement">Give Encouragement</button>
+                <button class="starclan-btn dream-choice" data-msg="prophecy">Share a Prophecy</button>
+                <button class="starclan-btn dream-choice" data-msg="blessing">Give a Blessing</button>
+            </div>
+            <button class="starclan-btn" id="leave-dream" style="margin-top: 20px;">Leave the Dream</button>
+        </div>
+    `;
+    
+    const responses = {
+        warning: [
+            `"Beware, ${cat.name}. Danger lurks in the shadows..."`,
+            `"Dark times are coming. Stay alert, young ${cat.role}."`,
+            `"Trust your instincts. Not all cats are as they seem..."`
+        ],
+        encouragement: [
+            `"You are brave and strong, ${cat.name}. Your clan is proud of you!"`,
+            `"Have faith in yourself. You will do great things!"`,
+            `"StarClan watches over you always. Never give up!"`
+        ],
+        prophecy: [
+            `"When fire meets water, a new path will open..."`,
+            `"The moon will guide you when all seems lost..."`,
+            `"Three will become one, and the clans will survive..."`
+        ],
+        blessing: [
+            `"May StarClan light your path, ${cat.name}."`,
+            `"I give you the blessing of courage and wisdom."`,
+            `"Go in peace, knowing your ancestors watch over you."`
+        ]
+    };
+    
+    const catResponses = {
+        warning: `${cat.name} nods solemnly. "I will be careful. Thank you for the warning..."`,
+        encouragement: `${cat.name}'s eyes shine with hope. "Thank you! I won't let you down!"`,
+        prophecy: `${cat.name} looks puzzled but determined. "I... I will remember your words..."`,
+        blessing: `${cat.name} bows their head gratefully. "Thank you, ancestor. I am honored."`
+    };
+    
+    document.querySelectorAll('.dream-choice').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const msgType = btn.dataset.msg;
+            const yourMessage = responses[msgType][Math.floor(Math.random() * responses[msgType].length)];
+            const catResponse = catResponses[msgType];
+            
+            document.querySelector('.dream-chat').innerHTML = `
+                <p class="dream-you-say" style="color: #ffd700; margin-bottom: 15px;">You say: ${yourMessage}</p>
+                <p class="dream-cat-says" style="color: #e1bee7;">${catResponse}</p>
+            `;
+            document.querySelector('.dream-options').innerHTML = `
+                <p style="color: #aaa; font-style: italic;">The dream begins to fade...</p>
+            `;
+        });
+    });
+    
+    document.getElementById('leave-dream')?.addEventListener('click', () => {
+        // Restore the original StarClan screen
+        starclanScreen.innerHTML = `
+            <div class="starclan-bg"></div>
+            <h2>Welcome to StarClan</h2>
+            <p class="starclan-message">You have joined your warrior ancestors among the stars.</p>
+            <div class="starclan-options">
+                <button class="starclan-btn" id="stay-starclan">Stay in StarClan</button>
+                <button class="starclan-btn" id="visit-dreams">Visit a Cat's Dream</button>
+                <button class="starclan-btn portal-btn" id="restart-portal">Portal to New Life</button>
+            </div>
+        `;
+        // Re-add event listeners
+        document.getElementById('stay-starclan')?.addEventListener('click', stayInStarClan);
+        document.getElementById('visit-dreams')?.addEventListener('click', visitDreams);
+        document.getElementById('restart-portal')?.addEventListener('click', restartGame);
+    });
 }
 
 // Restart game
