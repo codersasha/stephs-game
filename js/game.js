@@ -2090,6 +2090,30 @@ function renderForest() {
         </g>
     `;
     
+    // Barn - a nice place for loners to live!
+    worldHTML += `
+        <g class="barn clickable" data-location="barn" style="cursor: pointer;">
+            <!-- Barn structure -->
+            <rect x="550" y="30" width="100" height="70" fill="#8B4513" stroke="#5D3A1A" stroke-width="3"/>
+            <!-- Barn roof -->
+            <polygon points="545,30 600,0 655,30" fill="#A52A2A" stroke="#7A1A1A" stroke-width="2"/>
+            <!-- Barn door -->
+            <rect x="580" y="55" width="40" height="45" fill="#3D2817"/>
+            <ellipse cx="600" cy="77" rx="15" ry="20" fill="#2D1810"/>
+            <!-- Hay in doorway -->
+            <ellipse cx="600" cy="95" rx="18" ry="8" fill="#DAA520"/>
+            <!-- Windows -->
+            <rect x="555" y="45" width="15" height="15" fill="#87CEEB" stroke="#5D3A1A" stroke-width="1"/>
+            <rect x="630" y="45" width="15" height="15" fill="#87CEEB" stroke="#5D3A1A" stroke-width="1"/>
+            <!-- Hay bales outside -->
+            <ellipse cx="530" cy="90" rx="15" ry="10" fill="#DAA520"/>
+            <ellipse cx="670" cy="85" rx="12" ry="8" fill="#DAA520"/>
+            <!-- Text -->
+            <text x="600" y="115" text-anchor="middle" fill="#DAA520" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Barn</text>
+            <text x="600" y="127" text-anchor="middle" fill="#aa9988" font-size="7" style="text-shadow: 1px 1px 2px black;">(Loner's Paradise)</text>
+        </g>
+    `;
+    
     // Add warrior companion if with one
     if (GameState.withWarrior) {
         worldHTML += renderWarriorCompanion();
@@ -2176,6 +2200,11 @@ function renderForest() {
     // Loner den click handler
     document.querySelector('.loner-den')?.addEventListener('click', () => {
         showLonerDenPopup();
+    });
+    
+    // Barn click handler
+    document.querySelector('.barn')?.addEventListener('click', () => {
+        showBarnPopup();
     });
     
     // Check for random forest events
@@ -2289,6 +2318,182 @@ function showLonerDenPopup() {
     
     addAction(actions, 'Leave', closePopup);
     popup.classList.remove('hidden');
+}
+
+// Barn popup - a nice place for loners!
+function showBarnPopup() {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'The Barn';
+    
+    if (cat.isLoner && cat.livesInBarn) {
+        desc.textContent = 'Your cozy barn home! Warm hay, plenty of mice, and no Clan rules. Other barn cats live here too.';
+    } else if (cat.isLoner) {
+        desc.textContent = 'A warm barn full of hay and mice! Some friendly cats live here. It looks like a nice place to stay...';
+    } else {
+        desc.textContent = 'A Twoleg barn at the edge of the territories. Loners and barn cats live here, far from Clan life.';
+    }
+    
+    actions.innerHTML = '';
+    
+    if (cat.isLoner && cat.livesInBarn) {
+        // Already living here!
+        addAction(actions, 'Rest in the Hay', () => {
+            closePopup();
+            cat.health = Math.min(100, cat.health + 15);
+            showMessage('You curl up in the warm hay. So cozy! (+15 health)');
+            updateGameUI();
+            saveGameData();
+        });
+        
+        addAction(actions, 'Hunt Barn Mice', () => {
+            closePopup();
+            barnHunt();
+        });
+        
+        addAction(actions, 'Talk to Barley', () => {
+            closePopup();
+            talkToBarley();
+        });
+        
+        addAction(actions, 'Talk to Ravenpaw', () => {
+            closePopup();
+            talkToRavenpaw();
+        });
+        
+    } else if (cat.isLoner) {
+        // Loner visiting
+        addAction(actions, 'Live in the Barn', () => {
+            closePopup();
+            moveIntoBarn();
+        });
+        
+        addAction(actions, 'Just Visit', () => {
+            closePopup();
+            showMessage('You explore the barn. It smells of hay and mice. Very cozy!');
+            showSpeechBubble('Barley', 'Welcome, stranger! Feel free to look around.');
+        });
+        
+    } else {
+        // Clan cat visiting
+        addAction(actions, 'Visit the Barn Cats', () => {
+            closePopup();
+            showMessage('You enter the barn carefully...');
+            setTimeout(() => {
+                showSpeechBubble('Ravenpaw', 'Hello, friend! What brings you here?');
+                showMessage('Ravenpaw and Barley greet you warmly.');
+            }, 1500);
+        });
+        
+        addAction(actions, 'Leave Clan Life (Live Here)', () => {
+            closePopup();
+            becomeBarnCat();
+        });
+    }
+    
+    addAction(actions, 'Leave', closePopup);
+    popup.classList.remove('hidden');
+}
+
+// Move into the barn as a loner
+function moveIntoBarn() {
+    const cat = GameState.catData;
+    cat.livesInBarn = true;
+    
+    showMessage('You decide to make the barn your new home!');
+    showSpeechBubble('Barley', 'Welcome! Make yourself at home.');
+    
+    setTimeout(() => {
+        showMessage('Barley and Ravenpaw show you the best hay piles to sleep in.');
+        showSpeechBubble('Ravenpaw', 'The mice here are plentiful. You\'ll like it!');
+        updateGameUI();
+        saveGameData();
+    }, 2500);
+}
+
+// Hunt in the barn (easier than forest)
+function barnHunt() {
+    const cat = GameState.catData;
+    
+    showMessage('You stalk through the hay bales, listening for mice...');
+    
+    setTimeout(() => {
+        // 70% success - barn mice are plentiful!
+        if (Math.random() < 0.7) {
+            cat.hunger = Math.min(100, cat.hunger + 35);
+            const catches = ['a fat mouse', 'two mice', 'a plump vole', 'a sleepy mouse'];
+            const caught = catches[Math.floor(Math.random() * catches.length)];
+            showMessage(`You caught ${caught}! The barn is full of prey. (+35 hunger)`);
+        } else {
+            showMessage('The mice escaped into the hay. Better luck next time!');
+        }
+        updateGameUI();
+        saveGameData();
+    }, 2000);
+}
+
+// Talk to Barley
+function talkToBarley() {
+    const phrases = [
+        'Life is simple here. No battles, no patrols. Just peace.',
+        'The Twolegs leave us alone. It\'s a good life.',
+        'I\'ve lived in this barn for many seasons now.',
+        'Ravenpaw is good company. We look out for each other.',
+        'Sometimes Clan cats visit. They always seem so stressed!'
+    ];
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    showSpeechBubble('Barley', phrase);
+    showMessage('Barley stretches lazily in the hay.');
+}
+
+// Talk to Ravenpaw
+function talkToRavenpaw() {
+    const phrases = [
+        'I used to be a ThunderClan apprentice, you know.',
+        'Sometimes I miss the Clan... but I\'m happy here.',
+        'Barley taught me everything about barn life.',
+        'The hay is so warm! Much better than the apprentice den.',
+        'I still dream of StarClan sometimes...'
+    ];
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    showSpeechBubble('Ravenpaw', phrase);
+    showMessage('Ravenpaw\'s eyes sparkle with old memories.');
+}
+
+// Become a barn cat (leave your Clan for the barn)
+function becomeBarnCat() {
+    const cat = GameState.catData;
+    const oldClan = cat.clan;
+    
+    showMessage(`You look back at the forest one last time...`);
+    
+    setTimeout(() => {
+        showMessage(`"Goodbye, ${oldClan}..." you whisper.`);
+        
+        setTimeout(() => {
+            cat.isLoner = true;
+            cat.livesInBarn = true;
+            cat.previousClan = oldClan;
+            cat.clan = 'Barn Cat';
+            cat.rank = 'Barn Cat';
+            
+            // Remove Clan suffix
+            cat.name = cat.firstName;
+            
+            GameState.currentLocation = 'forest';
+            
+            showSpeechBubble('Barley', 'Welcome to your new home, friend!');
+            showMessage('You are now a barn cat! Barley and Ravenpaw welcome you warmly.');
+            
+            renderGameWorld();
+            updateGameUI();
+            saveGameData();
+        }, 2500);
+    }, 2000);
 }
 
 // Become a loner!
