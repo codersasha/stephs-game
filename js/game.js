@@ -722,7 +722,9 @@ function beginAdventure() {
         furColorName: GameState.customization.furColorName,
         pattern: GameState.customization.pattern,
         eyeColor: GameState.customization.eyeColor,
-        eyeColorName: GameState.customization.eyeColorName
+        eyeColorName: GameState.customization.eyeColorName,
+        // Your kits!
+        kits: []
     };
     
     saveGameData();
@@ -993,19 +995,320 @@ function renderDenInterior(denType) {
         renderGameWorld();
         showMessage('You left the den.');
     });
+    
+    // Nursery-specific handlers
+    if (denType === 'nursery') {
+        // Have kits button
+        document.querySelector('.have-kits-btn')?.addEventListener('click', () => {
+            showHaveKitsPopup();
+        });
+        
+        // Click on your kits
+        document.querySelectorAll('.player-kit').forEach(kit => {
+            kit.addEventListener('click', () => {
+                const kitIndex = parseInt(kit.dataset.kitIndex);
+                interactWithKit(kitIndex);
+            });
+        });
+    }
+}
+
+// Show popup to have kits
+function showHaveKitsPopup() {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Have Kits!';
+    desc.textContent = 'How many kits would you like to have? (1-5)';
+    actions.innerHTML = '';
+    
+    for (let i = 1; i <= 5; i++) {
+        addAction(actions, `${i} Kit${i > 1 ? 's' : ''}`, () => {
+            closePopup();
+            startKitCreation(i);
+        });
+    }
+    
+    addAction(actions, 'Never mind', closePopup);
+    popup.classList.remove('hidden');
+}
+
+// Start creating kits one by one
+function startKitCreation(numKits) {
+    GameState.kitCreation = {
+        total: numKits,
+        current: 0,
+        kits: []
+    };
+    showKitCustomizationPopup();
+}
+
+// Show kit customization popup
+function showKitCustomizationPopup() {
+    const creation = GameState.kitCreation;
+    const kitNum = creation.current + 1;
+    
+    // Create a custom popup for kit creation
+    const overlay = document.createElement('div');
+    overlay.id = 'kit-creation-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    `;
+    
+    overlay.innerHTML = `
+        <div style="background: linear-gradient(135deg, #2a3a4a, #1a2a3a); padding: 20px; border-radius: 15px; max-width: 350px; width: 90%; border: 2px solid #ffd700;">
+            <h2 style="color: #ffd700; text-align: center; margin-bottom: 15px;">Kit ${kitNum} of ${creation.total}</h2>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="color: #fff; display: block; margin-bottom: 5px;">Name:</label>
+                <input type="text" id="kit-name-input" placeholder="Enter kit name..." maxlength="10" 
+                    style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ffd700; background: #1a2a3a; color: white; box-sizing: border-box;">
+                <span style="color: #aaa; font-size: 12px;">kit will be added automatically</span>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="color: #fff; display: block; margin-bottom: 5px;">Fur Color:</label>
+                <div id="kit-fur-colors" style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button class="kit-color-btn selected" data-color="#e67e22" style="width: 30px; height: 30px; border-radius: 50%; background: #e67e22; border: 2px solid #ffd700; cursor: pointer;"></button>
+                    <button class="kit-color-btn" data-color="#8d6e63" style="width: 30px; height: 30px; border-radius: 50%; background: #8d6e63; border: 2px solid transparent; cursor: pointer;"></button>
+                    <button class="kit-color-btn" data-color="#2c2c2c" style="width: 30px; height: 30px; border-radius: 50%; background: #2c2c2c; border: 2px solid transparent; cursor: pointer;"></button>
+                    <button class="kit-color-btn" data-color="#f5f5f5" style="width: 30px; height: 30px; border-radius: 50%; background: #f5f5f5; border: 2px solid transparent; cursor: pointer;"></button>
+                    <button class="kit-color-btn" data-color="#d4a574" style="width: 30px; height: 30px; border-radius: 50%; background: #d4a574; border: 2px solid transparent; cursor: pointer;"></button>
+                    <button class="kit-color-btn" data-color="#708090" style="width: 30px; height: 30px; border-radius: 50%; background: #708090; border: 2px solid transparent; cursor: pointer;"></button>
+                    <button class="kit-color-btn" data-color="#FFD700" style="width: 30px; height: 30px; border-radius: 50%; background: #FFD700; border: 2px solid transparent; cursor: pointer;"></button>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="color: #fff; display: block; margin-bottom: 5px;">Pattern:</label>
+                <div id="kit-patterns" style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button class="kit-pattern-btn selected" data-pattern="solid" style="padding: 5px 10px; border-radius: 5px; background: #3a4a5a; border: 2px solid #ffd700; color: white; cursor: pointer;">Solid</button>
+                    <button class="kit-pattern-btn" data-pattern="tabby" style="padding: 5px 10px; border-radius: 5px; background: #3a4a5a; border: 2px solid transparent; color: white; cursor: pointer;">Tabby</button>
+                    <button class="kit-pattern-btn" data-pattern="spotted" style="padding: 5px 10px; border-radius: 5px; background: #3a4a5a; border: 2px solid transparent; color: white; cursor: pointer;">Spotted</button>
+                    <button class="kit-pattern-btn" data-pattern="patched" style="padding: 5px 10px; border-radius: 5px; background: #3a4a5a; border: 2px solid transparent; color: white; cursor: pointer;">Patched</button>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="color: #fff; display: block; margin-bottom: 5px;">Eye Color:</label>
+                <div id="kit-eye-colors" style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button class="kit-eye-btn selected" data-color="#2ecc71" style="width: 30px; height: 30px; border-radius: 50%; background: #2ecc71; border: 2px solid #ffd700; cursor: pointer;"></button>
+                    <button class="kit-eye-btn" data-color="#3498db" style="width: 30px; height: 30px; border-radius: 50%; background: #3498db; border: 2px solid transparent; cursor: pointer;"></button>
+                    <button class="kit-eye-btn" data-color="#f1c40f" style="width: 30px; height: 30px; border-radius: 50%; background: #f1c40f; border: 2px solid transparent; cursor: pointer;"></button>
+                    <button class="kit-eye-btn" data-color="#9b59b6" style="width: 30px; height: 30px; border-radius: 50%; background: #9b59b6; border: 2px solid transparent; cursor: pointer;"></button>
+                    <button class="kit-eye-btn" data-color="#e67e22" style="width: 30px; height: 30px; border-radius: 50%; background: #e67e22; border: 2px solid transparent; cursor: pointer;"></button>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="kit-create-btn" style="padding: 10px 25px; background: linear-gradient(135deg, #ffd700, #ffaa00); border: none; border-radius: 10px; color: #1a1a1a; font-weight: bold; cursor: pointer; font-size: 14px;">
+                    Create Kit!
+                </button>
+                <button id="kit-cancel-btn" style="padding: 10px 20px; background: #666; border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 14px;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Store selected values
+    let selectedFur = '#e67e22';
+    let selectedPattern = 'solid';
+    let selectedEye = '#2ecc71';
+    
+    // Fur color selection
+    overlay.querySelectorAll('.kit-color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            overlay.querySelectorAll('.kit-color-btn').forEach(b => b.style.borderColor = 'transparent');
+            btn.style.borderColor = '#ffd700';
+            selectedFur = btn.dataset.color;
+        });
+    });
+    
+    // Pattern selection
+    overlay.querySelectorAll('.kit-pattern-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            overlay.querySelectorAll('.kit-pattern-btn').forEach(b => b.style.borderColor = 'transparent');
+            btn.style.borderColor = '#ffd700';
+            selectedPattern = btn.dataset.pattern;
+        });
+    });
+    
+    // Eye color selection
+    overlay.querySelectorAll('.kit-eye-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            overlay.querySelectorAll('.kit-eye-btn').forEach(b => b.style.borderColor = 'transparent');
+            btn.style.borderColor = '#ffd700';
+            selectedEye = btn.dataset.color;
+        });
+    });
+    
+    // Create button
+    overlay.querySelector('#kit-create-btn').addEventListener('click', () => {
+        const nameInput = overlay.querySelector('#kit-name-input');
+        const firstName = nameInput.value.trim();
+        
+        if (!firstName) {
+            alert('Please enter a name for your kit!');
+            return;
+        }
+        
+        const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase() + 'kit';
+        
+        // Add kit to creation list
+        creation.kits.push({
+            name: formattedName,
+            firstName: firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase(),
+            furColor: selectedFur,
+            pattern: selectedPattern,
+            eyeColor: selectedEye,
+            age: 0
+        });
+        
+        creation.current++;
+        
+        // Remove overlay
+        overlay.remove();
+        
+        // More kits to create?
+        if (creation.current < creation.total) {
+            showKitCustomizationPopup();
+        } else {
+            // All done! Add kits to player
+            finishKitCreation();
+        }
+    });
+    
+    // Cancel button
+    overlay.querySelector('#kit-cancel-btn').addEventListener('click', () => {
+        overlay.remove();
+        GameState.kitCreation = null;
+        showMessage('Kit creation cancelled.');
+    });
+}
+
+// Finish creating kits
+function finishKitCreation() {
+    const cat = GameState.catData;
+    const creation = GameState.kitCreation;
+    
+    // Add all kits to player
+    if (!cat.kits) cat.kits = [];
+    cat.kits.push(...creation.kits);
+    
+    // Clear creation state
+    GameState.kitCreation = null;
+    
+    // Show success message
+    const kitNames = creation.kits.map(k => k.name).join(', ');
+    showMessage(`Congratulations! You now have ${creation.kits.length} kit${creation.kits.length > 1 ? 's' : ''}: ${kitNames}!`);
+    
+    // Re-render nursery
+    renderGameWorld();
+    updateGameUI();
+    saveGameData();
+}
+
+// Interact with your kit
+function interactWithKit(kitIndex) {
+    const cat = GameState.catData;
+    const kit = cat.kits[kitIndex];
+    
+    if (!kit) return;
+    
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = kit.name;
+    desc.textContent = `Your precious kit! Age: ${kit.age} moons`;
+    actions.innerHTML = '';
+    
+    addAction(actions, 'Play with ' + kit.name, () => {
+        closePopup();
+        showMessage(`You play with ${kit.name}! They pounce on your tail happily.`);
+        showSpeechBubble(kit.name, 'Yay! Play with me!');
+    });
+    
+    addAction(actions, 'Groom ' + kit.name, () => {
+        closePopup();
+        showMessage(`You gently groom ${kit.name}'s fur.`);
+        showSpeechBubble(kit.name, 'That feels nice...');
+    });
+    
+    addAction(actions, 'Tell a Story', () => {
+        closePopup();
+        const stories = [
+            'the great battle of the clans',
+            'the time Firestar saved the forest',
+            'how the clans found their new home',
+            'the legend of StarClan'
+        ];
+        const story = stories[Math.floor(Math.random() * stories.length)];
+        showMessage(`You tell ${kit.name} about ${story}.`);
+        showSpeechBubble(kit.name, 'Wow! Tell me more!');
+    });
+    
+    addAction(actions, 'Cancel', closePopup);
+    popup.classList.remove('hidden');
 }
 
 // Nursery interior - cozy with moss nests and kits
 function renderNurseryInterior() {
+    const cat = GameState.catData;
+    const playerKits = cat?.kits || [];
+    
+    let kitsHTML = '';
+    
+    // Render player's own kits
+    const kitPositions = [
+        { x: 225, y: 165 },
+        { x: 260, y: 170 },
+        { x: 190, y: 170 },
+        { x: 240, y: 180 },
+        { x: 210, y: 180 }
+    ];
+    
+    playerKits.forEach((kit, i) => {
+        if (i < kitPositions.length) {
+            const pos = kitPositions[i];
+            kitsHTML += `
+                <g class="player-kit clickable" data-kit-index="${i}" style="cursor: pointer;">
+                    ${renderDetailedNPCCat(pos.x, pos.y, kit.furColor, kit.eyeColor, kit.name, 0.35)}
+                </g>
+            `;
+        }
+    });
+    
+    // Can have kits if warrior, queen, or older
+    const canHaveKits = cat && (cat.rank === 'Warrior' || cat.rank === 'Queen' || cat.rank === 'Deputy' || cat.rank === 'Leader' || cat.rank === 'Medicine Cat' || cat.rank === 'Elder') && cat.age >= 15;
+    
     return `
         <!-- Moss nests -->
         <ellipse cx="100" cy="200" rx="45" ry="25" fill="#4a6a3a" stroke="#3a5a2a" stroke-width="2"/>
         <ellipse cx="100" cy="195" rx="40" ry="20" fill="#5a7a4a"/>
         <text x="100" y="235" text-anchor="middle" fill="#aaa" font-size="9">Nest</text>
         
-        <ellipse cx="225" cy="180" rx="50" ry="28" fill="#4a6a3a" stroke="#3a5a2a" stroke-width="2"/>
-        <ellipse cx="225" cy="175" rx="45" ry="23" fill="#5a7a4a"/>
-        <text x="225" y="215" text-anchor="middle" fill="#aaa" font-size="9">Nest</text>
+        <!-- Your nest with your kits! -->
+        <ellipse cx="225" cy="180" rx="60" ry="32" fill="#4a6a3a" stroke="#3a5a2a" stroke-width="2"/>
+        <ellipse cx="225" cy="175" rx="55" ry="27" fill="#5a7a4a"/>
+        <text x="225" y="220" text-anchor="middle" fill="#ffd700" font-size="9">Your Nest</text>
+        ${kitsHTML}
         
         <ellipse cx="350" cy="200" rx="45" ry="25" fill="#4a6a3a" stroke="#3a5a2a" stroke-width="2"/>
         <ellipse cx="350" cy="195" rx="40" ry="20" fill="#5a7a4a"/>
@@ -1021,7 +1324,15 @@ function renderNurseryInterior() {
         <ellipse cx="368" cy="276" rx="8" ry="5" fill="#8a7a6a"/>
         <text x="370" y="305" text-anchor="middle" fill="#a98" font-size="8">Food</text>
         
-        <!-- Sleeping kits (if any) -->
+        <!-- Have Kits button (if eligible) -->
+        ${canHaveKits ? `
+        <g class="have-kits-btn clickable" style="cursor: pointer;">
+            <rect x="170" y="290" width="110" height="30" rx="10" fill="#d4a574" stroke="#c49464" stroke-width="2"/>
+            <text x="225" y="310" text-anchor="middle" fill="#3a2a1a" font-size="11" font-weight="bold">Have Kits!</text>
+        </g>
+        ` : ''}
+        
+        <!-- Other kits in nursery -->
         ${renderDetailedNPCCat(100, 185, '#d4a574', '#f1c40f', 'Molekit', 0.35)}
         ${renderDetailedNPCCat(350, 185, '#cc8866', '#27ae60', 'Cherrykit', 0.35)}
     `;
