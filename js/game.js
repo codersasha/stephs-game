@@ -874,6 +874,8 @@ function renderGameWorld() {
         renderCamp();
     } else if (GameState.currentLocation.startsWith('den_')) {
         renderDenInterior(GameState.currentLocation.replace('den_', ''));
+    } else if (GameState.currentLocation === 'barn') {
+        renderBarnInterior();
     } else {
         renderForest();
     }
@@ -2379,29 +2381,17 @@ function showBarnPopup() {
     
     actions.innerHTML = '';
     
+    // Everyone can enter the barn!
+    addAction(actions, 'Enter Barn', () => {
+        closePopup();
+        enterBarn();
+    });
+    
     if (cat.isLoner && cat.livesInBarn) {
         // Already living here!
-        addAction(actions, 'Rest in the Hay', () => {
-            closePopup();
-            cat.health = Math.min(100, cat.health + 15);
-            showMessage('You curl up in the warm hay. So cozy! (+15 health)');
-            updateGameUI();
-            saveGameData();
-        });
-        
         addAction(actions, 'Hunt Barn Mice', () => {
             closePopup();
             barnHunt();
-        });
-        
-        addAction(actions, 'Talk to Barley', () => {
-            closePopup();
-            talkToBarley();
-        });
-        
-        addAction(actions, 'Talk to Ravenpaw', () => {
-            closePopup();
-            talkToRavenpaw();
         });
         
     } else if (cat.isLoner) {
@@ -2533,6 +2523,185 @@ function becomeBarnCat() {
             saveGameData();
         }, 2500);
     }, 2000);
+}
+
+// Enter the barn interior
+function enterBarn() {
+    GameState.currentLocation = 'barn';
+    GameState.playerX = 200;
+    GameState.playerY = 250;
+    renderGameWorld();
+    showMessage('You enter the warm barn. It smells of hay and mice.');
+}
+
+// Render barn interior
+function renderBarnInterior() {
+    const gameWorld = document.getElementById('game-world');
+    const cat = GameState.catData;
+    const isNight = GameState.isNight;
+    
+    let barnHTML = `
+        <svg viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <radialGradient id="barnLight" cx="50%" cy="30%" r="70%">
+                    <stop offset="0%" stop-color="${isNight ? '#2a2a1a' : '#5a4a3a'}"/>
+                    <stop offset="100%" stop-color="${isNight ? '#1a1a0a' : '#3a2a1a'}"/>
+                </radialGradient>
+                <filter id="hayShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="2" dy="3" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
+                </filter>
+            </defs>
+            
+            <!-- Barn interior background -->
+            <rect x="0" y="0" width="450" height="400" fill="url(#barnLight)"/>
+            
+            <!-- Wooden walls -->
+            <rect x="0" y="0" width="450" height="50" fill="#5D3A1A"/>
+            <rect x="0" y="0" width="25" height="400" fill="#6D4A2A"/>
+            <rect x="425" y="0" width="25" height="400" fill="#6D4A2A"/>
+            
+            <!-- Wooden planks on walls -->
+            <line x1="0" y1="80" x2="25" y2="80" stroke="#4D2A1A" stroke-width="2"/>
+            <line x1="0" y1="160" x2="25" y2="160" stroke="#4D2A1A" stroke-width="2"/>
+            <line x1="0" y1="240" x2="25" y2="240" stroke="#4D2A1A" stroke-width="2"/>
+            <line x1="0" y1="320" x2="25" y2="320" stroke="#4D2A1A" stroke-width="2"/>
+            <line x1="425" y1="80" x2="450" y2="80" stroke="#4D2A1A" stroke-width="2"/>
+            <line x1="425" y1="160" x2="450" y2="160" stroke="#4D2A1A" stroke-width="2"/>
+            <line x1="425" y1="240" x2="450" y2="240" stroke="#4D2A1A" stroke-width="2"/>
+            <line x1="425" y1="320" x2="450" y2="320" stroke="#4D2A1A" stroke-width="2"/>
+            
+            <!-- Hay floor -->
+            <rect x="25" y="350" width="400" height="50" fill="#DAA520"/>
+            <ellipse cx="100" cy="360" rx="50" ry="15" fill="#C4941A"/>
+            <ellipse cx="250" cy="365" rx="70" ry="18" fill="#E5B530"/>
+            <ellipse cx="380" cy="358" rx="45" ry="12" fill="#C4941A"/>
+            
+            <!-- Hay bales - left side -->
+            <g class="hay-bale clickable" data-action="rest" style="cursor: pointer;" filter="url(#hayShadow)">
+                <rect x="40" y="280" width="80" height="50" rx="5" fill="#DAA520"/>
+                <rect x="45" y="285" width="70" height="40" rx="3" fill="#E5B530"/>
+                <line x1="60" y1="285" x2="60" y2="325" stroke="#C4941A" stroke-width="2"/>
+                <line x1="90" y1="285" x2="90" y2="325" stroke="#C4941A" stroke-width="2"/>
+                <text x="80" y="345" text-anchor="middle" fill="#fff" font-size="9" style="text-shadow: 1px 1px 2px black;">Rest Here</text>
+            </g>
+            
+            <!-- Hay bales - right side (stacked) -->
+            <g filter="url(#hayShadow)">
+                <rect x="330" y="300" width="80" height="40" rx="5" fill="#DAA520"/>
+                <rect x="340" y="260" width="60" height="35" rx="5" fill="#E5B530"/>
+                <rect x="350" y="230" width="40" height="25" rx="5" fill="#DAA520"/>
+            </g>
+            
+            <!-- Mouse holes -->
+            <g class="mouse-hole clickable" data-action="hunt" style="cursor: pointer;">
+                <ellipse cx="50" cy="175" rx="15" ry="20" fill="#1a0a0a"/>
+                <ellipse cx="55" cy="170" rx="3" ry="2" fill="#8B7355"/>
+                <text x="50" y="205" text-anchor="middle" fill="#aaa" font-size="8" style="text-shadow: 1px 1px 2px black;">Hunt mice</text>
+            </g>
+            
+            <g class="mouse-hole clickable" data-action="hunt" style="cursor: pointer;">
+                <ellipse cx="400" cy="200" rx="15" ry="20" fill="#1a0a0a"/>
+                <ellipse cx="395" cy="195" rx="3" ry="2" fill="#8B7355"/>
+                <text x="400" y="230" text-anchor="middle" fill="#aaa" font-size="8" style="text-shadow: 1px 1px 2px black;">Hunt mice</text>
+            </g>
+            
+            <!-- Water bowl -->
+            <g class="water-bowl clickable" data-action="drink" style="cursor: pointer;">
+                <ellipse cx="350" cy="350" rx="25" ry="12" fill="#666"/>
+                <ellipse cx="350" cy="348" rx="20" ry="9" fill="#4a9ac7"/>
+                <ellipse cx="345" cy="346" rx="5" ry="3" fill="#7ac4e8" opacity="0.5"/>
+                <text x="350" y="375" text-anchor="middle" fill="#7ac4e8" font-size="9" style="text-shadow: 1px 1px 2px black;">Drink</text>
+            </g>
+            
+            <!-- Barley (black and white cat) -->
+            <g class="barn-cat clickable" data-cat="Barley" style="cursor: pointer; pointer-events: all;">
+                <ellipse cx="150" cy="150" rx="25" ry="15" fill="#2c2c2c"/>
+                <circle cx="165" cy="140" r="12" fill="#2c2c2c"/>
+                <ellipse cx="145" cy="148" rx="8" ry="5" fill="#f5f5f5"/>
+                <polygon points="158,130 162,118 168,132" fill="#2c2c2c"/>
+                <polygon points="170,128 175,116 180,130" fill="#2c2c2c"/>
+                <circle cx="162" cy="138" r="2" fill="#4a4"/>
+                <circle cx="170" cy="137" r="2" fill="#4a4"/>
+                <text x="150" y="180" text-anchor="middle" fill="#f0e6d2" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Barley</text>
+            </g>
+            
+            <!-- Ravenpaw (black cat with white chest) -->
+            <g class="barn-cat clickable" data-cat="Ravenpaw" style="cursor: pointer; pointer-events: all;">
+                <ellipse cx="280" cy="200" rx="22" ry="13" fill="#1a1a1a"/>
+                <circle cx="293" cy="192" r="11" fill="#1a1a1a"/>
+                <ellipse cx="280" cy="198" rx="6" ry="4" fill="#f5f5f5"/>
+                <polygon points="287,183 290,172 295,184" fill="#1a1a1a"/>
+                <polygon points="297,181 301,170 305,182" fill="#1a1a1a"/>
+                <circle cx="290" cy="190" r="2" fill="#2a2"/>
+                <circle cx="297" cy="189" r="2" fill="#2a2"/>
+                <text x="280" y="228" text-anchor="middle" fill="#f0e6d2" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Ravenpaw</text>
+            </g>
+            
+            <!-- Barn door (exit) -->
+            <g class="barn-exit clickable" data-action="exit" style="cursor: pointer;">
+                <rect x="180" y="0" width="90" height="50" fill="#4D2A1A"/>
+                <rect x="190" y="5" width="70" height="40" fill="#2a1a0a"/>
+                <ellipse cx="225" cy="25" rx="25" ry="18" fill="#5a8a5a" opacity="0.6"/>
+                <text x="225" y="60" text-anchor="middle" fill="#aaffaa" font-size="10" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Exit Barn</text>
+            </g>
+            
+            <!-- Light from door -->
+            ${!isNight ? `
+            <ellipse cx="225" cy="100" rx="60" ry="40" fill="#ffd700" opacity="0.1"/>
+            ` : ''}
+    `;
+    
+    // Add player cat
+    barnHTML += renderPlayerCat();
+    
+    // Add speech bubbles
+    barnHTML += renderSpeechBubbles();
+    
+    barnHTML += `</svg>`;
+    
+    gameWorld.innerHTML = barnHTML;
+    
+    // Add event listeners
+    document.querySelectorAll('.hay-bale').forEach(bale => {
+        bale.addEventListener('click', () => {
+            cat.health = Math.min(100, cat.health + 15);
+            showMessage('You curl up in the warm hay. So cozy! (+15 health)');
+            updateGameUI();
+            saveGameData();
+        });
+    });
+    
+    document.querySelectorAll('.mouse-hole').forEach(hole => {
+        hole.addEventListener('click', () => {
+            barnHunt();
+        });
+    });
+    
+    document.querySelector('.water-bowl')?.addEventListener('click', () => {
+        cat.thirst = Math.min(100, cat.thirst + 25);
+        showMessage('You drink the cool water. Refreshing! (+25 thirst)');
+        updateGameUI();
+        saveGameData();
+    });
+    
+    document.querySelectorAll('.barn-cat').forEach(barnCat => {
+        barnCat.addEventListener('click', () => {
+            const catName = barnCat.dataset.cat;
+            if (catName === 'Barley') {
+                talkToBarley();
+            } else if (catName === 'Ravenpaw') {
+                talkToRavenpaw();
+            }
+        });
+    });
+    
+    document.querySelector('.barn-exit')?.addEventListener('click', () => {
+        GameState.currentLocation = 'forest';
+        GameState.playerX = 600;
+        GameState.playerY = 100;
+        renderGameWorld();
+        showMessage('You exit the barn into the forest.');
+    });
 }
 
 // Become a loner!
