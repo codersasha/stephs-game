@@ -3560,13 +3560,18 @@ function renderBackyard() {
                 <rect x="185" y="382" width="15" height="16" fill="#a08060"/>
                 
                 <!-- THE HOLE IN THE FENCE! -->
-                <g class="fence-hole clickable" data-action="go-forest" style="cursor: pointer;">
+                <g class="fence-hole clickable" data-action="go-forest" style="cursor: pointer; pointer-events: all;">
+                    <!-- Invisible larger click area -->
+                    <rect x="190" y="340" width="80" height="60" fill="transparent" style="pointer-events: all;"/>
+                    <!-- Visible hole -->
                     <rect x="200" y="375" width="60" height="25" fill="#1a3a1a"/>
                     <ellipse cx="230" cy="387" rx="28" ry="12" fill="#0a2a0a"/>
                     <!-- Broken fence pieces -->
-                    <rect x="195" y="378" width="8" height="18" fill="#6B5344" transform="rotate(-15 199 387)"/>
-                    <rect x="257" y="378" width="8" height="18" fill="#6B5344" transform="rotate(15 261 387)"/>
-                    <text x="230" y="370" text-anchor="middle" fill="#aaffaa" font-size="9" font-weight="bold" style="text-shadow: 1px 1px 2px black;">To Forest!</text>
+                    <rect x="195" y="378" width="8" height="18" fill="#6B5344" transform="rotate(-15 199 387)" style="pointer-events: none;"/>
+                    <rect x="257" y="378" width="8" height="18" fill="#6B5344" transform="rotate(15 261 387)" style="pointer-events: none;"/>
+                    <!-- Label -->
+                    <rect x="195" y="350" width="70" height="22" rx="5" fill="#2a5a2a" opacity="0.9"/>
+                    <text x="230" y="366" text-anchor="middle" fill="#aaffaa" font-size="11" font-weight="bold" style="pointer-events: none;">To Forest!</text>
                 </g>
                 
                 <!-- Rest of fence -->
@@ -3641,7 +3646,15 @@ function renderBackyard() {
         showMessage('You slip back inside through the cat flap.');
     });
     
-    document.querySelector('.fence-hole')?.addEventListener('click', () => {
+    document.querySelector('.fence-hole')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showFenceHolePopup();
+    });
+    
+    // Touch support for mobile
+    document.querySelector('.fence-hole')?.addEventListener('touchstart', (e) => {
+        e.preventDefault();
         showFenceHolePopup();
     });
     
