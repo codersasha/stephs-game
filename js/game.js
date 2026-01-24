@@ -829,9 +829,265 @@ function renderGameWorld() {
     
     if (GameState.currentLocation === 'camp') {
         renderCamp();
+    } else if (GameState.currentLocation.startsWith('den_')) {
+        renderDenInterior(GameState.currentLocation.replace('den_', ''));
     } else {
         renderForest();
     }
+}
+
+// Enter a den
+function enterDen(denType) {
+    GameState.currentLocation = 'den_' + denType;
+    GameState.playerX = 200;
+    GameState.playerY = 250;
+    renderGameWorld();
+    
+    const denNames = {
+        nursery: 'the Nursery',
+        elders: 'the Elders Den',
+        warriors: 'the Warriors Den',
+        apprentices: 'the Apprentices Den',
+        medicine: 'the Medicine Den',
+        leader: 'the Leader\'s Den'
+    };
+    showMessage(`You entered ${denNames[denType] || 'the den'}.`);
+}
+
+// Render inside of a den
+function renderDenInterior(denType) {
+    const gameWorld = document.getElementById('game-world');
+    const cat = GameState.catData;
+    const isNight = GameState.isNight;
+    
+    const denColors = {
+        nursery: { wall: '#5a4a3a', floor: '#6a5a4a', accent: '#8a7a6a' },
+        elders: { wall: '#4a3a2a', floor: '#5a4a3a', accent: '#7a6a5a' },
+        warriors: { wall: '#3a4a3a', floor: '#4a5a4a', accent: '#5a6a5a' },
+        apprentices: { wall: '#3a4a5a', floor: '#4a5a6a', accent: '#5a6a7a' },
+        medicine: { wall: '#4a5a4a', floor: '#5a6a5a', accent: '#6a7a6a' },
+        leader: { wall: '#5a4a2a', floor: '#6a5a3a', accent: '#8a7a5a' }
+    };
+    
+    const colors = denColors[denType] || denColors.nursery;
+    
+    let denHTML = `
+        <svg viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <radialGradient id="denLight" cx="50%" cy="30%" r="70%">
+                    <stop offset="0%" stop-color="${isNight ? '#2a2a3a' : '#4a4a3a'}"/>
+                    <stop offset="100%" stop-color="${isNight ? '#1a1a2a' : '#2a2a1a'}"/>
+                </radialGradient>
+                <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,0.4)"/>
+                </filter>
+            </defs>
+            
+            <!-- Den interior background -->
+            <rect x="0" y="0" width="450" height="400" fill="url(#denLight)"/>
+            
+            <!-- Curved walls -->
+            <ellipse cx="225" cy="50" rx="200" ry="80" fill="${colors.wall}"/>
+            <ellipse cx="225" cy="380" rx="220" ry="60" fill="${colors.floor}"/>
+            
+            <!-- Side walls -->
+            <rect x="25" y="50" width="30" height="280" fill="${colors.wall}"/>
+            <rect x="395" y="50" width="30" height="280" fill="${colors.wall}"/>
+            
+            <!-- Floor texture -->
+            <ellipse cx="100" cy="320" rx="40" ry="20" fill="${colors.accent}" opacity="0.4"/>
+            <ellipse cx="225" cy="350" rx="60" ry="25" fill="${colors.accent}" opacity="0.3"/>
+            <ellipse cx="350" cy="310" rx="45" ry="22" fill="${colors.accent}" opacity="0.4"/>
+    `;
+    
+    // Add den-specific content
+    switch (denType) {
+        case 'nursery':
+            denHTML += renderNurseryInterior();
+            break;
+        case 'elders':
+            denHTML += renderEldersInterior();
+            break;
+        case 'warriors':
+            denHTML += renderWarriorsInterior();
+            break;
+        case 'apprentices':
+            denHTML += renderApprenticesInterior();
+            break;
+        case 'medicine':
+            denHTML += renderMedicineInterior();
+            break;
+        case 'leader':
+            denHTML += renderLeaderInterior();
+            break;
+    }
+    
+    // Exit to camp
+    denHTML += `
+        <g class="den-exit clickable" style="cursor: pointer;">
+            <ellipse cx="225" cy="385" rx="50" ry="25" fill="#3a5a3a" stroke="#5a7a5a" stroke-width="2"/>
+            <text x="225" y="390" text-anchor="middle" fill="#aaffaa" font-size="12" font-weight="bold">EXIT</text>
+        </g>
+    `;
+    
+    // Add player cat
+    denHTML += renderPlayerCat();
+    
+    // Add speech bubbles
+    denHTML += renderSpeechBubbles();
+    
+    denHTML += '</svg>';
+    
+    gameWorld.innerHTML = denHTML;
+    
+    // Add exit click handler
+    document.querySelector('.den-exit')?.addEventListener('click', () => {
+        GameState.currentLocation = 'camp';
+        GameState.playerX = 225;
+        GameState.playerY = 250;
+        renderGameWorld();
+        showMessage('You left the den.');
+    });
+}
+
+// Nursery interior - cozy with moss nests and kits
+function renderNurseryInterior() {
+    return `
+        <!-- Moss nests -->
+        <ellipse cx="100" cy="200" rx="45" ry="25" fill="#4a6a3a" stroke="#3a5a2a" stroke-width="2"/>
+        <ellipse cx="100" cy="195" rx="40" ry="20" fill="#5a7a4a"/>
+        <text x="100" y="235" text-anchor="middle" fill="#aaa" font-size="9">Nest</text>
+        
+        <ellipse cx="225" cy="180" rx="50" ry="28" fill="#4a6a3a" stroke="#3a5a2a" stroke-width="2"/>
+        <ellipse cx="225" cy="175" rx="45" ry="23" fill="#5a7a4a"/>
+        <text x="225" y="215" text-anchor="middle" fill="#aaa" font-size="9">Nest</text>
+        
+        <ellipse cx="350" cy="200" rx="45" ry="25" fill="#4a6a3a" stroke="#3a5a2a" stroke-width="2"/>
+        <ellipse cx="350" cy="195" rx="40" ry="20" fill="#5a7a4a"/>
+        <text x="350" y="235" text-anchor="middle" fill="#aaa" font-size="9">Nest</text>
+        
+        <!-- Water moss -->
+        <ellipse cx="80" cy="280" rx="25" ry="15" fill="#2a4a3a"/>
+        <ellipse cx="80" cy="278" rx="20" ry="12" fill="#4a8aaa" opacity="0.6"/>
+        <text x="80" y="305" text-anchor="middle" fill="#7ac" font-size="8">Water</text>
+        
+        <!-- Small prey pile -->
+        <ellipse cx="370" cy="280" rx="25" ry="15" fill="#4a3a2a"/>
+        <ellipse cx="368" cy="276" rx="8" ry="5" fill="#8a7a6a"/>
+        <text x="370" y="305" text-anchor="middle" fill="#a98" font-size="8">Food</text>
+        
+        <!-- Sleeping kits (if any) -->
+        ${renderDetailedNPCCat(100, 185, '#d4a574', '#f1c40f', 'Molekit', 0.35)}
+        ${renderDetailedNPCCat(350, 185, '#cc8866', '#27ae60', 'Cherrykit', 0.35)}
+    `;
+}
+
+// Elders interior
+function renderEldersInterior() {
+    return `
+        <!-- Comfortable nests -->
+        <ellipse cx="120" cy="180" rx="55" ry="30" fill="#5a4a3a" stroke="#4a3a2a" stroke-width="2"/>
+        <ellipse cx="120" cy="175" rx="50" ry="25" fill="#6a5a4a"/>
+        
+        <ellipse cx="330" cy="180" rx="55" ry="30" fill="#5a4a3a" stroke="#4a3a2a" stroke-width="2"/>
+        <ellipse cx="330" cy="175" rx="50" ry="25" fill="#6a5a4a"/>
+        
+        <!-- Story circle area -->
+        <ellipse cx="225" cy="270" rx="70" ry="40" fill="#4a3a2a" opacity="0.5"/>
+        <text x="225" y="275" text-anchor="middle" fill="#aa9" font-size="10">Story Circle</text>
+        
+        <!-- An elder -->
+        ${renderDetailedNPCCat(120, 165, '#888899', '#f1c40f', 'Longtail', 0.7)}
+    `;
+}
+
+// Warriors interior
+function renderWarriorsInterior() {
+    return `
+        <!-- Large moss nests -->
+        <ellipse cx="90" cy="160" rx="50" ry="28" fill="#3a4a3a" stroke="#2a3a2a" stroke-width="2"/>
+        <ellipse cx="90" cy="155" rx="45" ry="23" fill="#4a5a4a"/>
+        
+        <ellipse cx="225" cy="140" rx="55" ry="30" fill="#3a4a3a" stroke="#2a3a2a" stroke-width="2"/>
+        <ellipse cx="225" cy="135" rx="50" ry="25" fill="#4a5a4a"/>
+        
+        <ellipse cx="360" cy="160" rx="50" ry="28" fill="#3a4a3a" stroke="#2a3a2a" stroke-width="2"/>
+        <ellipse cx="360" cy="155" rx="45" ry="23" fill="#4a5a4a"/>
+        
+        <ellipse cx="140" cy="240" rx="50" ry="28" fill="#3a4a3a" stroke="#2a3a2a" stroke-width="2"/>
+        <ellipse cx="140" cy="235" rx="45" ry="23" fill="#4a5a4a"/>
+        
+        <ellipse cx="310" cy="240" rx="50" ry="28" fill="#3a4a3a" stroke="#2a3a2a" stroke-width="2"/>
+        <ellipse cx="310" cy="235" rx="45" ry="23" fill="#4a5a4a"/>
+        
+        <!-- Sleeping warriors -->
+        ${renderDetailedNPCCat(90, 145, '#888899', '#f4d35e', 'Graystripe', 0.6)}
+        ${renderDetailedNPCCat(360, 145, '#8B7355', '#c4a35a', 'Dustpelt', 0.6)}
+    `;
+}
+
+// Apprentices interior
+function renderApprenticesInterior() {
+    return `
+        <!-- Apprentice nests -->
+        <ellipse cx="100" cy="170" rx="45" ry="25" fill="#3a4a5a" stroke="#2a3a4a" stroke-width="2"/>
+        <ellipse cx="100" cy="165" rx="40" ry="20" fill="#4a5a6a"/>
+        
+        <ellipse cx="225" cy="150" rx="50" ry="28" fill="#3a4a5a" stroke="#2a3a4a" stroke-width="2"/>
+        <ellipse cx="225" cy="145" rx="45" ry="23" fill="#4a5a6a"/>
+        
+        <ellipse cx="350" cy="170" rx="45" ry="25" fill="#3a4a5a" stroke="#2a3a4a" stroke-width="2"/>
+        <ellipse cx="350" cy="165" rx="40" ry="20" fill="#4a5a6a"/>
+        
+        <!-- Training area -->
+        <ellipse cx="225" cy="280" rx="60" ry="35" fill="#4a5a3a" opacity="0.4"/>
+        <text x="225" y="285" text-anchor="middle" fill="#8a9" font-size="10">Practice Area</text>
+    `;
+}
+
+// Medicine den interior
+function renderMedicineInterior() {
+    return `
+        <!-- Herb storage -->
+        <rect x="60" y="120" width="80" height="60" rx="5" fill="#4a5a3a" stroke="#3a4a2a" stroke-width="2"/>
+        <text x="100" y="155" text-anchor="middle" fill="#8a9" font-size="10">Herbs</text>
+        
+        <rect x="310" y="120" width="80" height="60" rx="5" fill="#4a5a3a" stroke="#3a4a2a" stroke-width="2"/>
+        <text x="350" y="155" text-anchor="middle" fill="#8a9" font-size="10">Herbs</text>
+        
+        <!-- Patient nests -->
+        <ellipse cx="120" cy="240" rx="50" ry="28" fill="#5a6a5a" stroke="#4a5a4a" stroke-width="2"/>
+        <ellipse cx="120" cy="235" rx="45" ry="23" fill="#6a7a6a"/>
+        <text x="120" y="275" text-anchor="middle" fill="#aaa" font-size="9">Patient Nest</text>
+        
+        <ellipse cx="330" cy="240" rx="50" ry="28" fill="#5a6a5a" stroke="#4a5a4a" stroke-width="2"/>
+        <ellipse cx="330" cy="235" rx="45" ry="23" fill="#6a7a6a"/>
+        <text x="330" y="275" text-anchor="middle" fill="#aaa" font-size="9">Patient Nest</text>
+        
+        <!-- Medicine cat -->
+        ${renderDetailedNPCCat(225, 180, '#d4a574', '#3498db', 'Leafpool', 0.7)}
+    `;
+}
+
+// Leader's den interior
+function renderLeaderInterior() {
+    return `
+        <!-- Large luxurious nest -->
+        <ellipse cx="225" cy="180" rx="70" ry="40" fill="#6a5a3a" stroke="#5a4a2a" stroke-width="3"/>
+        <ellipse cx="225" cy="172" rx="65" ry="35" fill="#7a6a4a"/>
+        <ellipse cx="225" cy="165" rx="55" ry="28" fill="#8a7a5a" opacity="0.5"/>
+        <text x="225" y="225" text-anchor="middle" fill="#ca9" font-size="10">Leader's Nest</text>
+        
+        <!-- Decorative stones -->
+        <ellipse cx="100" cy="150" rx="20" ry="15" fill="#6a6a7a"/>
+        <ellipse cx="350" cy="150" rx="20" ry="15" fill="#6a6a7a"/>
+        
+        <!-- Prey pile for leader -->
+        <ellipse cx="350" cy="280" rx="30" ry="18" fill="#4a3a2a"/>
+        <ellipse cx="348" cy="276" rx="10" ry="6" fill="#8a7a6a"/>
+        <ellipse cx="354" cy="274" rx="8" ry="5" fill="#9a8a7a"/>
+        <text x="350" y="308" text-anchor="middle" fill="#a98" font-size="9">Leader's Prey</text>
+    `;
 }
 
 // Render the camp with all dens
@@ -2459,6 +2715,13 @@ function interactWithLocation(locationKey) {
         case 'nursery':
             title.textContent = 'Nursery';
             desc.textContent = 'Where queens and kits rest safely. Warriors leave food and water here.';
+            
+            // Enter the den
+            addAction(actions, 'Enter Nursery', () => {
+                closePopup();
+                enterDen('nursery');
+            });
+            
             if (cat.rank === 'Kit') {
                 addAction(actions, 'Sleep', () => {
                     restInDen();
@@ -2495,6 +2758,12 @@ function interactWithLocation(locationKey) {
         case 'elders':
             title.textContent = "Elders' Den";
             desc.textContent = 'The elders share stories of the old days.';
+            
+            addAction(actions, 'Enter Elders Den', () => {
+                closePopup();
+                enterDen('elders');
+            });
+            
             if (cat.rank === 'Elder') {
                 addAction(actions, 'Rest', () => {
                     restInDen();
@@ -2511,6 +2780,12 @@ function interactWithLocation(locationKey) {
         case 'warriors':
             title.textContent = "Warriors' Den";
             desc.textContent = 'Where the brave warriors rest between patrols.';
+            
+            addAction(actions, 'Enter Warriors Den', () => {
+                closePopup();
+                enterDen('warriors');
+            });
+            
             if (cat.rank === 'Warrior' || cat.rank === 'Deputy') {
                 addAction(actions, 'Rest', () => {
                     restInDen();
@@ -2522,6 +2797,12 @@ function interactWithLocation(locationKey) {
         case 'apprentices':
             title.textContent = "Apprentices' Den";
             desc.textContent = 'Young cats learning to become warriors.';
+            
+            addAction(actions, 'Enter Apprentices Den', () => {
+                closePopup();
+                enterDen('apprentices');
+            });
+            
             if (cat.rank === 'Apprentice') {
                 addAction(actions, 'Rest', () => {
                     restInDen();
@@ -2533,6 +2814,12 @@ function interactWithLocation(locationKey) {
         case 'medicine':
             title.textContent = 'Medicine Den';
             desc.textContent = 'The medicine cat can heal you with herbs.';
+            
+            addAction(actions, 'Enter Medicine Den', () => {
+                closePopup();
+                enterDen('medicine');
+            });
+            
             if (GameState.herbs.length > 0) {
                 addAction(actions, 'Give herbs to medicine cat', () => {
                     giveHerbsToMedicineCat();
@@ -2550,6 +2837,12 @@ function interactWithLocation(locationKey) {
         case 'leader':
             title.textContent = "Leader's Den";
             desc.textContent = 'The clan leader rests here.';
+            
+            addAction(actions, 'Enter Leader Den', () => {
+                closePopup();
+                enterDen('leader');
+            });
+            
             if (cat.rank === 'Leader') {
                 addAction(actions, 'Rest', () => {
                     restInDen();
