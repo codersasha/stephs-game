@@ -351,13 +351,9 @@ function setupEventListeners() {
     document.getElementById('emote-sleep').addEventListener('click', () => toggleRest());
     document.getElementById('emote-meow').addEventListener('click', () => doMeow());
     document.getElementById('emote-talk').addEventListener('click', () => {
-        // In multiplayer, focus the chat input
+        // In multiplayer, show menu to choose chat or NPC talk
         if (GameState.isMultiplayer) {
-            const chatInput = document.getElementById('chat-input');
-            if (chatInput) {
-                chatInput.focus();
-                showMessage('Type your message and press Send!');
-            }
+            showTalkMenu();
         } else {
             openSpeechPopup();
         }
@@ -8942,6 +8938,37 @@ function updateMultiplayerChatVisibility() {
             chatBox.classList.add('hidden');
         }
     }
+}
+
+// Show talk menu in multiplayer (choose chat or NPC talk)
+function showTalkMenu() {
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Talk';
+    desc.textContent = 'Who do you want to talk to?';
+    
+    actions.innerHTML = '';
+    
+    addAction(actions, 'Chat with Players', () => {
+        closePopup();
+        const chatInput = document.getElementById('chat-input');
+        if (chatInput) {
+            chatInput.focus();
+            showMessage('Type your message and press Send!');
+        }
+    });
+    
+    addAction(actions, 'Talk to Cats (NPCs)', () => {
+        closePopup();
+        openSpeechPopup();
+    });
+    
+    addAction(actions, 'Cancel', closePopup);
+    
+    popup.classList.add('active');
 }
 
 // Show player speech bubble (for chat messages)
