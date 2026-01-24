@@ -2392,6 +2392,18 @@ function encounterDanger(dangerType) {
     
     const info = dangerInfo[dangerType] || dangerInfo.fox;
     
+    // Kits die instantly to foxes and dogs - they're too small to survive!
+    if (cat.rank === 'Kit' && (dangerType === 'fox' || dangerType === 'dog')) {
+        showMessage(`A ${info.name.toLowerCase()} appears! You're too small to escape!`);
+        setTimeout(() => {
+            showMessage(`The ${info.name.toLowerCase()} catches you... You were too little to survive alone in the forest.`);
+            setTimeout(() => {
+                catDeath(`caught by a ${info.name.toLowerCase()} in the forest`);
+            }, 2500);
+        }, 2000);
+        return;
+    }
+    
     title.textContent = `DANGER! A ${info.name}!`;
     desc.textContent = `A ${info.name.toLowerCase()} is blocking your path! What do you do?`;
     actions.innerHTML = '';
