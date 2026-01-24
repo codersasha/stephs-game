@@ -1105,29 +1105,121 @@ function renderNPCCats() {
 function renderForest() {
     const gameWorld = document.getElementById('game-world');
     const clan = GameState.selectedClan;
+    const isNight = GameState.isNight;
     
-    // Generate random herbs and prey positions
+    // Forest is bigger! 600x500
     const herbSpots = [
-        { x: 80, y: 100, herb: 'cobweb' },
-        { x: 350, y: 150, herb: 'catmint' },
-        { x: 150, y: 280, herb: 'marigold' },
-        { x: 300, y: 320, herb: 'dock' },
-        { x: 50, y: 220, herb: 'juniper' },
-        { x: 380, y: 280, herb: 'poppy' }
+        { x: 100, y: 120, herb: 'cobweb' },
+        { x: 480, y: 100, herb: 'catmint' },
+        { x: 150, y: 380, herb: 'marigold' },
+        { x: 400, y: 420, herb: 'dock' },
+        { x: 70, y: 280, herb: 'juniper' },
+        { x: 520, y: 320, herb: 'poppy' },
+        { x: 300, y: 80, herb: 'cobweb' },
+        { x: 550, y: 200, herb: 'marigold' }
     ];
     
+    // Different ground colors based on clan territory
+    const groundColors = {
+        thunder: { base: '#1a3a1a', accent: '#2a4a2a' },
+        shadow: { base: '#1a1a2a', accent: '#2a2a3a' },
+        river: { base: '#1a2a3a', accent: '#2a3a4a' },
+        wind: { base: '#2a3a2a', accent: '#3a4a3a' }
+    };
+    const colors = groundColors[clan] || groundColors.thunder;
+    const skyColor = isNight ? '#0a0a1a' : '#1a3a2a';
+    
     let worldHTML = `
-        <svg id="forest-svg" viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-            <!-- Forest ground -->
-            <rect x="0" y="0" width="450" height="400" fill="#1a3a2a"/>
+        <svg id="forest-svg" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <radialGradient id="forestGlow" cx="50%" cy="30%" r="60%">
+                    <stop offset="0%" stop-color="${isNight ? '#1a2a3a' : '#2a4a3a'}"/>
+                    <stop offset="100%" stop-color="${skyColor}"/>
+                </radialGradient>
+                <filter id="treeShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="rgba(0,0,0,0.4)"/>
+                </filter>
+                <linearGradient id="treeGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#3d6d26"/>
+                    <stop offset="100%" stop-color="#1e4d2b"/>
+                </linearGradient>
+                <linearGradient id="treeGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#2d5d16"/>
+                    <stop offset="100%" stop-color="#1a3a1a"/>
+                </linearGradient>
+            </defs>
             
-            <!-- Trees scattered around -->
-            <polygon points="40,350 55,200 70,350" fill="#2d5016"/>
-            <polygon points="100,380 120,250 140,380" fill="#1e4d2b"/>
-            <polygon points="350,350 370,180 390,350" fill="#2d5016"/>
-            <polygon points="280,380 300,220 320,380" fill="#1e4d2b"/>
-            <polygon points="180,300 200,150 220,300" fill="#2d5016"/>
-            <polygon points="400,300 415,180 430,300" fill="#1e4d2b"/>
+            <!-- Forest ground with texture -->
+            <rect x="0" y="0" width="600" height="500" fill="url(#forestGlow)"/>
+            
+            <!-- Ground texture - grass patches -->
+            <ellipse cx="100" cy="450" rx="80" ry="30" fill="${colors.accent}" opacity="0.6"/>
+            <ellipse cx="300" cy="480" rx="100" ry="40" fill="${colors.accent}" opacity="0.5"/>
+            <ellipse cx="500" cy="460" rx="90" ry="35" fill="${colors.accent}" opacity="0.6"/>
+            <ellipse cx="200" cy="350" rx="60" ry="25" fill="${colors.accent}" opacity="0.4"/>
+            <ellipse cx="450" cy="300" rx="70" ry="30" fill="${colors.accent}" opacity="0.5"/>
+            
+            <!-- Fallen leaves scattered -->
+            <circle cx="120" cy="320" r="3" fill="#8B4513" opacity="0.7"/>
+            <circle cx="250" cy="400" r="2" fill="#CD853F" opacity="0.6"/>
+            <circle cx="380" cy="280" r="3" fill="#A0522D" opacity="0.7"/>
+            <circle cx="480" cy="380" r="2" fill="#8B4513" opacity="0.6"/>
+            <circle cx="180" cy="220" r="2" fill="#CD853F" opacity="0.5"/>
+            <circle cx="520" cy="150" r="3" fill="#A0522D" opacity="0.7"/>
+            
+            <!-- Trees - many more! -->
+            <!-- Back row (distant, smaller) -->
+            <polygon points="50,150 65,50 80,150" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="130,160 150,40 170,160" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="220,140 240,30 260,140" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="310,150 330,20 350,150" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="400,140 420,35 440,140" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="490,155 510,45 530,155" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="560,145 575,60 590,145" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            
+            <!-- Middle row trees -->
+            <polygon points="20,320 45,150 70,320" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="90,340 120,180 150,340" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            <polygon points="530,300 555,140 580,300" fill="url(#treeGrad1)" filter="url(#treeShadow)"/>
+            <polygon points="560,350 580,200 600,350" fill="url(#treeGrad2)" filter="url(#treeShadow)"/>
+            
+            <!-- Tree trunks -->
+            <rect x="60" y="150" width="10" height="30" fill="#5D4037"/>
+            <rect x="145" y="160" width="12" height="35" fill="#4E342E"/>
+            <rect x="235" y="140" width="10" height="30" fill="#5D4037"/>
+            <rect x="325" y="150" width="12" height="32" fill="#4E342E"/>
+            <rect x="415" y="140" width="10" height="28" fill="#5D4037"/>
+            <rect x="505" y="155" width="11" height="30" fill="#4E342E"/>
+            <rect x="40" y="320" width="12" height="40" fill="#5D4037"/>
+            <rect x="115" y="340" width="14" height="45" fill="#4E342E"/>
+            <rect x="550" y="300" width="12" height="35" fill="#5D4037"/>
+            
+            <!-- Bushes -->
+            <ellipse cx="180" cy="250" rx="25" ry="18" fill="#2d5d26"/>
+            <ellipse cx="350" cy="200" rx="30" ry="20" fill="#1e4d1b"/>
+            <ellipse cx="450" cy="350" rx="28" ry="16" fill="#2d5d26"/>
+            <ellipse cx="80" cy="400" rx="22" ry="14" fill="#1e4d1b"/>
+            <ellipse cx="520" cy="420" rx="25" ry="15" fill="#2d5d26"/>
+            
+            <!-- Stream for RiverClan territory -->
+            ${clan === 'river' ? `
+            <path d="M0,250 Q150,220 300,260 Q450,300 600,270" stroke="#4a8aaa" stroke-width="20" fill="none" opacity="0.7"/>
+            <path d="M0,250 Q150,220 300,260 Q450,300 600,270" stroke="#6aaacc" stroke-width="8" fill="none" opacity="0.5"/>
+            ` : ''}
+            
+            <!-- Moorland grass for WindClan -->
+            ${clan === 'wind' ? `
+            <line x1="100" y1="300" x2="110" y2="280" stroke="#5a7a4a" stroke-width="2"/>
+            <line x1="200" y1="350" x2="210" y2="330" stroke="#5a7a4a" stroke-width="2"/>
+            <line x1="350" y1="320" x2="360" y2="300" stroke="#5a7a4a" stroke-width="2"/>
+            <line x1="480" y1="280" x2="490" y2="260" stroke="#5a7a4a" stroke-width="2"/>
+            ` : ''}
+            
+            <!-- Dark pines for ShadowClan -->
+            ${clan === 'shadow' ? `
+            <polygon points="280,380 300,200 320,380" fill="#1a3a2a" filter="url(#treeShadow)"/>
+            <polygon points="380,400 400,250 420,400" fill="#0a2a1a" filter="url(#treeShadow)"/>
+            ` : ''}
             
             <!-- Herb spots -->
     `;
@@ -1135,29 +1227,51 @@ function renderForest() {
     herbSpots.forEach((spot, i) => {
         const herb = HERBS[spot.herb];
         worldHTML += `
-            <g class="herb-spot" data-herb="${spot.herb}" data-index="${i}">
-                <circle cx="${spot.x}" cy="${spot.y}" r="20" fill="#2a4a2a" stroke="#4a6a4a" stroke-width="2"/>
-                <text x="${spot.x}" y="${spot.y + 5}" text-anchor="middle" font-size="10" fill="#8a8">${herb.name}</text>
+            <g class="herb-spot clickable" data-herb="${spot.herb}" data-index="${i}" style="cursor: pointer;">
+                <circle cx="${spot.x}" cy="${spot.y}" r="22" fill="#2a4a2a" stroke="#5a8a5a" stroke-width="2"/>
+                <circle cx="${spot.x-5}" cy="${spot.y-3}" r="4" fill="#4a8a4a"/>
+                <circle cx="${spot.x+5}" cy="${spot.y+2}" r="3" fill="#3a7a3a"/>
+                <circle cx="${spot.x}" cy="${spot.y-6}" r="3" fill="#5a9a5a"/>
+                <text x="${spot.x}" y="${spot.y + 32}" text-anchor="middle" font-size="11" fill="#aaffaa" style="text-shadow: 1px 1px 2px black;">${herb.name}</text>
             </g>
         `;
     });
     
-    // Prey spot
+    // Multiple prey spots around the forest
+    const preySpots = [
+        { x: 280, y: 300, type: 'mouse' },
+        { x: 450, y: 180, type: 'mouse' },
+        { x: 180, y: 450, type: 'vole' },
+        { x: 380, y: 380, type: 'mouse' }
+    ];
+    
+    preySpots.forEach((prey, i) => {
+        worldHTML += `
+            <g class="prey-spot clickable" data-action="hunt" data-index="${i}" style="cursor: pointer;">
+                <circle cx="${prey.x}" cy="${prey.y}" r="28" fill="#4a3a2a" stroke="#7a6a5a" stroke-width="2"/>
+                <ellipse cx="${prey.x}" cy="${prey.y}" rx="10" ry="6" fill="#8B7355"/>
+                <circle cx="${prey.x-4}" cy="${prey.y-2}" r="2" fill="#1a1a1a"/>
+                <ellipse cx="${prey.x+8}" cy="${prey.y}" rx="3" ry="1" fill="#9a8a7a"/>
+                <text x="${prey.x}" y="${prey.y + 38}" text-anchor="middle" fill="#f0e6d2" font-size="11" style="text-shadow: 1px 1px 2px black;">Hunt ${prey.type}</text>
+            </g>
+        `;
+    });
+    
+    // Danger spot (fox den or dog area)
     worldHTML += `
-        <g class="prey-spot" data-action="hunt">
-            <circle cx="225" cy="200" r="25" fill="#4a3a2a" stroke="#6a5a4a" stroke-width="2"/>
-            <ellipse cx="225" cy="200" rx="8" ry="5" fill="#8B7355"/>
-            <circle cx="220" cy="198" r="2" fill="#1a1a1a"/>
-            <text x="225" y="230" text-anchor="middle" fill="white" font-size="10">Prey</text>
+        <g class="danger-spot" data-danger="fox">
+            <ellipse cx="550" cy="80" rx="35" ry="25" fill="#3a2a1a" stroke="#5a4a3a" stroke-width="2"/>
+            <ellipse cx="550" cy="85" rx="20" ry="12" fill="#1a0a0a"/>
+            <text x="550" y="120" text-anchor="middle" fill="#ff6666" font-size="10" style="text-shadow: 1px 1px 2px black;">??? Den</text>
         </g>
     `;
     
-    // Camp entrance
+    // Camp entrance (bigger, clearer)
     worldHTML += `
-        <g class="camp-den" data-location="camp">
-            <rect x="5" y="170" width="40" height="60" fill="#4a3a2a" rx="5"/>
-            <polygon points="25,175 15,200 35,200" fill="#3a5a3a"/>
-            <text x="25" y="225" text-anchor="middle" fill="white" font-size="8">Camp</text>
+        <g class="camp-den clickable" data-location="camp" style="cursor: pointer;">
+            <ellipse cx="35" cy="250" rx="30" ry="40" fill="#4a3a2a" stroke="#6a5a4a" stroke-width="3"/>
+            <polygon points="35,215 20,250 50,250" fill="#3a5a3a"/>
+            <text x="35" y="300" text-anchor="middle" fill="#ffd700" font-size="12" font-weight="bold" style="text-shadow: 1px 1px 2px black;">CAMP</text>
         </g>
     `;
     
@@ -1166,6 +1280,14 @@ function renderForest() {
     
     // Add speech bubbles
     worldHTML += renderSpeechBubbles();
+    
+    // Moon/Sun indicator
+    if (isNight) {
+        worldHTML += `
+            <circle cx="550" cy="40" r="15" fill="#ffffcc" opacity="0.8"/>
+            <circle cx="545" cy="38" r="12" fill="${skyColor}"/>
+        `;
+    }
     
     worldHTML += `</svg>`;
     
@@ -1176,7 +1298,11 @@ function renderForest() {
         spot.addEventListener('click', () => collectHerb(spot.dataset.herb, spot.dataset.index));
     });
     
-    document.querySelector('.prey-spot')?.addEventListener('click', huntPrey);
+    document.querySelectorAll('.prey-spot').forEach(spot => {
+        spot.addEventListener('click', () => startHuntingGame());
+    });
+    
+    document.querySelector('.danger-spot')?.addEventListener('click', () => encounterDanger('fox'));
     
     document.querySelectorAll('.camp-den').forEach(den => {
         den.addEventListener('click', () => {
@@ -1185,10 +1311,13 @@ function renderForest() {
                 GameState.playerX = 225;
                 GameState.playerY = 250;
                 renderGameWorld();
-                showMessage('🏕️ You returned to camp!');
+                showMessage('You returned to camp safely!');
             }
         });
     });
+    
+    // Check for random forest events
+    checkForestEvents();
 }
 
 // Render player cat at current position
@@ -2068,6 +2197,288 @@ function huntPrey() {
     saveGameData();
 }
 
+// Hunting mini-game!
+let huntingGameActive = false;
+let mousePosition = { x: 200, y: 200 };
+let mouseInterval = null;
+let huntingTimeout = null;
+
+function startHuntingGame() {
+    const cat = GameState.catData;
+    
+    // Kits can't hunt!
+    if (cat.rank === 'Kit') {
+        showMessage("You're too young to hunt! Go back to camp!");
+        return;
+    }
+    
+    if (cat.rank === 'Elder') {
+        showMessage("Your hunting days are over. Rest your old bones!");
+        return;
+    }
+    
+    huntingGameActive = true;
+    mousePosition = { x: 200 + Math.random() * 200, y: 150 + Math.random() * 200 };
+    
+    showMessage('A mouse! Quick, click on it to catch it!');
+    
+    renderHuntingGame();
+    
+    // Mouse moves around
+    mouseInterval = setInterval(() => {
+        if (huntingGameActive) {
+            // Mouse moves to random position
+            mousePosition.x = 100 + Math.random() * 400;
+            mousePosition.y = 100 + Math.random() * 300;
+            renderHuntingGame();
+        }
+    }, 800); // Mouse moves every 0.8 seconds
+    
+    // Time limit - 8 seconds to catch
+    huntingTimeout = setTimeout(() => {
+        if (huntingGameActive) {
+            endHuntingGame(false);
+        }
+    }, 8000);
+}
+
+function renderHuntingGame() {
+    const gameWorld = document.getElementById('game-world');
+    
+    gameWorld.innerHTML = `
+        <svg id="hunting-svg" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <radialGradient id="huntGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#2a4a2a"/>
+                    <stop offset="100%" stop-color="#1a2a1a"/>
+                </radialGradient>
+            </defs>
+            
+            <!-- Hunting ground -->
+            <rect x="0" y="0" width="600" height="500" fill="url(#huntGlow)"/>
+            
+            <!-- Grass texture -->
+            <ellipse cx="150" cy="400" rx="80" ry="30" fill="#2a5a2a" opacity="0.5"/>
+            <ellipse cx="400" cy="350" rx="100" ry="40" fill="#2a5a2a" opacity="0.4"/>
+            <ellipse cx="300" cy="450" rx="120" ry="35" fill="#2a5a2a" opacity="0.5"/>
+            
+            <!-- Leaves and debris -->
+            <circle cx="100" cy="200" r="3" fill="#8B4513" opacity="0.6"/>
+            <circle cx="450" cy="280" r="4" fill="#CD853F" opacity="0.5"/>
+            <circle cx="250" cy="150" r="3" fill="#A0522D" opacity="0.6"/>
+            
+            <!-- THE MOUSE! Click it! -->
+            <g id="hunt-mouse" class="clickable" style="cursor: pointer;">
+                <ellipse cx="${mousePosition.x}" cy="${mousePosition.y}" rx="18" ry="12" fill="#8B7355"/>
+                <circle cx="${mousePosition.x - 10}" cy="${mousePosition.y - 4}" r="4" fill="#7a6a5a"/>
+                <circle cx="${mousePosition.x - 13}" cy="${mousePosition.y - 5}" r="2" fill="#1a1a1a"/>
+                <ellipse cx="${mousePosition.x + 15}" cy="${mousePosition.y}" rx="8" ry="3" fill="#9a8a7a"/>
+                <circle cx="${mousePosition.x - 6}" cy="${mousePosition.y - 8}" r="5" fill="#8B7355"/>
+                <circle cx="${mousePosition.x - 3}" cy="${mousePosition.y - 8}" r="5" fill="#8B7355"/>
+            </g>
+            
+            <!-- Instructions -->
+            <text x="300" y="50" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold" style="text-shadow: 2px 2px 4px black;">CLICK THE MOUSE!</text>
+            <text x="300" y="480" text-anchor="middle" fill="#aaa" font-size="14">Hurry! It's getting away!</text>
+            
+            <!-- Cancel button -->
+            <g id="cancel-hunt" class="clickable" style="cursor: pointer;">
+                <rect x="20" y="20" width="80" height="30" rx="5" fill="#6a4a4a" stroke="#8a6a6a" stroke-width="2"/>
+                <text x="60" y="40" text-anchor="middle" fill="white" font-size="12">Give up</text>
+            </g>
+        </svg>
+    `;
+    
+    // Add click handler for mouse
+    document.getElementById('hunt-mouse')?.addEventListener('click', () => {
+        endHuntingGame(true);
+    });
+    
+    // Add cancel handler
+    document.getElementById('cancel-hunt')?.addEventListener('click', () => {
+        endHuntingGame(false);
+    });
+}
+
+function endHuntingGame(caught) {
+    huntingGameActive = false;
+    if (mouseInterval) clearInterval(mouseInterval);
+    if (huntingTimeout) clearTimeout(huntingTimeout);
+    
+    const cat = GameState.catData;
+    
+    if (caught) {
+        cat.hunger = Math.min(100, cat.hunger + 35);
+        cat.experience += 15;
+        showMessage('Great catch! You caught the mouse!');
+    } else {
+        showMessage('The mouse escaped into its hole...');
+    }
+    
+    updateGameUI();
+    saveGameData();
+    
+    // Return to forest
+    GameState.currentLocation = 'forest';
+    renderGameWorld();
+}
+
+// Forest events - dangers and patrols!
+function checkForestEvents() {
+    const cat = GameState.catData;
+    
+    // Kits in forest - warriors might find them!
+    if (cat.rank === 'Kit' && !GameState.isHiding) {
+        // 20% chance per render a warrior finds you
+        if (Math.random() < 0.2) {
+            setTimeout(() => warriorFindsKit(), 2000);
+        }
+    }
+    
+    // Random danger encounters (fox or dog)
+    if (Math.random() < 0.05) { // 5% chance
+        setTimeout(() => randomDangerEncounter(), 3000);
+    }
+}
+
+function warriorFindsKit() {
+    const cat = GameState.catData;
+    if (cat.rank !== 'Kit' || GameState.currentLocation !== 'forest') return;
+    if (GameState.isHiding) {
+        showMessage('You stay hidden as a patrol passes by...');
+        return;
+    }
+    
+    const warriors = ['Dustpelt', 'Sandstorm', 'Cloudtail', 'Thornclaw', 'Brackenfur'];
+    const warrior = warriors[Math.floor(Math.random() * warriors.length)];
+    
+    showSpeechBubble(warrior, 'What are you doing out here?!');
+    
+    setTimeout(() => {
+        showMessage(`${warrior} found you! "Kits shouldn't be in the forest alone!"`);
+        setTimeout(() => {
+            showMessage(`${warrior} carries you back to camp by your scruff!`);
+            GameState.currentLocation = 'camp';
+            GameState.playerX = 200;
+            GameState.playerY = 280;
+            renderGameWorld();
+            
+            setTimeout(() => {
+                showMessage('You\'re back in the nursery. The queens look worried!');
+            }, 1500);
+        }, 2000);
+    }, 1500);
+}
+
+function randomDangerEncounter() {
+    if (GameState.currentLocation !== 'forest') return;
+    
+    const dangers = ['fox', 'dog', 'badger'];
+    const danger = dangers[Math.floor(Math.random() * dangers.length)];
+    
+    encounterDanger(danger);
+}
+
+function encounterDanger(dangerType) {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    const dangerInfo = {
+        fox: { name: 'Fox', damage: 40, color: '#cc6633' },
+        dog: { name: 'Dog', damage: 50, color: '#8B4513' },
+        badger: { name: 'Badger', damage: 45, color: '#333333' }
+    };
+    
+    const info = dangerInfo[dangerType] || dangerInfo.fox;
+    
+    title.textContent = `DANGER! A ${info.name}!`;
+    desc.textContent = `A ${info.name.toLowerCase()} is blocking your path! What do you do?`;
+    actions.innerHTML = '';
+    
+    addAction(actions, 'RUN!', () => {
+        closePopup();
+        const escapeChance = cat.rank === 'Kit' ? 0.4 : 0.7; // Kits are slower
+        
+        if (Math.random() < escapeChance) {
+            showMessage(`You run as fast as you can! The ${info.name.toLowerCase()} doesn't catch you!`);
+        } else {
+            cat.health -= Math.floor(info.damage * 0.5);
+            showMessage(`The ${info.name.toLowerCase()} scratches you as you escape! (-${Math.floor(info.damage * 0.5)} health)`);
+            if (cat.health <= 0) {
+                catDeath(`killed by a ${info.name.toLowerCase()}`);
+                return;
+            }
+        }
+        updateGameUI();
+        saveGameData();
+    });
+    
+    if (cat.rank !== 'Kit' && cat.rank !== 'Elder') {
+        addAction(actions, 'Fight!', () => {
+            closePopup();
+            const fightChance = 0.4 + (cat.experience / 500); // Better odds with experience
+            
+            if (Math.random() < fightChance) {
+                cat.experience += 30;
+                showMessage(`You fought off the ${info.name.toLowerCase()}! You're a brave warrior!`);
+            } else {
+                cat.health -= info.damage;
+                showMessage(`The ${info.name.toLowerCase()} overpowers you! (-${info.damage} health)`);
+                if (cat.health <= 0) {
+                    catDeath(`killed by a ${info.name.toLowerCase()}`);
+                    return;
+                }
+            }
+            updateGameUI();
+            saveGameData();
+        });
+    }
+    
+    addAction(actions, 'Hide!', () => {
+        closePopup();
+        GameState.isHiding = true;
+        renderGameWorld();
+        
+        if (Math.random() < 0.8) { // 80% chance hiding works
+            showMessage(`You hide in the bushes... The ${info.name.toLowerCase()} sniffs around and leaves.`);
+        } else {
+            cat.health -= Math.floor(info.damage * 0.3);
+            showMessage(`The ${info.name.toLowerCase()} finds you! It scratches you before running off.`);
+            if (cat.health <= 0) {
+                catDeath(`killed by a ${info.name.toLowerCase()}`);
+                return;
+            }
+        }
+        
+        setTimeout(() => {
+            GameState.isHiding = false;
+            renderGameWorld();
+        }, 2000);
+        
+        updateGameUI();
+        saveGameData();
+    });
+    
+    popup.classList.remove('hidden');
+}
+
+function catDeath(cause) {
+    const cat = GameState.catData;
+    showMessage(`${cat.name} was ${cause}...`);
+    
+    setTimeout(() => {
+        showMessage('You see a bright light... StarClan awaits...');
+        // TODO: Implement StarClan death sequence
+        cat.health = 100;
+        cat.rank = 'StarClan';
+        GameState.currentLocation = 'starclan';
+        renderGameWorld();
+    }, 3000);
+}
+
 function giveHerbsToMedicineCat() {
     if (GameState.herbs.length === 0) return;
     
@@ -2136,8 +2547,9 @@ function startGameLoop() {
         cat.hunger = Math.max(0, cat.hunger - 0.5);
         cat.thirst = Math.max(0, cat.thirst - 0.7);
         
-        // Kits and elders get fed automatically by the clan!
-        if (cat.rank === 'Kit' || cat.rank === 'Elder') {
+        // Kits and elders get fed automatically by the clan - but ONLY in camp!
+        // In the forest, you're on your own!
+        if ((cat.rank === 'Kit' || cat.rank === 'Elder') && GameState.currentLocation === 'camp') {
             // Auto-feed when hungry
             if (cat.hunger < 30) {
                 cat.hunger = Math.min(100, cat.hunger + 25);
@@ -2150,14 +2562,14 @@ function startGameLoop() {
             }
         }
         
-        // If very thirsty, a cat brings you water in moss
-        if (cat.thirst < 20 && cat.rank !== 'Kit' && cat.rank !== 'Elder') {
+        // If very thirsty, a cat brings you water in moss - only in camp!
+        if (cat.thirst < 20 && cat.rank !== 'Kit' && cat.rank !== 'Elder' && GameState.currentLocation === 'camp') {
             cat.thirst = Math.min(100, cat.thirst + 25);
             showMessage('A clanmate noticed you were thirsty and brought water in moss!');
         }
         
-        // If sick (low health), cats come to help
-        if (cat.health < 40) {
+        // If sick (low health), cats come to help - only in camp!
+        if (cat.health < 40 && GameState.currentLocation === 'camp') {
             // Medicine cat or helper brings food and water
             if (cat.hunger < 50) {
                 cat.hunger = Math.min(100, cat.hunger + 20);
@@ -2167,6 +2579,11 @@ function startGameLoop() {
                 cat.thirst = Math.min(100, cat.thirst + 20);
                 showMessage('The medicine cat brought you water soaked in moss.');
             }
+        }
+        
+        // In the forest, kits are in danger if not hiding!
+        if (GameState.currentLocation === 'forest' && cat.rank === 'Kit') {
+            showMessage('The forest is dangerous for kits! Go back to camp!');
         }
         
         // If hungry or thirsty, decrease health
