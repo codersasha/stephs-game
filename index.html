@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Warrior Cats - The Clan Game</title>
+    <title>Warrior Cats the Game</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+    <!-- PeerJS for multiplayer -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
     <div id="game-container">
@@ -14,12 +16,62 @@
             <div class="stars-bg"></div>
             <div class="home-content">
                 <h1 class="game-title">Warrior Cats</h1>
-                <h2 class="game-subtitle">The Clan Game</h2>
+                <h2 class="game-subtitle">the Game</h2>
                 <div id="cats-scene" class="cats-scene">
                     <!-- SVG cats will be inserted here -->
                 </div>
                 <p class="press-start blink">Press any button to start</p>
             </div>
+        </div>
+
+        <!-- Play Mode Selection Screen -->
+        <div id="mode-screen" class="screen">
+            <h2>How do you want to play?</h2>
+            <div class="mode-buttons">
+                <button class="mode-btn single-player" id="single-player-btn">
+                    <span class="mode-icon">1</span>
+                    <span class="mode-name">Play Alone</span>
+                    <span class="mode-desc">Adventure by yourself</span>
+                </button>
+                <button class="mode-btn host-game" id="host-game-btn">
+                    <span class="mode-icon">+</span>
+                    <span class="mode-name">Start a Clan</span>
+                    <span class="mode-desc">Host a game for friends</span>
+                </button>
+                <button class="mode-btn join-game" id="join-game-btn">
+                    <span class="mode-icon">></span>
+                    <span class="mode-name">Join a Clan</span>
+                    <span class="mode-desc">Join a friend's game</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Host Game Screen -->
+        <div id="host-screen" class="screen">
+            <h2>Start a Clan</h2>
+            <p class="host-instructions">Share this code with your friends!</p>
+            <div class="room-code-display">
+                <span id="room-code">Connecting...</span>
+                <button id="copy-code-btn" class="copy-btn">Copy</button>
+            </div>
+            <div class="connected-players">
+                <h3>Cats in your Clan: <span id="player-count">1</span></h3>
+                <div id="player-list"></div>
+            </div>
+            <button id="start-multiplayer-btn" class="start-btn" disabled>Start Adventure!</button>
+            <button id="cancel-host-btn" class="back-btn">Cancel</button>
+        </div>
+
+        <!-- Join Game Screen -->
+        <div id="join-screen" class="screen">
+            <h2>Join a Clan</h2>
+            <p class="join-instructions">Enter the code from your friend:</p>
+            <div class="room-code-input">
+                <input type="text" id="join-code-input" placeholder="Enter code..." maxlength="20">
+                <button id="connect-btn" class="connect-btn">Join!</button>
+            </div>
+            <p id="join-status" class="join-status"></p>
+            <button id="cancel-join-btn" class="back-btn">Cancel</button>
         </div>
 
         <!-- Clan Selection Screen -->

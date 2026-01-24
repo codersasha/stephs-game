@@ -37,7 +37,15 @@ const GameState = {
     currentEmotion: 'normal',
     isSitting: false,
     isSleeping: false,
-    isHiding: false
+    isHiding: false,
+    // Multiplayer
+    isMultiplayer: false,
+    isHost: false,
+    peer: null,
+    connections: [], // For host: all connected peers
+    hostConnection: null, // For client: connection to host
+    roomCode: null,
+    otherPlayers: {} // Other players' data keyed by peerId
 };
 
 // NPC Cats in the clan
@@ -104,6 +112,7 @@ const CLANS = {
 document.addEventListener('DOMContentLoaded', () => {
     initHomeScreen();
     setupEventListeners();
+    setupMultiplayerListeners();
     createCatsSVG();
 });
 
@@ -376,7 +385,7 @@ function showScreen(screenName) {
 // Start the game (from home screen)
 function startGame() {
     if (GameState.currentScreen === 'home') {
-        showScreen('clan');
+        showScreen('mode'); // Go to mode selection (single/multiplayer)
     }
 }
 
@@ -3745,9 +3754,14 @@ function movePlayer(dx, dy) {
     const newX = GameState.playerX + dx;
     const newY = GameState.playerY + dy;
     
-    // Bounds checking
-    const minX = 30, maxX = 420;
-    const minY = 50, maxY = 370;
+    // Bounds checking - bigger for forest
+    let minX = 30, maxX = 420;
+    let minY = 50, maxY = 370;
+    
+    if (GameState.currentLocation === 'forest') {
+        maxX = 1150;
+        maxY = 950;
+    }
     
     if (newX >= minX && newX <= maxX) {
         GameState.playerX = newX;
@@ -3758,6 +3772,11 @@ function movePlayer(dx, dy) {
     
     renderGameWorld();
     updateActionButton();
+    
+    // Send position update in multiplayer
+    if (GameState.isMultiplayer) {
+        sendPositionUpdate();
+    }
 }
 
 function updateActionButton() {
@@ -7043,4 +7062,468 @@ function restartGame() {
     GameState.catData = null;
     GameState.selectedSlot = null;
     showScreen('clan');
+}
+
+// ==========================================
+// MULTIPLAYER FUNCTIONS
+// ==========================================
+
+// Set up multiplayer event listeners
+function setupMultiplayerListeners() {
+    // Mode selection
+    document.getElementById('single-player-btn')?.addEventListener('click', () => {
+        GameState.isMultiplayer = false;
+        showScreen('clan');
+    });
+    
+    document.getElementById('host-game-btn')?.addEventListener('click', () => {
+        startHosting();
+    });
+    
+    document.getElementById('join-game-btn')?.addEventListener('click', () => {
+        showScreen('join');
+    });
+    
+    // Host screen
+    document.getElementById('copy-code-btn')?.addEventListener('click', copyRoomCode);
+    document.getElementById('start-multiplayer-btn')?.addEventListener('click', startMultiplayerGame);
+    document.getElementById('cancel-host-btn')?.addEventListener('click', cancelHosting);
+    
+    // Join screen
+    document.getElementById('connect-btn')?.addEventListener('click', joinGame);
+    document.getElementById('cancel-join-btn')?.addEventListener('click', cancelJoining);
+    
+    // Allow pressing Enter to join
+    document.getElementById('join-code-input')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') joinGame();
+    });
+}
+
+// Generate a fun room code
+function generateRoomCode() {
+    const prefixes = ['THUNDER', 'SHADOW', 'RIVER', 'WIND', 'STAR', 'MOON', 'SUN', 'FIRE'];
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const number = Math.floor(Math.random() * 9000) + 1000;
+    return `${prefix}${number}`;
+}
+
+// Start hosting a game
+function startHosting() {
+    showScreen('host');
+    document.getElementById('room-code').textContent = 'Connecting...';
+    document.getElementById('start-multiplayer-btn').disabled = true;
+    
+    GameState.isMultiplayer = true;
+    GameState.isHost = true;
+    GameState.connections = [];
+    GameState.otherPlayers = {};
+    
+    // Generate room code
+    GameState.roomCode = generateRoomCode();
+    
+    // Create peer with room code as ID
+    GameState.peer = new Peer(GameState.roomCode);
+    
+    GameState.peer.on('open', (id) => {
+        console.log('Host peer opened with ID:', id);
+        document.getElementById('room-code').textContent = id;
+        document.getElementById('start-multiplayer-btn').disabled = false;
+        updatePlayerList();
+    });
+    
+    GameState.peer.on('connection', (conn) => {
+        console.log('New connection from:', conn.peer);
+        handleNewConnection(conn);
+    });
+    
+    GameState.peer.on('error', (err) => {
+        console.error('Peer error:', err);
+        if (err.type === 'unavailable-id') {
+            // Room code already taken, generate new one
+            GameState.roomCode = generateRoomCode() + Math.floor(Math.random() * 100);
+            GameState.peer = new Peer(GameState.roomCode);
+            setupHostPeerEvents();
+        } else {
+            document.getElementById('room-code').textContent = 'Error! Try again';
+        }
+    });
+}
+
+// Handle new player connection (host side)
+function handleNewConnection(conn) {
+    conn.on('open', () => {
+        console.log('Connection opened with:', conn.peer);
+        GameState.connections.push(conn);
+        
+        // Request player data
+        conn.send({ type: 'requestData' });
+        
+        // Listen for data from this connection
+        conn.on('data', (data) => {
+            handlePeerData(conn.peer, data);
+        });
+        
+        conn.on('close', () => {
+            console.log('Connection closed:', conn.peer);
+            GameState.connections = GameState.connections.filter(c => c.peer !== conn.peer);
+            delete GameState.otherPlayers[conn.peer];
+            updatePlayerList();
+            broadcastToAll({ type: 'playerLeft', peerId: conn.peer });
+        });
+    });
+}
+
+// Handle data received from a peer
+function handlePeerData(peerId, data) {
+    switch (data.type) {
+        case 'requestData':
+            // Send our player data
+            sendPlayerData();
+            break;
+            
+        case 'playerData':
+            // Store other player's data
+            GameState.otherPlayers[peerId] = data.player;
+            updatePlayerList();
+            
+            // If we're host, broadcast all players to everyone
+            if (GameState.isHost) {
+                broadcastAllPlayers();
+            }
+            break;
+            
+        case 'allPlayers':
+            // Update all other players (client receiving from host)
+            GameState.otherPlayers = data.players;
+            updatePlayerList();
+            break;
+            
+        case 'playerUpdate':
+            // Update a specific player's position/state
+            if (GameState.otherPlayers[data.peerId]) {
+                Object.assign(GameState.otherPlayers[data.peerId], data.update);
+            } else {
+                GameState.otherPlayers[data.peerId] = data.update;
+            }
+            // Re-render if in gameplay
+            if (GameState.currentScreen === 'gameplay') {
+                renderGameWorld();
+            }
+            break;
+            
+        case 'playerLeft':
+            delete GameState.otherPlayers[data.peerId];
+            if (GameState.currentScreen === 'gameplay') {
+                renderGameWorld();
+            }
+            break;
+            
+        case 'chat':
+            // Show chat message as speech bubble
+            showOtherPlayerSpeech(data.peerId, data.message);
+            break;
+            
+        case 'startGame':
+            // Host started the game
+            GameState.selectedClan = data.clan;
+            showScreen('clan');
+            break;
+    }
+}
+
+// Send our player data to connected peers
+function sendPlayerData() {
+    const playerData = {
+        type: 'playerData',
+        player: {
+            name: GameState.catData?.name || 'Unknown',
+            furColor: GameState.catData?.furColor || '#e67e22',
+            eyeColor: GameState.catData?.eyeColor || '#2ecc71',
+            pattern: GameState.catData?.pattern || 'solid',
+            x: GameState.playerX,
+            y: GameState.playerY,
+            location: GameState.currentLocation,
+            emotion: GameState.currentEmotion,
+            isSitting: GameState.isSitting,
+            isHost: GameState.isHost
+        }
+    };
+    
+    if (GameState.isHost) {
+        broadcastToAll(playerData);
+    } else if (GameState.hostConnection) {
+        GameState.hostConnection.send(playerData);
+    }
+}
+
+// Broadcast data to all connected peers (host only)
+function broadcastToAll(data) {
+    GameState.connections.forEach(conn => {
+        if (conn.open) {
+            conn.send(data);
+        }
+    });
+}
+
+// Broadcast all player data to all peers (host only)
+function broadcastAllPlayers() {
+    const allPlayers = { ...GameState.otherPlayers };
+    
+    // Add host's own data
+    allPlayers['host'] = {
+        name: GameState.catData?.name || 'Host',
+        furColor: GameState.catData?.furColor || '#e67e22',
+        eyeColor: GameState.catData?.eyeColor || '#2ecc71',
+        pattern: GameState.catData?.pattern || 'solid',
+        x: GameState.playerX,
+        y: GameState.playerY,
+        location: GameState.currentLocation,
+        isHost: true
+    };
+    
+    broadcastToAll({ type: 'allPlayers', players: allPlayers });
+}
+
+// Update player list display
+function updatePlayerList() {
+    const playerList = document.getElementById('player-list');
+    const playerCount = document.getElementById('player-count');
+    
+    if (!playerList || !playerCount) return;
+    
+    let html = '';
+    let count = 1; // Start with host
+    
+    // Add host
+    html += `<span class="player-tag host">You (Host)</span>`;
+    
+    // Add other players
+    Object.keys(GameState.otherPlayers).forEach(peerId => {
+        const player = GameState.otherPlayers[peerId];
+        if (player && player.name) {
+            html += `<span class="player-tag">${player.name}</span>`;
+            count++;
+        } else {
+            html += `<span class="player-tag">Joining...</span>`;
+            count++;
+        }
+    });
+    
+    playerList.innerHTML = html;
+    playerCount.textContent = count;
+    
+    // Enable start button if there are other players
+    const startBtn = document.getElementById('start-multiplayer-btn');
+    if (startBtn) {
+        startBtn.disabled = count < 1; // Can start even solo for testing
+    }
+}
+
+// Copy room code to clipboard
+function copyRoomCode() {
+    const code = document.getElementById('room-code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copy-code-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 2000);
+    }).catch(() => {
+        alert('Code: ' + code);
+    });
+}
+
+// Cancel hosting
+function cancelHosting() {
+    if (GameState.peer) {
+        GameState.peer.destroy();
+        GameState.peer = null;
+    }
+    GameState.isMultiplayer = false;
+    GameState.isHost = false;
+    GameState.connections = [];
+    showScreen('mode');
+}
+
+// Join a game
+function joinGame() {
+    const codeInput = document.getElementById('join-code-input');
+    const status = document.getElementById('join-status');
+    const code = codeInput.value.trim().toUpperCase();
+    
+    if (!code) {
+        status.textContent = 'Please enter a code!';
+        status.className = 'join-status error';
+        return;
+    }
+    
+    status.textContent = 'Connecting...';
+    status.className = 'join-status';
+    
+    GameState.isMultiplayer = true;
+    GameState.isHost = false;
+    GameState.roomCode = code;
+    
+    // Create our peer
+    GameState.peer = new Peer();
+    
+    GameState.peer.on('open', (id) => {
+        console.log('Client peer opened with ID:', id);
+        
+        // Connect to host
+        const conn = GameState.peer.connect(code);
+        GameState.hostConnection = conn;
+        
+        conn.on('open', () => {
+            console.log('Connected to host!');
+            status.textContent = 'Connected! Waiting for host to start...';
+            status.className = 'join-status success';
+            
+            // Send our data once we have it
+            conn.on('data', (data) => {
+                handlePeerData('host', data);
+            });
+            
+            // Request data from host
+            conn.send({ type: 'requestData' });
+        });
+        
+        conn.on('error', (err) => {
+            console.error('Connection error:', err);
+            status.textContent = 'Could not connect! Check the code.';
+            status.className = 'join-status error';
+        });
+        
+        conn.on('close', () => {
+            status.textContent = 'Disconnected from host.';
+            status.className = 'join-status error';
+        });
+    });
+    
+    GameState.peer.on('error', (err) => {
+        console.error('Peer error:', err);
+        status.textContent = 'Connection failed! Try again.';
+        status.className = 'join-status error';
+    });
+}
+
+// Cancel joining
+function cancelJoining() {
+    if (GameState.peer) {
+        GameState.peer.destroy();
+        GameState.peer = null;
+    }
+    GameState.isMultiplayer = false;
+    GameState.hostConnection = null;
+    document.getElementById('join-code-input').value = '';
+    document.getElementById('join-status').textContent = '';
+    showScreen('mode');
+}
+
+// Start multiplayer game (host only)
+function startMultiplayerGame() {
+    // Go to clan selection
+    showScreen('clan');
+    
+    // Notify all clients
+    broadcastToAll({ type: 'startGame', clan: GameState.selectedClan });
+}
+
+// Send player position update
+function sendPositionUpdate() {
+    if (!GameState.isMultiplayer) return;
+    
+    const update = {
+        type: 'playerUpdate',
+        peerId: GameState.peer?.id || 'host',
+        update: {
+            name: GameState.catData?.name || 'Unknown',
+            furColor: GameState.catData?.furColor || '#e67e22',
+            eyeColor: GameState.catData?.eyeColor || '#2ecc71',
+            pattern: GameState.catData?.pattern || 'solid',
+            x: GameState.playerX,
+            y: GameState.playerY,
+            location: GameState.currentLocation,
+            emotion: GameState.currentEmotion,
+            isSitting: GameState.isSitting
+        }
+    };
+    
+    if (GameState.isHost) {
+        broadcastToAll(update);
+    } else if (GameState.hostConnection?.open) {
+        GameState.hostConnection.send(update);
+    }
+}
+
+// Show speech from another player
+function showOtherPlayerSpeech(peerId, message) {
+    const player = GameState.otherPlayers[peerId];
+    if (player && player.name) {
+        showSpeechBubble(player.name, message);
+    }
+}
+
+// Render other players in the game world
+function renderOtherPlayers() {
+    if (!GameState.isMultiplayer) return '';
+    
+    let html = '';
+    
+    Object.entries(GameState.otherPlayers).forEach(([peerId, player]) => {
+        // Only render if in same location
+        if (player.location === GameState.currentLocation) {
+            const x = player.x || 200;
+            const y = player.y || 200;
+            
+            html += `
+                <g class="other-player-cat" transform="translate(${x}, ${y})">
+                    ${renderOtherPlayerCatSVG(player)}
+                    <text x="0" y="-35" class="other-player-name">${player.name || 'Player'}</text>
+                </g>
+            `;
+        }
+    });
+    
+    return html;
+}
+
+// Render another player's cat SVG
+function renderOtherPlayerCatSVG(player) {
+    const furColor = player.furColor || '#e67e22';
+    const eyeColor = player.eyeColor || '#2ecc71';
+    const darkerFur = adjustColor(furColor, -30);
+    
+    return `
+        <g transform="scale(0.6)">
+            <!-- Body -->
+            <ellipse cx="0" cy="0" rx="25" ry="15" fill="${darkerFur}"/>
+            <ellipse cx="0" cy="-2" rx="22" ry="12" fill="${furColor}"/>
+            
+            <!-- Head -->
+            <circle cx="20" cy="-10" r="14" fill="${furColor}"/>
+            
+            <!-- Ears -->
+            <polygon points="12,-22 15,-35 22,-20" fill="${furColor}"/>
+            <polygon points="26,-20 33,-33 30,-18" fill="${furColor}"/>
+            <polygon points="14,-23 16,-32 20,-21" fill="#ffb6c1"/>
+            <polygon points="27,-19 31,-30 29,-18" fill="#ffb6c1"/>
+            
+            <!-- Eyes -->
+            <ellipse cx="16" cy="-12" rx="3" ry="4" fill="${eyeColor}"/>
+            <ellipse cx="26" cy="-12" rx="3" ry="4" fill="${eyeColor}"/>
+            <circle cx="16" cy="-12" r="1.5" fill="#1a1a1a"/>
+            <circle cx="26" cy="-12" r="1.5" fill="#1a1a1a"/>
+            
+            <!-- Nose -->
+            <ellipse cx="21" cy="-5" rx="2" ry="1.5" fill="#ffb6c1"/>
+            
+            <!-- Legs -->
+            <rect x="-15" y="8" width="6" height="15" rx="3" fill="${darkerFur}"/>
+            <rect x="-5" y="8" width="6" height="15" rx="3" fill="${furColor}"/>
+            <rect x="5" y="8" width="6" height="15" rx="3" fill="${darkerFur}"/>
+            <rect x="15" y="8" width="6" height="15" rx="3" fill="${furColor}"/>
+            
+            <!-- Tail -->
+            <path d="M-22 0 Q-35 -10 -30 -25" stroke="${furColor}" stroke-width="6" fill="none" stroke-linecap="round"/>
+        </g>
+    `;
 }
