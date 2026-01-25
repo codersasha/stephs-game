@@ -7598,23 +7598,24 @@ function killClanmate(victimName) {
                 
                 setTimeout(() => {
                     showMessage('What have you done? The camp is still quiet... for now.');
-                
-                setTimeout(() => {
-                    // Someone discovers the body!
-                    const discoverers = ['Sandstorm', 'Graystripe', 'Ferncloud', 'Brightheart'];
-                    const discoverer = discoverers[Math.floor(Math.random() * discoverers.length)];
-                    
-                    showMessage(`${discoverer} walks by and sees the body!`);
-                    showSpeechBubble(discoverer, `NO! ${victimName}! Who did this?!`);
                     
                     setTimeout(() => {
-                        showMessage('The clan gathers around in horror...');
+                        // Someone discovers the body!
+                        const discoverers = ['Sandstorm', 'Graystripe', 'Ferncloud', 'Brightheart'];
+                        const discoverer = discoverers[Math.floor(Math.random() * discoverers.length)];
+                        
+                        showMessage(`${discoverer} walks by and sees the body!`);
+                        showSpeechBubble(discoverer, `NO! ${victimName}! Who did this?!`);
                         
                         setTimeout(() => {
-                            showBlameMenu(victimName, discoverer);
-                        }, 2000);
-                    }, 2500);
-                }, 3000);
+                            showMessage('The clan gathers around in horror...');
+                            
+                            setTimeout(() => {
+                                showBlameMenu(victimName, discoverer);
+                            }, 2000);
+                        }, 2500);
+                    }, 3000);
+                }, 2500);
             }, 2500);
         }, 2500);
     }, 2500);
