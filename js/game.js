@@ -6052,7 +6052,7 @@ function checkForestEvents() {
     }
     
     // Random danger encounters (fox or dog)
-    if (Math.random() < 0.05) { // 5% chance
+    if (Math.random() < 0.10) { // 10% chance
         setTimeout(() => randomDangerEncounter(), 3000);
     }
 }
