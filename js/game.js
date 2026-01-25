@@ -986,9 +986,18 @@ function updateGameUI() {
         }
     }
     
-    document.getElementById('health-fill').style.width = `${cat.health}%`;
-    document.getElementById('hunger-fill').style.width = `${cat.hunger}%`;
-    document.getElementById('thirst-fill').style.width = `${cat.thirst}%`;
+    // Dead cats (StarClan/Dark Forest) have no HP, Food, or Water
+    const isDead = cat.inStarClan || cat.inDarkForest || cat.rank === 'StarClan' || cat.rank === 'Dark Forest';
+    
+    if (isDead) {
+        document.getElementById('health-fill').style.width = '0%';
+        document.getElementById('hunger-fill').style.width = '0%';
+        document.getElementById('thirst-fill').style.width = '0%';
+    } else {
+        document.getElementById('health-fill').style.width = `${cat.health}%`;
+        document.getElementById('hunger-fill').style.width = `${cat.hunger}%`;
+        document.getElementById('thirst-fill').style.width = `${cat.thirst}%`;
+    }
     
     // Hide attack button for kits
     const attackBtn = document.getElementById('emote-attack');
