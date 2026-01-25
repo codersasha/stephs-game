@@ -5153,10 +5153,10 @@ function movePlayer(dx, dy) {
         moved = true;
     }
     
-    // Count steps and check for night
+    // Count steps and check for night - 100 steps = night time and age up!
     if (moved && !GameState.isNight) {
         GameState.stepsToday++;
-        if (GameState.stepsToday >= 200) {
+        if (GameState.stepsToday >= 100) {
             showMessage('You have walked all day. Night is falling...');
             setTimeout(() => startNight(), 1500);
         }
