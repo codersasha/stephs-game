@@ -9447,17 +9447,20 @@ function visitDreams() {
         </div>
     `;
     
-    // Add click handlers for cat selection
+    // Add click and touch handlers for cat selection
     document.querySelectorAll('.cat-to-visit').forEach(btn => {
-        btn.addEventListener('click', () => {
+        const handler = () => {
             const catName = btn.dataset.name;
             const catRole = btn.dataset.role;
             const catClan = btn.dataset.clan;
             showDreamMessageOptions(catName, catRole, catClan);
-        });
+        };
+        btn.addEventListener('click', handler);
+        btn.addEventListener('touchend', (e) => { e.preventDefault(); handler(); });
     });
     
     document.getElementById('back-to-starclan')?.addEventListener('click', returnToStarClanMenu);
+    document.getElementById('back-to-starclan')?.addEventListener('touchend', (e) => { e.preventDefault(); returnToStarClanMenu(); });
 }
 
 // Show message options for the selected cat
@@ -9545,34 +9548,43 @@ function showDreamMessageOptions(catName, catRole, catClan) {
         guidance: `${catName} dips their head respectfully. "I will follow your wisdom."`
     };
     
-    // Add event listeners
-    document.querySelectorAll('.dream-message-choice').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const msgType = btn.dataset.msg;
-            const yourMessage = yourMessages[msgType][Math.floor(Math.random() * yourMessages[msgType].length)];
-            const catResponse = catResponses[msgType];
-            
-            starclanScreen.innerHTML = `
-                <div class="starclan-bg"></div>
-                <div class="starclan-view">
-                    <h2>${catName}'s Dream</h2>
-                    <div class="dream-conversation" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; margin: 20px 0;">
-                        <p style="color: #ffd700; font-size: 16px; margin-bottom: 20px;">You say: ${yourMessage}</p>
-                        <p style="color: #e1bee7; font-size: 14px;">${catResponse}</p>
-                    </div>
-                    <p style="color: #aaa; font-style: italic; margin: 20px 0;">The dream begins to fade... ${catName} will remember your visit.</p>
-                    <button class="starclan-btn" id="visit-another" style="margin: 10px;">Visit Another Cat</button>
-                    <button class="starclan-btn" id="leave-dream" style="margin: 10px;">Return to StarClan</button>
+    // Function to handle message selection
+    function handleMessageChoice(msgType) {
+        const yourMessage = yourMessages[msgType][Math.floor(Math.random() * yourMessages[msgType].length)];
+        const catResponse = catResponses[msgType];
+        
+        starclanScreen.innerHTML = `
+            <div class="starclan-bg"></div>
+            <div class="starclan-view">
+                <h2>${catName}'s Dream</h2>
+                <div class="dream-conversation" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <p style="color: #ffd700; font-size: 16px; margin-bottom: 20px;">You say: ${yourMessage}</p>
+                    <p style="color: #e1bee7; font-size: 14px;">${catResponse}</p>
                 </div>
-            `;
-            
-            document.getElementById('visit-another')?.addEventListener('click', visitDreams);
-            document.getElementById('leave-dream')?.addEventListener('click', returnToStarClanMenu);
-        });
+                <p style="color: #aaa; font-style: italic; margin: 20px 0;">The dream begins to fade... ${catName} will remember your visit.</p>
+                <button class="starclan-btn" id="visit-another" style="margin: 10px;">Visit Another Cat</button>
+                <button class="starclan-btn" id="leave-dream" style="margin: 10px;">Return to StarClan</button>
+            </div>
+        `;
+        
+        document.getElementById('visit-another')?.addEventListener('click', visitDreams);
+        document.getElementById('visit-another')?.addEventListener('touchend', (e) => { e.preventDefault(); visitDreams(); });
+        document.getElementById('leave-dream')?.addEventListener('click', returnToStarClanMenu);
+        document.getElementById('leave-dream')?.addEventListener('touchend', (e) => { e.preventDefault(); returnToStarClanMenu(); });
+    }
+    
+    // Add event listeners for message choices (click and touch)
+    document.querySelectorAll('.dream-message-choice').forEach(btn => {
+        const msgType = btn.dataset.msg;
+        btn.addEventListener('click', () => handleMessageChoice(msgType));
+        btn.addEventListener('touchend', (e) => { e.preventDefault(); handleMessageChoice(msgType); });
     });
     
+    // Navigation buttons
     document.getElementById('choose-different-cat')?.addEventListener('click', visitDreams);
+    document.getElementById('choose-different-cat')?.addEventListener('touchend', (e) => { e.preventDefault(); visitDreams(); });
     document.getElementById('leave-dream')?.addEventListener('click', returnToStarClanMenu);
+    document.getElementById('leave-dream')?.addEventListener('touchend', (e) => { e.preventDefault(); returnToStarClanMenu(); });
 }
 
 // Return to StarClan menu
