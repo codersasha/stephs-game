@@ -7034,6 +7034,53 @@ function startGameLoop() {
             showMessage('The forest is dangerous for kits! Go back to camp!');
         }
         
+        // 40% chance of being chased out if in another clan's territory!
+        if (GameState.currentLocation === 'forest' && !GameState.justChasedOut) {
+            const playerClan = (cat.clan || GameState.selectedClan || '').toLowerCase();
+            const playerX = GameState.playerX;
+            const playerY = GameState.playerY;
+            
+            // Define territory areas
+            let currentTerritory = null;
+            if (playerX < 400 && playerY >= 200 && playerY <= 550) currentTerritory = 'thunder';
+            else if (playerX >= 400 && playerX <= 800 && playerY >= 700) currentTerritory = 'river';
+            else if (playerX >= 850 && playerY >= 200 && playerY <= 600) currentTerritory = 'shadow';
+            else if (playerX >= 500 && playerX <= 900 && playerY <= 330) currentTerritory = 'wind';
+            
+            // Check if in enemy territory
+            const isInOwnTerritory = playerClan.includes(currentTerritory) || currentTerritory === null;
+            const isLoner = cat.isLoner || playerClan === 'loner';
+            const isKittypet = cat.isKittypet || playerClan === 'kittypet';
+            
+            if (currentTerritory && !isInOwnTerritory && !isLoner && !isKittypet) {
+                // 40% chance of being chased!
+                if (Math.random() < 0.40) {
+                    const clanNames = { thunder: 'ThunderClan', river: 'RiverClan', shadow: 'ShadowClan', wind: 'WindClan' };
+                    const enemyClan = clanNames[currentTerritory];
+                    const warriors = ['a patrol', 'border guards', 'enemy warriors', 'a hunting party'];
+                    const chasers = warriors[Math.floor(Math.random() * warriors.length)];
+                    
+                    GameState.justChasedOut = true;
+                    setTimeout(() => { GameState.justChasedOut = false; }, 30000); // Can't be chased again for 30s
+                    
+                    showMessage(`${chasers} from ${enemyClan} spotted you trespassing!`);
+                    
+                    setTimeout(() => {
+                        showMessage(`"Get out of our territory, intruder!" They chase you away!`);
+                        cat.health -= 10;
+                        
+                        // Push player back toward center of map
+                        GameState.playerX = 600;
+                        GameState.playerY = 500;
+                        
+                        updateGameUI();
+                        saveGameData();
+                        renderGameWorld();
+                    }, 2000);
+                }
+            }
+        }
+        
         // If hungry or thirsty, decrease health
         if (cat.hunger <= 0 || cat.thirst <= 0) {
             cat.health = Math.max(0, cat.health - 1);
