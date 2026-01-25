@@ -916,10 +916,21 @@ function updateTutorialPage() {
 
 // Start the main gameplay
 function startGameplay() {
+    const cat = GameState.catData;
+    
+    // Check if cat is dead - go to appropriate afterlife
+    if (cat.inDarkForest || cat.rank === 'Dark Forest') {
+        showDarkForestScreen();
+        return;
+    }
+    
+    if (cat.inStarClan || cat.rank === 'StarClan') {
+        showScreen('starclan');
+        return;
+    }
+    
     showScreen('game');
     updateGameUI();
-    
-    const cat = GameState.catData;
     
     // Different starting locations based on cat type
     if (cat.isKittypet) {
@@ -6964,7 +6975,7 @@ function startGameLoop() {
     }, 100);
     
     gameLoopInterval = setInterval(() => {
-        if (GameState.catData.inStarClan) return;
+        if (GameState.catData.inStarClan || GameState.catData.inDarkForest) return;
         if (GameState.isNight) return; // No actions during night
         
         const cat = GameState.catData;
