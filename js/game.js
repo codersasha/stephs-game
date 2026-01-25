@@ -1441,8 +1441,8 @@ function renderNurseryInterior() {
         }
     });
     
-    // Can have kits if warrior, queen, or older
-    const canHaveKits = cat && (cat.rank === 'Warrior' || cat.rank === 'Queen' || cat.rank === 'Deputy' || cat.rank === 'Leader' || cat.rank === 'Medicine Cat' || cat.rank === 'Elder') && cat.age >= 15;
+    // Only Queens can have kits!
+    const canHaveKits = cat && cat.rank === 'Queen' && cat.age >= 15;
     
     return `
         <!-- Moss nests -->
