@@ -7575,6 +7575,16 @@ function killClanmate(victimName) {
     cat.murderedCat = true;
     cat.murderedCatName = victimName;
     
+    // Add victim to StarClan cats list so they appear there!
+    if (!GameState.killedCats) GameState.killedCats = [];
+    GameState.killedCats.push({
+        name: victimName,
+        killedBy: cat.name,
+        furColor: '#888888',
+        eyeColor: '#3498db'
+    });
+    saveGameData();
+    
     showMessage(`You stalk towards ${victimName} in the shadows...`);
     
     setTimeout(() => {
@@ -7584,7 +7594,10 @@ function killClanmate(victimName) {
             showMessage(`You strike! ${victimName} falls, lifeless.`);
             
             setTimeout(() => {
-                showMessage('What have you done? The camp is still quiet... for now.');
+                showMessage(`${victimName}'s spirit rises and fades away to StarClan...`);
+                
+                setTimeout(() => {
+                    showMessage('What have you done? The camp is still quiet... for now.');
                 
                 setTimeout(() => {
                     // Someone discovers the body!
@@ -9640,6 +9653,21 @@ function renderStarClanWorld() {
         { name: 'Feathertail', x: 380, y: 250, furColor: '#a9a9a9', eyeColor: '#3498db' }
     ];
     
+    // Add cats that were killed by the player - they're in StarClan now!
+    if (GameState.killedCats && GameState.killedCats.length > 0) {
+        GameState.killedCats.forEach((killed, index) => {
+            starClanCats.push({
+                name: killed.name,
+                x: 120 + (index * 60) % 200,
+                y: 350 + Math.floor(index / 3) * 30,
+                furColor: killed.furColor || '#888888',
+                eyeColor: killed.eyeColor || '#3498db',
+                wasKilled: true,
+                killedBy: killed.killedBy
+            });
+        });
+    }
+    
     let worldHTML = `
         <svg viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
             <defs>
@@ -10150,6 +10178,23 @@ function talkToAncestor(name) {
             'Crowfeather... I still watch over him.'
         ]
     };
+    
+    // Check if this cat was killed by the player!
+    const killedCat = GameState.killedCats?.find(k => k.name === name);
+    if (killedCat && killedCat.killedBy === GameState.catData?.name) {
+        const killedMessages = [
+            `You... YOU killed me! How dare you show your face here!`,
+            `I know what you did. StarClan sees all, murderer.`,
+            `My blood is on your claws. You will never find peace.`,
+            `Why? Why did you do it? I trusted you...`,
+            `The Dark Forest awaits you. You don't belong here.`,
+            `Stay away from me! I'll never forgive you!`
+        ];
+        const message = killedMessages[Math.floor(Math.random() * killedMessages.length)];
+        showSpeechBubble(name, message);
+        showMessage(`${name} recognizes you... their murderer.`);
+        return;
+    }
     
     const ancestorMessages = messages[name] || ['Greetings from StarClan. May you walk safely among the stars.'];
     const message = ancestorMessages[Math.floor(Math.random() * ancestorMessages.length)];
