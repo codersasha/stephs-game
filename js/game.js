@@ -1022,6 +1022,8 @@ function renderGameWorld() {
         renderStarClanWorld();
     } else if (GameState.currentLocation === 'starclan_forest') {
         renderStarClanForest();
+    } else if (GameState.currentLocation === 'dark_forest') {
+        renderDarkForest();
     } else {
         renderForest();
     }
@@ -6858,10 +6860,20 @@ function catDeath(cause) {
         return;
     }
     
+    // Check if cat was evil - goes to Dark Forest instead of StarClan!
+    const isEvil = cat.isBanished || cat.evilActs >= 3 || cat.murderedCat;
+    
     // Final death
     cat.health = 100;
-    cat.rank = 'StarClan';
-    goToStarClan();
+    
+    if (isEvil) {
+        cat.rank = 'Dark Forest';
+        cat.inDarkForest = true;
+        goToDarkForest();
+    } else {
+        cat.rank = 'StarClan';
+        goToStarClan();
+    }
 }
 
 function giveHerbsToMedicineCat() {
@@ -7488,6 +7500,9 @@ function showAttackClanmateMenu() {
 
 function attackClanmate(clanmateName) {
     const cat = GameState.catData;
+    
+    // Track evil acts - this affects where you go when you die!
+    cat.evilActs = (cat.evilActs || 0) + 1;
     
     showMessage(`You unsheathe your claws and attack ${clanmateName}!`);
     showSpeechBubble(clanmateName, 'What are you doing?!');
@@ -8887,6 +8902,292 @@ function goToStarClan() {
     GameState.catData.inStarClan = true;
     saveGameData();
     showScreen('starclan');
+}
+
+// Go to Dark Forest (for evil cats)
+function goToDarkForest() {
+    clearInterval(gameLoopInterval);
+    GameState.catData.inDarkForest = true;
+    saveGameData();
+    showDarkForestScreen();
+}
+
+// Show Dark Forest screen
+function showDarkForestScreen() {
+    const gameScreen = document.getElementById('game-screen');
+    gameScreen.classList.add('hidden');
+    
+    // Create or get dark forest screen
+    let darkForestScreen = document.getElementById('darkforest-screen');
+    if (!darkForestScreen) {
+        darkForestScreen = document.createElement('div');
+        darkForestScreen.id = 'darkforest-screen';
+        darkForestScreen.className = 'screen';
+        document.querySelector('.game-container').appendChild(darkForestScreen);
+    }
+    
+    darkForestScreen.innerHTML = `
+        <div class="darkforest-bg"></div>
+        <h2 style="color: #aa0000; text-shadow: 0 0 20px rgba(170,0,0,0.8);">The Dark Forest</h2>
+        <p class="darkforest-message" style="color: #888;">You open your eyes... but there are no stars here. Only darkness and twisted trees.</p>
+        <p style="color: #666; font-style: italic; margin: 10px 0;">This is the Place of No Stars. You have been judged for your actions in life.</p>
+        <div class="darkforest-options" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+            <button class="darkforest-btn" id="stay-darkforest">Wander the Dark Forest</button>
+            <button class="darkforest-btn portal-btn" id="darkforest-restart">Fade Away (New Life)</button>
+        </div>
+    `;
+    
+    // Style the dark forest screen
+    darkForestScreen.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        text-align: center;
+        background: linear-gradient(180deg, #0a0a0a 0%, #1a0a0a 50%, #2a1a1a 100%);
+        min-height: 100vh;
+    `;
+    
+    darkForestScreen.classList.remove('hidden');
+    
+    // Add button styles
+    const btns = darkForestScreen.querySelectorAll('.darkforest-btn');
+    btns.forEach(btn => {
+        btn.style.cssText = `
+            padding: 15px 30px;
+            background: rgba(100, 0, 0, 0.3);
+            border: 2px solid #660000;
+            border-radius: 10px;
+            color: #cc6666;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        `;
+    });
+    
+    // Event listeners
+    document.getElementById('stay-darkforest')?.addEventListener('click', stayInDarkForest);
+    document.getElementById('darkforest-restart')?.addEventListener('click', restartGame);
+}
+
+// Stay in Dark Forest - explore the dark world
+function stayInDarkForest() {
+    GameState.currentLocation = 'dark_forest';
+    GameState.playerX = 225;
+    GameState.playerY = 200;
+    GameState.inDarkForest = true;
+    
+    // Hide the dark forest menu screen
+    const darkForestScreen = document.getElementById('darkforest-screen');
+    if (darkForestScreen) darkForestScreen.classList.add('hidden');
+    
+    showScreen('game');
+    renderGameWorld();
+    showMessage('You wander through the endless dark trees...');
+}
+
+// Render Dark Forest world
+function renderDarkForest() {
+    const gameWorld = document.getElementById('game-world');
+    
+    // Evil cats that dwell in the Dark Forest
+    const darkForestCats = [
+        { name: 'Tigerstar', x: 100, y: 180, furColor: '#8B4513', eyeColor: '#ff0000' },
+        { name: 'Brokenstar', x: 320, y: 200, furColor: '#4a3a2a', eyeColor: '#ff6600' },
+        { name: 'Hawkfrost', x: 200, y: 280, furColor: '#5a4a3a', eyeColor: '#00ccff' },
+        { name: 'Mapleshade', x: 350, y: 300, furColor: '#d4a574', eyeColor: '#ffcc00' },
+        { name: 'Thistleclaw', x: 80, y: 320, furColor: '#808080', eyeColor: '#ff3300' },
+        { name: 'Darkstripe', x: 280, y: 150, furColor: '#3a3a3a', eyeColor: '#ff9900' }
+    ];
+    
+    let worldHTML = `
+        <svg viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <filter id="darkGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+                    <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+                <radialGradient id="darkForestGrad" cx="50%" cy="50%" r="70%">
+                    <stop offset="0%" stop-color="#1a0a0a"/>
+                    <stop offset="100%" stop-color="#0a0505"/>
+                </radialGradient>
+                <linearGradient id="bloodMist" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="transparent"/>
+                    <stop offset="50%" stop-color="#330000"/>
+                    <stop offset="100%" stop-color="transparent"/>
+                </linearGradient>
+            </defs>
+            
+            <!-- Dark, starless sky -->
+            <rect x="0" y="0" width="450" height="400" fill="url(#darkForestGrad)"/>
+            
+            <!-- NO STARS - just empty darkness -->
+            
+            <!-- Dead, twisted ground -->
+            <ellipse cx="225" cy="380" rx="220" ry="50" fill="#1a1010"/>
+            <ellipse cx="225" cy="375" rx="200" ry="45" fill="#2a1515"/>
+            
+            <!-- Twisted dead trees -->
+            <g fill="#2a1a1a" stroke="#3a2a2a" stroke-width="2">
+                <path d="M30,350 L35,280 L25,230 L40,180 L30,150 L50,200 L45,260 L55,290 L50,350"/>
+                <path d="M70,360 L80,300 L75,250 L90,200 L85,170 L70,190 L75,240 L65,280 L75,320"/>
+                <path d="M380,350 L375,290 L385,240 L370,190 L380,160 L395,200 L385,250 L390,300"/>
+                <path d="M420,360 L410,310 L420,270 L405,220 L415,180 L430,230 L420,280 L430,330"/>
+            </g>
+            
+            <!-- Fog/mist on ground -->
+            <ellipse cx="150" cy="350" rx="80" ry="20" fill="#330000" opacity="0.2"/>
+            <ellipse cx="300" cy="340" rx="100" ry="25" fill="#220000" opacity="0.15"/>
+            
+            <!-- Dark pool (blood-colored water) -->
+            <ellipse cx="225" cy="320" rx="40" ry="20" fill="#1a0505"/>
+            <ellipse cx="225" cy="318" rx="35" ry="16" fill="#2a0a0a"/>
+            
+            <!-- Red mist across the forest -->
+            <ellipse cx="225" cy="100" rx="180" ry="30" fill="url(#bloodMist)" opacity="0.2"/>
+            
+            <!-- Back button -->
+            <g class="darkforest-back clickable" style="cursor: pointer;">
+                <rect x="10" y="10" width="80" height="35" rx="5" fill="#3a1a1a" stroke="#660000" stroke-width="2"/>
+                <text x="50" y="32" text-anchor="middle" fill="#aa6666" font-size="11" font-weight="bold">Back</text>
+            </g>
+    `;
+    
+    // Add evil cats wandering
+    darkForestCats.forEach(cat => {
+        worldHTML += `
+            <g class="darkforest-cat clickable" data-name="${cat.name}" style="cursor: pointer; opacity: 0.8;">
+                <!-- Dark aura around cat -->
+                <ellipse cx="${cat.x}" cy="${cat.y}" rx="25" ry="18" fill="#330000" opacity="0.3"/>
+                
+                <!-- Cat body -->
+                <ellipse cx="${cat.x}" cy="${cat.y}" rx="18" ry="10" fill="${cat.furColor}"/>
+                
+                <!-- Head -->
+                <circle cx="${cat.x + 12}" cy="${cat.y - 6}" r="8" fill="${cat.furColor}"/>
+                
+                <!-- Ears -->
+                <polygon points="${cat.x + 6},${cat.y - 12} ${cat.x + 9},${cat.y - 20} ${cat.x + 13},${cat.y - 10}" fill="${cat.furColor}"/>
+                <polygon points="${cat.x + 14},${cat.y - 10} ${cat.x + 18},${cat.y - 18} ${cat.x + 17},${cat.y - 8}" fill="${cat.furColor}"/>
+                
+                <!-- Glowing evil eyes -->
+                <ellipse cx="${cat.x + 9}" cy="${cat.y - 6}" rx="2" ry="2.5" fill="${cat.eyeColor}" filter="url(#darkGlow)"/>
+                <ellipse cx="${cat.x + 15}" cy="${cat.y - 6}" rx="2" ry="2.5" fill="${cat.eyeColor}" filter="url(#darkGlow)"/>
+                
+                <!-- Name -->
+                <text x="${cat.x}" y="${cat.y + 22}" text-anchor="middle" fill="#aa6666" font-size="9" font-weight="bold">${cat.name}</text>
+            </g>
+        `;
+    });
+    
+    // Add player cat
+    worldHTML += renderDarkForestPlayerCat();
+    
+    worldHTML += `</svg>`;
+    
+    gameWorld.innerHTML = worldHTML;
+    
+    // Add Back button event
+    document.querySelector('.darkforest-back')?.addEventListener('click', () => {
+        showDarkForestScreen();
+    });
+    
+    // Click on dark forest cats to talk
+    document.querySelectorAll('.darkforest-cat').forEach(catEl => {
+        catEl.addEventListener('click', () => {
+            const name = catEl.dataset.name;
+            talkToDarkForestCat(name);
+        });
+    });
+}
+
+// Render player cat in Dark Forest
+function renderDarkForestPlayerCat() {
+    const cat = GameState.catData;
+    const x = GameState.playerX;
+    const y = GameState.playerY;
+    
+    return `
+        <g class="player-cat" style="pointer-events: none;">
+            <!-- Dark aura -->
+            <ellipse cx="${x}" cy="${y}" rx="20" ry="12" fill="#330000" opacity="0.4"/>
+            
+            <!-- Shadow -->
+            <ellipse cx="${x}" cy="${y + 15}" rx="15" ry="5" fill="rgba(0,0,0,0.5)"/>
+            
+            <!-- Body -->
+            <ellipse cx="${x}" cy="${y}" rx="18" ry="10" fill="${cat.furColor}"/>
+            
+            <!-- Head -->
+            <circle cx="${x + 12}" cy="${y - 6}" r="8" fill="${cat.furColor}"/>
+            
+            <!-- Ears -->
+            <polygon points="${x + 6},${y - 12} ${x + 9},${y - 20} ${x + 13},${y - 10}" fill="${cat.furColor}"/>
+            <polygon points="${x + 14},${y - 10} ${x + 18},${y - 18} ${x + 17},${y - 8}" fill="${cat.furColor}"/>
+            <polygon points="${x + 7},${y - 13} ${x + 9},${y - 18} ${x + 12},${y - 11}" fill="#ffb6c1" opacity="0.6"/>
+            
+            <!-- Eyes (now have a red tint) -->
+            <ellipse cx="${x + 9}" cy="${y - 6}" rx="2" ry="2.5" fill="${cat.eyeColor}"/>
+            <ellipse cx="${x + 15}" cy="${y - 6}" rx="2" ry="2.5" fill="${cat.eyeColor}"/>
+            <circle cx="${x + 9}" cy="${y - 6}" r="1" fill="#ff0000" opacity="0.3"/>
+            <circle cx="${x + 15}" cy="${y - 6}" r="1" fill="#ff0000" opacity="0.3"/>
+            
+            <!-- Name -->
+            <text x="${x + 5}" y="${y + 28}" text-anchor="middle" fill="#cc6666" font-size="9" font-weight="bold">${cat.name}</text>
+        </g>
+    `;
+}
+
+// Talk to Dark Forest cats
+function talkToDarkForestCat(name) {
+    const messages = {
+        'Tigerstar': [
+            'Power is everything. The weak deserve to fall.',
+            'I see darkness in you... Good.',
+            'The Clans are fools. Only the strong survive.',
+            'Join me, and together we can rule the forest!'
+        ],
+        'Brokenstar': [
+            'Kits should learn to fight. Mercy is weakness.',
+            'I made ShadowClan strong. They should have thanked me.',
+            'The warrior code is for cowards.',
+            'You remind me of myself... ruthless.'
+        ],
+        'Hawkfrost': [
+            'My father taught me well... but I surpassed him.',
+            'Trust no one. Not even your kin.',
+            'I almost had everything... the lake, the power...',
+            'Ambition is not a sin. Failure is.'
+        ],
+        'Mapleshade': [
+            'They took everything from me! MY KITS!',
+            'Revenge... sweet, sweet revenge...',
+            'Love made me weak. Hatred made me strong.',
+            'The living still fear my name. As they should.'
+        ],
+        'Thistleclaw': [
+            'Battle is the only truth. Blood is the only law.',
+            'I trained Tigerstar, you know. My finest student.',
+            'The weak call me cruel. The strong call me teacher.',
+            'Show me your claws. Let me see your hatred.'
+        ],
+        'Darkstripe': [
+            'I followed Tigerstar because he was strong.',
+            'Loyalty? I was loyal! To the RIGHT leader...',
+            'The Clans never appreciated true warriors.',
+            'Perhaps YOU understand true strength.'
+        ]
+    };
+    
+    const catMessages = messages[name] || ['The darkness whispers around you...'];
+    const message = catMessages[Math.floor(Math.random() * catMessages.length)];
+    
+    showSpeechBubble(name, message);
+    showMessage(`${name} speaks from the shadows...`);
 }
 
 // Stay in StarClan - go to walkable StarClan world (the real world but ghostly)!
