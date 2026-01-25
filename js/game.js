@@ -7952,11 +7952,6 @@ function showKillClanmateMenu() {
 function killClanmate(victimName) {
     const cat = GameState.catData;
     
-    // Track murder - VERY evil!
-    cat.evilActs = (cat.evilActs || 0) + 3;
-    cat.murderedCat = true;
-    cat.murderedCatName = victimName;
-    
     // Add victim to StarClan cats list so they appear there!
     if (!GameState.killedCats) GameState.killedCats = [];
     GameState.killedCats.push({
@@ -7965,6 +7960,36 @@ function killClanmate(victimName) {
         furColor: '#888888',
         eyeColor: '#3498db'
     });
+    
+    // Leaders can execute cats as "justice" - no evil tracking!
+    if (cat.rank === 'Leader') {
+        showMessage(`You stalk towards ${victimName}...`);
+        
+        setTimeout(() => {
+            showMessage(`As leader, you have the power of life and death over your clan.`);
+            
+            setTimeout(() => {
+                showMessage(`You strike! ${victimName} falls.`);
+                
+                setTimeout(() => {
+                    showMessage(`${victimName}'s spirit rises to StarClan...`);
+                    
+                    setTimeout(() => {
+                        showMessage(`The clan accepts your judgment. A leader's word is law.`);
+                        cat.experience += 10;
+                        updateGameUI();
+                        saveGameData();
+                    }, 2500);
+                }, 2500);
+            }, 2000);
+        }, 2000);
+        return;
+    }
+    
+    // Track murder - VERY evil! (for non-leaders)
+    cat.evilActs = (cat.evilActs || 0) + 3;
+    cat.murderedCat = true;
+    cat.murderedCatName = victimName;
     saveGameData();
     
     showMessage(`You stalk towards ${victimName} in the shadows...`);
@@ -8188,6 +8213,23 @@ function banishForMurder(victimName, leaderName) {
 
 function attackClanmate(clanmateName) {
     const cat = GameState.catData;
+    
+    // Leaders can punish cats without consequences!
+    if (cat.rank === 'Leader') {
+        showMessage(`You unsheathe your claws and attack ${clanmateName}!`);
+        showSpeechBubble(clanmateName, 'Forgive me, leader!');
+        
+        setTimeout(() => {
+            showMessage(`As leader, you have the right to discipline your warriors.`);
+            setTimeout(() => {
+                showMessage(`${clanmateName} bows their head in submission.`);
+                cat.experience += 5;
+                updateGameUI();
+                saveGameData();
+            }, 2000);
+        }, 2000);
+        return;
+    }
     
     // Track evil acts - this affects where you go when you die!
     cat.evilActs = (cat.evilActs || 0) + 1;
