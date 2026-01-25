@@ -2463,7 +2463,16 @@ function renderThreat(type, x, y) {
 // Render the forest (outside camp) for hunting/herb gathering
 function renderForest() {
     const gameWorld = document.getElementById('game-world');
-    const clan = GameState.selectedClan;
+    // Use the cat's actual clan, not selectedClan (which can change when visiting other clans)
+    // The clan might be stored as 'thunder', 'river', etc. or need to be extracted from full name
+    let clan = GameState.catData?.clan || GameState.selectedClan || 'thunder';
+    // Normalize clan name (convert 'ThunderClan' to 'thunder', 'RiverClan' to 'river', etc.)
+    if (clan.includes('Thunder') || clan === 'thunder') clan = 'thunder';
+    else if (clan.includes('River') || clan === 'river') clan = 'river';
+    else if (clan.includes('Shadow') || clan === 'shadow') clan = 'shadow';
+    else if (clan.includes('Wind') || clan === 'wind') clan = 'wind';
+    else clan = 'thunder'; // Default fallback
+    
     const isNight = GameState.isNight;
     
     // Forest is HUGE! 1200x1000
