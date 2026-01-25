@@ -6118,6 +6118,169 @@ function randomDangerEncounter() {
     startBattle(danger);
 }
 
+// Check for intruders in your territory
+function checkForIntruders() {
+    if (GameState.currentLocation !== 'forest') return;
+    if (GameState.justChasedIntruder) return; // Cooldown
+    
+    const cat = GameState.catData;
+    if (cat.isLoner || cat.isKittypet) return; // Loners/kittypets don't have territory
+    if (cat.rank === 'Kit') return; // Kits can't chase anyone
+    
+    // Check if in your own territory
+    const playerClan = (cat.clan || GameState.selectedClan || '').toLowerCase();
+    const playerX = GameState.playerX;
+    const playerY = GameState.playerY;
+    
+    let currentTerritory = null;
+    if (playerX < 400 && playerY >= 200 && playerY <= 550) currentTerritory = 'thunder';
+    else if (playerX >= 400 && playerX <= 800 && playerY >= 700) currentTerritory = 'river';
+    else if (playerX >= 850 && playerY >= 200 && playerY <= 600) currentTerritory = 'shadow';
+    else if (playerX >= 500 && playerX <= 900 && playerY <= 330) currentTerritory = 'wind';
+    
+    const isInOwnTerritory = playerClan.includes(currentTerritory);
+    
+    if (!isInOwnTerritory || !currentTerritory) return;
+    
+    // 5% chance to find an intruder in your territory
+    if (Math.random() > 0.05) return;
+    
+    // Pick an enemy clan
+    const enemyClans = ['ThunderClan', 'RiverClan', 'ShadowClan', 'WindClan'].filter(c => 
+        !playerClan.includes(c.toLowerCase().replace('clan', ''))
+    );
+    const enemyClan = enemyClans[Math.floor(Math.random() * enemyClans.length)];
+    
+    // Enemy cat names
+    const enemyNames = {
+        'ThunderClan': ['Dustpelt', 'Cloudtail', 'Brightheart', 'Brackenfur'],
+        'RiverClan': ['Hawkfrost', 'Mothwing', 'Stormfur', 'Feathertail'],
+        'ShadowClan': ['Russetfur', 'Rowanclaw', 'Tawnypelt', 'Boulder'],
+        'WindClan': ['Crowfeather', 'Nightcloud', 'Webfoot', 'Tornear']
+    };
+    const names = enemyNames[enemyClan] || ['a warrior'];
+    const intruderName = names[Math.floor(Math.random() * names.length)];
+    
+    GameState.justChasedIntruder = true;
+    setTimeout(() => { GameState.justChasedIntruder = false; }, 30000);
+    
+    showIntruderEncounter(intruderName, enemyClan);
+}
+
+// Show intruder encounter popup
+function showIntruderEncounter(intruderName, enemyClan) {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'INTRUDER!';
+    desc.textContent = `You spot ${intruderName} from ${enemyClan} sneaking through your territory!`;
+    actions.innerHTML = '';
+    
+    // Chase them out!
+    addAction(actions, 'Chase them out!', () => {
+        closePopup();
+        showMessage(`You yowl: "Get out of our territory, ${enemyClan} scum!"`);
+        
+        setTimeout(() => {
+            // 70% chance to successfully chase them
+            if (Math.random() < 0.70) {
+                const reactions = [
+                    `${intruderName} hisses but runs away!`,
+                    `${intruderName}: "Fine! But we'll be back!"`,
+                    `${intruderName} flees across the border!`,
+                    `You chase ${intruderName} all the way to the border!`
+                ];
+                showMessage(reactions[Math.floor(Math.random() * reactions.length)]);
+                cat.experience += 15;
+                showMessage('You defended your territory! (+15 XP)');
+            } else {
+                // They fight back!
+                showMessage(`${intruderName} turns to fight!`);
+                setTimeout(() => {
+                    const damage = 10 + Math.floor(Math.random() * 10);
+                    cat.health -= damage;
+                    showMessage(`${intruderName} scratches you! (-${damage} health)`);
+                    
+                    setTimeout(() => {
+                        showMessage(`After a fierce fight, ${intruderName} retreats!`);
+                        cat.experience += 25;
+                        updateGameUI();
+                        saveGameData();
+                    }, 2000);
+                }, 2000);
+            }
+            updateGameUI();
+            saveGameData();
+        }, 2000);
+    });
+    
+    // Fight them!
+    if (cat.rank !== 'Elder') {
+        addAction(actions, 'Attack immediately!', () => {
+            closePopup();
+            showMessage(`You leap at ${intruderName} with claws out!`);
+            
+            setTimeout(() => {
+                // 50/50 fight
+                if (Math.random() < 0.5) {
+                    showMessage(`You pin ${intruderName} down!`);
+                    setTimeout(() => {
+                        showMessage(`${intruderName}: "Okay, okay! I'm leaving!"`);
+                        cat.experience += 30;
+                        showMessage('Decisive victory! (+30 XP)');
+                        updateGameUI();
+                        saveGameData();
+                    }, 2000);
+                } else {
+                    const damage = 15 + Math.floor(Math.random() * 10);
+                    cat.health -= damage;
+                    showMessage(`${intruderName} fights back hard! (-${damage} health)`);
+                    
+                    setTimeout(() => {
+                        showMessage(`${intruderName} escapes while you recover...`);
+                        cat.experience += 10;
+                        updateGameUI();
+                        saveGameData();
+                    }, 2000);
+                }
+            }, 2000);
+        });
+    }
+    
+    // Let them go
+    addAction(actions, 'Ignore them...', () => {
+        closePopup();
+        showMessage(`You pretend not to see ${intruderName}...`);
+        setTimeout(() => {
+            showMessage(`${intruderName} sneaks away with stolen prey!`);
+        }, 2000);
+    });
+    
+    // Report to leader
+    addAction(actions, 'Run back and report', () => {
+        closePopup();
+        showMessage('You rush back to camp to report the intruder!');
+        
+        setTimeout(() => {
+            GameState.currentLocation = 'camp';
+            GameState.playerX = 225;
+            GameState.playerY = 250;
+            renderGameWorld();
+            
+            const leader = getClanCats().find(c => c.rank === 'Leader')?.name || 'the leader';
+            showMessage(`You report to ${leader}: "${enemyClan} cats in our territory!"`);
+            cat.experience += 10;
+            updateGameUI();
+            saveGameData();
+        }, 2000);
+    });
+    
+    popup.classList.remove('hidden');
+}
+
 function encounterDanger(dangerType) {
     const cat = GameState.catData;
     const popup = document.getElementById('location-popup');
@@ -7108,6 +7271,9 @@ function startGameLoop() {
         
         // Check for enemy raid
         checkForRaid();
+        
+        // Check for intruders in your territory
+        checkForIntruders();
         
         // Random NPC chatter
         triggerRandomNPCChat();
