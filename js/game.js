@@ -5426,6 +5426,29 @@ function interactWithLocation(locationKey) {
                 break;
             }
             
+            // Elders can't leave camp - they're too old for adventures!
+            if (cat.rank === 'Elder') {
+                desc.textContent = 'Your adventuring days are behind you. The camp is warm and safe, and the apprentices will bring you food.';
+                addAction(actions, 'Stay in camp', () => {
+                    showMessage('You settle down for a rest. The elders den is cozy.');
+                    closePopup();
+                });
+                addAction(actions, 'Tell a story instead', () => {
+                    const stories = [
+                        'You gather some kits and tell them about the Great Battle of Sunningrocks!',
+                        'You share the tale of how Firestar first came to ThunderClan...',
+                        'You tell the young ones about the old forest, before the Twolegs came.',
+                        'You share wisdom about the warrior code with any cat who will listen.'
+                    ];
+                    showMessage(stories[Math.floor(Math.random() * stories.length)]);
+                    cat.experience += 5;
+                    updateGameUI();
+                    saveGameData();
+                    closePopup();
+                });
+                break;
+            }
+            
             // Kits can sneak out if no one is watching!
             if (cat.rank === 'Kit') {
                 const watchChance = Math.random();
