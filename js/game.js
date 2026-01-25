@@ -2465,13 +2465,20 @@ function renderForest() {
     const gameWorld = document.getElementById('game-world');
     // Use the cat's actual clan, not selectedClan (which can change when visiting other clans)
     // The clan might be stored as 'thunder', 'river', etc. or need to be extracted from full name
-    let clan = GameState.catData?.clan || GameState.selectedClan || 'thunder';
-    // Normalize clan name (convert 'ThunderClan' to 'thunder', 'RiverClan' to 'river', etc.)
-    if (clan.includes('Thunder') || clan === 'thunder') clan = 'thunder';
-    else if (clan.includes('River') || clan === 'river') clan = 'river';
-    else if (clan.includes('Shadow') || clan === 'shadow') clan = 'shadow';
-    else if (clan.includes('Wind') || clan === 'wind') clan = 'wind';
-    else clan = 'thunder'; // Default fallback
+    let rawClan = GameState.catData?.clan || GameState.selectedClan || 'thunder';
+    // Convert to lowercase for comparison
+    let clanLower = String(rawClan).toLowerCase();
+    
+    // Normalize clan name (convert 'RiverClan' to 'river', etc.)
+    let clan = 'thunder'; // Default
+    if (clanLower.includes('thunder') || clanLower === 'thunder') clan = 'thunder';
+    else if (clanLower.includes('river') || clanLower === 'river') clan = 'river';
+    else if (clanLower.includes('shadow') || clanLower === 'shadow') clan = 'shadow';
+    else if (clanLower.includes('wind') || clanLower === 'wind') clan = 'wind';
+    // Loners and KittyPets don't have a clan camp to return to
+    else if (clanLower === 'loner' || clanLower === 'kittypet' || clanLower === 'barn cat' || clanLower === 'starclan') {
+        clan = 'none'; // No camp entrance for non-clan cats
+    }
     
     const isNight = GameState.isNight;
     
