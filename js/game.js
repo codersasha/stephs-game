@@ -7504,7 +7504,7 @@ function showAttackClanmateMenu() {
     const actions = document.getElementById('location-actions');
     
     title.textContent = 'Attack a Clanmate?!';
-    desc.textContent = 'WARNING: Attacking your clanmates is against the warrior code! You will be BANISHED!';
+    desc.textContent = 'WARNING: Attacking your clanmates is against the warrior code!';
     actions.innerHTML = '';
     
     const clanmates = ['Sandstorm', 'Graystripe', 'Dustpelt', 'Cloudtail', 'Brackenfur', 'Brightheart'];
@@ -7516,8 +7516,278 @@ function showAttackClanmateMenu() {
         });
     });
     
+    // Add kill option (very evil!)
+    addAction(actions, 'Kill a Clanmate... (VERY EVIL)', () => {
+        closePopup();
+        showKillClanmateMenu();
+    });
+    
     addAction(actions, 'Never mind!', closePopup);
     popup.classList.remove('hidden');
+}
+
+// Kill a clanmate menu - check if anyone is watching!
+function showKillClanmateMenu() {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    // Check if anyone is watching (40% chance someone sees)
+    const isWatched = Math.random() < 0.40;
+    
+    if (isWatched) {
+        const watchers = ['Sandstorm', 'Dustpelt', 'Cloudtail', 'Brightheart', 'Ferncloud'];
+        const watcher = watchers[Math.floor(Math.random() * watchers.length)];
+        
+        title.textContent = 'Someone is Watching!';
+        desc.textContent = `${watcher} is nearby and would see everything! You can't do this now...`;
+        actions.innerHTML = '';
+        
+        addAction(actions, 'Wait for another time', closePopup);
+    } else {
+        title.textContent = 'No One is Watching...';
+        desc.textContent = 'The camp is quiet. No one would see... This is your darkest choice. Are you sure?';
+        actions.innerHTML = '';
+        
+        const victims = ['Dustpelt', 'Cloudtail', 'Brackenfur', 'Thornclaw', 'Spiderleg'];
+        
+        victims.forEach(victim => {
+            addAction(actions, `Kill ${victim}...`, () => {
+                closePopup();
+                killClanmate(victim);
+            });
+        });
+        
+        addAction(actions, 'No... I can\'t do this', closePopup);
+    }
+    
+    popup.classList.remove('hidden');
+}
+
+// Kill a clanmate when no one is watching
+function killClanmate(victimName) {
+    const cat = GameState.catData;
+    
+    // Track murder - VERY evil!
+    cat.evilActs = (cat.evilActs || 0) + 3;
+    cat.murderedCat = true;
+    cat.murderedCatName = victimName;
+    
+    showMessage(`You stalk towards ${victimName} in the shadows...`);
+    
+    setTimeout(() => {
+        showMessage(`${victimName} doesn't see you coming...`);
+        
+        setTimeout(() => {
+            showMessage(`You strike! ${victimName} falls, lifeless.`);
+            
+            setTimeout(() => {
+                showMessage('What have you done? The camp is still quiet... for now.');
+                
+                setTimeout(() => {
+                    // Someone discovers the body!
+                    const discoverers = ['Sandstorm', 'Graystripe', 'Ferncloud', 'Brightheart'];
+                    const discoverer = discoverers[Math.floor(Math.random() * discoverers.length)];
+                    
+                    showMessage(`${discoverer} walks by and sees the body!`);
+                    showSpeechBubble(discoverer, `NO! ${victimName}! Who did this?!`);
+                    
+                    setTimeout(() => {
+                        showMessage('The clan gathers around in horror...');
+                        
+                        setTimeout(() => {
+                            showBlameMenu(victimName, discoverer);
+                        }, 2000);
+                    }, 2500);
+                }, 3000);
+            }, 2500);
+        }, 2500);
+    }, 2500);
+}
+
+// Blame another cat for the murder
+function showBlameMenu(victimName, discoverer) {
+    const cat = GameState.catData;
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'What Do You Do?';
+    desc.textContent = `The clan is looking for answers. ${discoverer} is demanding to know who killed ${victimName}. No one saw you...`;
+    actions.innerHTML = '';
+    
+    // Option to stay silent
+    addAction(actions, 'Stay Silent (Suspicious...)', () => {
+        closePopup();
+        staySilentAfterMurder(victimName);
+    });
+    
+    // Option to blame other cats
+    const scapegoats = ['Darkstripe', 'a fox', 'a rogue', 'Longtail', 'Ashfur'];
+    scapegoats.forEach(scapegoat => {
+        addAction(actions, `Blame ${scapegoat}`, () => {
+            closePopup();
+            blameCatForMurder(victimName, scapegoat, discoverer);
+        });
+    });
+    
+    // Confess (very rare choice!)
+    addAction(actions, 'Confess... (Banishment)', () => {
+        closePopup();
+        confessToMurder(victimName);
+    });
+    
+    popup.classList.remove('hidden');
+}
+
+// Blame another cat - 69% chance of success!
+function blameCatForMurder(victimName, scapegoat, discoverer) {
+    const cat = GameState.catData;
+    
+    showSpeechBubble(cat.name, `I saw ${scapegoat} near ${victimName}! It must have been them!`);
+    
+    setTimeout(() => {
+        showMessage('The clan murmurs... Do they believe you?');
+        
+        setTimeout(() => {
+            // 69% chance they believe you!
+            const believed = Math.random() < 0.69;
+            
+            if (believed) {
+                // They believe you!
+                showMessage('The clan believes your story!');
+                showSpeechBubble(discoverer, `${scapegoat}?! That traitor!`);
+                
+                setTimeout(() => {
+                    if (scapegoat === 'a fox' || scapegoat === 'a rogue') {
+                        showMessage(`The clan vows revenge against ${scapegoat}. You got away with it...`);
+                    } else {
+                        showMessage(`${scapegoat} is driven from the clan! You got away with murder...`);
+                        showSpeechBubble(scapegoat, 'But I didn\'t do it! I swear!');
+                    }
+                    
+                    setTimeout(() => {
+                        showMessage('You are safe... for now. But StarClan sees all.');
+                        showMessage('When you die, the Dark Forest awaits you.');
+                        saveGameData();
+                    }, 3000);
+                }, 2500);
+            } else {
+                // They don't believe you!
+                showMessage('The clan looks at you suspiciously...');
+                showSpeechBubble(discoverer, 'Wait... there\'s blood on YOUR claws!');
+                
+                setTimeout(() => {
+                    const leaderName = cat.rank === 'Leader' ? 'Graystripe' : 'Firestar';
+                    showSpeechBubble(leaderName, `${cat.name}... YOU killed ${victimName}!`);
+                    showMessage('You have been caught!');
+                    
+                    setTimeout(() => {
+                        banishForMurder(victimName, leaderName);
+                    }, 2500);
+                }, 2500);
+            }
+        }, 3000);
+    }, 2500);
+}
+
+// Stay silent after murder - suspicious but might work
+function staySilentAfterMurder(victimName) {
+    const cat = GameState.catData;
+    
+    showMessage('You say nothing... The clan looks around suspiciously.');
+    
+    setTimeout(() => {
+        // 50% chance someone notices something
+        if (Math.random() < 0.5) {
+            const suspicious = ['Sandstorm', 'Graystripe', 'Dustpelt'];
+            const suspector = suspicious[Math.floor(Math.random() * suspicious.length)];
+            
+            showSpeechBubble(suspector, `Wait... ${cat.name}, why do you have blood on your fur?`);
+            
+            setTimeout(() => {
+                showMessage('They found you out!');
+                const leaderName = cat.rank === 'Leader' ? 'Graystripe' : 'Firestar';
+                banishForMurder(victimName, leaderName);
+            }, 2500);
+        } else {
+            showMessage('The clan assumes it was a fox or rogue... You got away with it.');
+            
+            setTimeout(() => {
+                showMessage('But the guilt weighs on you. StarClan will remember this.');
+                showMessage('When you die, the Dark Forest awaits...');
+                saveGameData();
+            }, 2500);
+        }
+    }, 3000);
+}
+
+// Confess to the murder
+function confessToMurder(victimName) {
+    const cat = GameState.catData;
+    
+    showSpeechBubble(cat.name, `I... I did it. I killed ${victimName}.`);
+    
+    setTimeout(() => {
+        showMessage('The clan gasps in horror!');
+        
+        setTimeout(() => {
+            const leaderName = cat.rank === 'Leader' ? 'Graystripe' : 'Firestar';
+            showSpeechBubble(leaderName, 'You... MONSTER!');
+            
+            setTimeout(() => {
+                banishForMurder(victimName, leaderName);
+            }, 2500);
+        }, 2500);
+    }, 2500);
+}
+
+// Banished for murder
+function banishForMurder(victimName, leaderName) {
+    const cat = GameState.catData;
+    const oldClan = cat.clan;
+    
+    showMessage(`${leaderName}: "You have murdered your own clanmate! This is the worst crime!"`);
+    
+    setTimeout(() => {
+        showMessage(`${leaderName}: "You are BANISHED forever! If you ever return, you will be killed on sight!"`);
+        
+        setTimeout(() => {
+            showMessage('The entire clan turns their backs on you in disgust...');
+            
+            setTimeout(() => {
+                // Banish the player
+                cat.isLoner = true;
+                cat.isBanished = true;
+                cat.isMurderer = true;
+                cat.previousClan = oldClan;
+                cat.clan = 'Loner';
+                cat.rank = 'Loner';
+                
+                // Remove rank suffix
+                const baseName = cat.name.replace(/paw$|kit$|star$/i, '');
+                cat.name = baseName;
+                
+                GameState.selectedClan = oldClan;
+                GameState.currentLocation = 'forest';
+                GameState.playerX = 300;
+                GameState.playerY = 250;
+                GameState.forestThreats = [];
+                
+                showMessage('You have been banished as a murderer. No clan will ever accept you.');
+                
+                setTimeout(() => {
+                    showMessage('You are cursed to walk alone... and the Dark Forest awaits you after death.');
+                    renderGameWorld();
+                    updateGameUI();
+                    saveGameData();
+                }, 3000);
+            }, 2500);
+        }, 2500);
+    }, 2500);
 }
 
 function attackClanmate(clanmateName) {
