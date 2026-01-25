@@ -8857,9 +8857,9 @@ function stayInStarClan() {
     GameState.playerY = 200;
     GameState.inStarClan = true;
     
-    showScreen('gameplay');
+    showScreen('game');
     renderGameWorld();
-    showMessage('You walk through the living world as a spirit...');
+    showMessage('You walk among the stars with your warrior ancestors...');
 }
 
 // Render StarClan world - the camp/forest but purple/blue with no threats
