@@ -6469,16 +6469,26 @@ function renderBattleScreen() {
                 padding: 5px;
             ">
                 ${battle.battleOver ? `
-                    <button class="battle-btn continue-btn" style="
-                        grid-column: span 2;
-                        padding: 15px;
-                        font-size: 16px;
-                        background: linear-gradient(180deg, #4CAF50, #2E7D32);
-                        color: white;
-                        border: none;
-                        border-radius: 8px;
-                        cursor: pointer;
-                    ">Continue</button>
+                    ${battle.playerHealth <= 0 ? `
+                        <div style="
+                            grid-column: span 2;
+                            padding: 15px;
+                            font-size: 16px;
+                            color: #ff6b6b;
+                            text-align: center;
+                        ">You have been defeated...</div>
+                    ` : `
+                        <button class="battle-btn continue-btn" style="
+                            grid-column: span 2;
+                            padding: 15px;
+                            font-size: 16px;
+                            background: linear-gradient(180deg, #4CAF50, #2E7D32);
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            cursor: pointer;
+                        ">Continue</button>
+                    `}
                 ` : `
                     <button class="battle-btn scratch-btn" style="
                         padding: 12px;
