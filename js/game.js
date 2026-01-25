@@ -7020,9 +7020,9 @@ function startGameLoop() {
             cat.health = Math.max(0, cat.health - 1);
         }
         
-        // Check for death
+        // Check for death - use catDeath() to properly check for evil status!
         if (cat.health <= 0) {
-            goToStarClan();
+            catDeath('starvation or thirst');
             return;
         }
         
