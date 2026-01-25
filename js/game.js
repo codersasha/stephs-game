@@ -7309,14 +7309,23 @@ function startNight() {
     GameState.isNight = true;
     const cat = GameState.catData;
     
-    // Check if it's a gathering night (random chance, but not for kits)
-    const isGathering = Math.random() > 0.5 && cat.rank !== 'Kit';
-    GameState.isGatheringNight = isGathering;
+    // Gathering happens every 10 moons! Kits and Elders stay home.
+    const isGatheringNight = cat.age > 0 && cat.age % 10 === 0;
+    const canAttend = cat.rank !== 'Kit' && cat.rank !== 'Elder';
+    GameState.isGatheringNight = isGatheringNight;
     
-    if (isGathering) {
-        showMessage('Tonight is a Gathering! All cats except kits go to Fourtrees to meet the other clans.');
+    if (isGatheringNight && canAttend) {
+        showMessage('Tonight is a Gathering! All cats except kits and elders go to Fourtrees!');
         setTimeout(() => {
             showGatheringScreen();
+        }, 3000);
+    } else if (isGatheringNight && !canAttend) {
+        showMessage(`Tonight is a Gathering, but ${cat.rank}s must stay in camp.`);
+        setTimeout(() => {
+            showMessage('You watch the warriors leave for Fourtrees...');
+            setTimeout(() => {
+                endNight();
+            }, 3000);
         }, 3000);
     } else {
         showMessage('Night has fallen. All cats go to sleep...');
@@ -7328,15 +7337,145 @@ function startNight() {
 
 function showGatheringScreen() {
     const cat = GameState.catData;
-    showMessage('At the Gathering, the leaders share news from each clan. You meet cats from other clans!');
+    const gameWorld = document.getElementById('game-world');
+    
+    // Teleport to Fourtrees!
+    GameState.currentLocation = 'fourtrees';
+    
+    // Render Fourtrees gathering scene
+    gameWorld.innerHTML = `
+        <svg viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <filter id="moonGlow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+            
+            <!-- Night sky -->
+            <rect width="450" height="400" fill="#0a0a1a"/>
+            
+            <!-- Stars -->
+            ${Array.from({length: 50}, () => `
+                <circle cx="${Math.random() * 450}" cy="${Math.random() * 150}" r="${Math.random() * 1.5 + 0.5}" fill="white" opacity="${Math.random() * 0.5 + 0.5}"/>
+            `).join('')}
+            
+            <!-- Full moon -->
+            <circle cx="380" cy="60" r="30" fill="#fffacd" filter="url(#moonGlow)"/>
+            
+            <!-- Ground -->
+            <ellipse cx="225" cy="350" rx="220" ry="80" fill="#1a2a1a"/>
+            
+            <!-- Four great oak trees -->
+            <g class="fourtrees">
+                <!-- Tree 1 -->
+                <rect x="80" y="180" width="20" height="120" fill="#4a3020"/>
+                <circle cx="90" cy="160" r="45" fill="#2a4a2a"/>
+                
+                <!-- Tree 2 -->
+                <rect x="170" y="160" width="20" height="140" fill="#3a2515"/>
+                <circle cx="180" cy="140" r="50" fill="#1a3a1a"/>
+                
+                <!-- Tree 3 -->
+                <rect x="260" y="170" width="20" height="130" fill="#4a3020"/>
+                <circle cx="270" cy="150" r="48" fill="#2a4a2a"/>
+                
+                <!-- Tree 4 -->
+                <rect x="350" y="180" width="20" height="120" fill="#3a2515"/>
+                <circle cx="360" cy="160" r="45" fill="#1a3a1a"/>
+            </g>
+            
+            <!-- Great Rock (where leaders speak) -->
+            <ellipse cx="225" cy="280" rx="60" ry="30" fill="#5a5a5a"/>
+            <ellipse cx="225" cy="265" rx="50" ry="20" fill="#6a6a6a"/>
+            
+            <!-- Leaders on the rock -->
+            <circle cx="185" cy="260" r="8" fill="#ff9800"/> <!-- ThunderClan -->
+            <circle cx="210" cy="255" r="8" fill="#2196f3"/> <!-- RiverClan -->
+            <circle cx="240" cy="255" r="8" fill="#673ab7"/> <!-- ShadowClan -->
+            <circle cx="265" cy="260" r="8" fill="#8bc34a"/> <!-- WindClan -->
+            
+            <!-- Cats from all clans gathered below -->
+            ${Array.from({length: 30}, (_, i) => {
+                const colors = ['#ff9800', '#2196f3', '#673ab7', '#8bc34a', '#8B4513', '#a0522d', '#808080', '#d4a574'];
+                return `<circle cx="${100 + (i % 10) * 30 + Math.random() * 10}" cy="${320 + Math.floor(i / 10) * 25 + Math.random() * 10}" r="6" fill="${colors[i % colors.length]}" opacity="0.8"/>`;
+            }).join('')}
+            
+            <!-- Your cat -->
+            <circle cx="225" cy="340" r="10" fill="${cat.furColor}" stroke="#ffd700" stroke-width="2"/>
+            
+            <!-- Title -->
+            <text x="225" y="30" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold">The Gathering at Fourtrees</text>
+        </svg>
+    `;
+    
+    showMessage('You arrive at Fourtrees under the full moon. All four clans are here!');
     cat.experience += 15;
     
-    setTimeout(() => {
-        showMessage('The Gathering is over. The clans return to their camps.');
+    // Show clan news one by one
+    setTimeout(() => showGatheringNews(), 3000);
+}
+
+function showGatheringNews() {
+    const cat = GameState.catData;
+    const playerClan = CLANS[cat.clan]?.name || 'ThunderClan';
+    
+    const clanNews = {
+        'ThunderClan': [
+            'Firestar: "ThunderClan is strong! We have two new apprentices this moon."',
+            'Firestar: "Prey is running well in our territory. ThunderClan thrives!"',
+            'Firestar: "We drove out a fox from our borders. ThunderClan remains vigilant."',
+            'Firestar: "A new litter of kits was born in the nursery. ThunderClan grows!"'
+        ],
+        'RiverClan': [
+            'Leopardstar: "RiverClan\'s rivers flow with fish. We want for nothing."',
+            'Leopardstar: "Two of our warriors have earned their names this moon."',
+            'Leopardstar: "The Twolegs have left the river. RiverClan celebrates!"',
+            'Leopardstar: "Our medicine cat has found new healing herbs by the water."'
+        ],
+        'ShadowClan': [
+            'Blackstar: "ShadowClan hunts well in the shadows. We need no help."',
+            'Blackstar: "A badger was spotted near our border, but we chased it away."',
+            'Blackstar: "ShadowClan has new warriors. Our strength grows."',
+            'Blackstar: "The pine forest provides all we need. ShadowClan is content."'
+        ],
+        'WindClan': [
+            'Onestar: "WindClan runs free across the moors. The rabbits are plentiful."',
+            'Onestar: "Our apprentices train hard. WindClan will have swift warriors."',
+            'Onestar: "The wind carries good omens for WindClan this moon."',
+            'Onestar: "We have made peace with a neighboring Clan. For now."'
+        ]
+    };
+    
+    const clans = ['ThunderClan', 'RiverClan', 'ShadowClan', 'WindClan'];
+    let delay = 0;
+    
+    clans.forEach((clan, index) => {
         setTimeout(() => {
-            endNight();
-        }, 3000);
-    }, 5000);
+            const news = clanNews[clan];
+            const announcement = news[Math.floor(Math.random() * news.length)];
+            showMessage(announcement);
+        }, delay);
+        delay += 3500;
+    });
+    
+    // After all news, end the gathering
+    setTimeout(() => {
+        showMessage('The moon is covered by clouds. The Gathering is over!');
+        setTimeout(() => {
+            showMessage('All cats return to their camps...');
+            setTimeout(() => {
+                // Teleport back to camp
+                GameState.currentLocation = 'camp';
+                GameState.playerX = 225;
+                GameState.playerY = 250;
+                endNight();
+            }, 2000);
+        }, 2000);
+    }, delay + 2000);
 }
 
 function endNight() {
