@@ -6957,15 +6957,37 @@ function startGameLoop() {
         // Kits and elders get fed automatically by the clan - but ONLY in camp!
         // In the forest, you're on your own!
         if ((cat.rank === 'Kit' || cat.rank === 'Elder') && GameState.currentLocation === 'camp') {
+            const helpers = ['Sandstorm', 'Ferncloud', 'Dustpelt', 'Brackenfur', 'Cloudtail'];
+            const helper = helpers[Math.floor(Math.random() * helpers.length)];
+            
             // Auto-feed when hungry
-            if (cat.hunger < 30) {
-                cat.hunger = Math.min(100, cat.hunger + 25);
-                showMessage('A warrior brought you some fresh-kill!');
+            if (cat.hunger < 40) {
+                cat.hunger = Math.min(100, cat.hunger + 30);
+                if (cat.rank === 'Elder') {
+                    const elderMessages = [
+                        `${helper} brought you a plump mouse. "For you, elder."`,
+                        `An apprentice dropped off some fresh-kill for you.`,
+                        `${helper} placed a vole at your paws respectfully.`,
+                        `"Here you go," ${helper} said, leaving fresh prey for you.`
+                    ];
+                    showMessage(elderMessages[Math.floor(Math.random() * elderMessages.length)]);
+                } else {
+                    showMessage('A warrior brought you some fresh-kill!');
+                }
             }
             // Auto-water when thirsty
-            if (cat.thirst < 30) {
-                cat.thirst = Math.min(100, cat.thirst + 20);
-                showMessage('A warrior brought you water in moss!');
+            if (cat.thirst < 40) {
+                cat.thirst = Math.min(100, cat.thirst + 25);
+                if (cat.rank === 'Elder') {
+                    const waterMessages = [
+                        `${helper} brought you dripping moss. "Fresh water, elder."`,
+                        `An apprentice fetched you water from the stream.`,
+                        `${helper} dropped wet moss by your nest.`
+                    ];
+                    showMessage(waterMessages[Math.floor(Math.random() * waterMessages.length)]);
+                } else {
+                    showMessage('A warrior brought you water in moss!');
+                }
             }
         }
         
@@ -7700,6 +7722,14 @@ function openSpeechPopup() {
             <button class="quick-speech-btn" data-text="Can I go out with you?">Can I go out?</button>
             <button class="quick-speech-btn" data-text="Good job!">Good job!</button>
         `;
+    } else if (cat && cat.rank === 'Elder') {
+        buttonsContainer.innerHTML = `
+            <button class="quick-speech-btn" data-text="Hello!">Hello!</button>
+            <button class="quick-speech-btn" data-text="I'm hungry">I'm hungry</button>
+            <button class="quick-speech-btn" data-text="I'm thirsty">I'm thirsty</button>
+            <button class="quick-speech-btn" data-text="Let me tell you a story...">Tell a story</button>
+            <button class="quick-speech-btn" data-text="Back in my day...">Back in my day...</button>
+        `;
     } else {
         buttonsContainer.innerHTML = `
             <button class="quick-speech-btn" data-text="Hello!">Hello!</button>
@@ -7903,6 +7933,38 @@ function sayPlayerSpeech() {
                 closeSpeechPopup();
                 setTimeout(() => {
                     askWarriorToTakeOut();
+                }, 1000);
+                return;
+            }
+        }
+        
+        // Elder special commands
+        if (cat && cat.rank === 'Elder') {
+            const lowerText = text.toLowerCase();
+            
+            // "I'm hungry" makes an apprentice bring food
+            if (lowerText.includes("hungry") || lowerText.includes("food")) {
+                closeSpeechPopup();
+                setTimeout(() => {
+                    elderAskForFood();
+                }, 1000);
+                return;
+            }
+            
+            // "I'm thirsty" makes an apprentice bring water
+            if (lowerText.includes("thirsty") || lowerText.includes("water")) {
+                closeSpeechPopup();
+                setTimeout(() => {
+                    elderAskForWater();
+                }, 1000);
+                return;
+            }
+            
+            // "Tell a story" or "Back in my day"
+            if (lowerText.includes("story") || lowerText.includes("back in my day")) {
+                closeSpeechPopup();
+                setTimeout(() => {
+                    elderTellStory();
                 }, 1000);
                 return;
             }
@@ -8498,6 +8560,96 @@ function kitAskForFood() {
             }, 2000);
         }, 3000);
     }, 2000);
+}
+
+// Elder asks for food
+function elderAskForFood() {
+    const cat = GameState.catData;
+    const apprentices = ['Squirrelpaw', 'Spiderpaw', 'an apprentice'];
+    const apprentice = apprentices[Math.floor(Math.random() * apprentices.length)];
+    
+    showSpeechBubble(cat.name, 'Could someone bring me something to eat?');
+    
+    setTimeout(() => {
+        showMessage(`${apprentice} hurries over respectfully.`);
+        showSpeechBubble(apprentice, 'Right away, elder! I\'ll fetch something for you!');
+        setTimeout(() => {
+            showMessage(`${apprentice} goes to the fresh-kill pile...`);
+            setTimeout(() => {
+                const prey = ['a plump vole', 'a juicy mouse', 'a fat thrush', 'a squirrel'];
+                const food = prey[Math.floor(Math.random() * prey.length)];
+                showMessage(`${apprentice} returns with ${food}!`);
+                showSpeechBubble(apprentice, 'Here you are, elder. The freshest prey!');
+                setTimeout(() => {
+                    cat.hunger = Math.min(100, cat.hunger + 45);
+                    showMessage('Ah, that hits the spot. Thank you, young one.');
+                    cat.experience += 2;
+                    updateGameUI();
+                    saveGameData();
+                }, 2000);
+            }, 2500);
+        }, 2000);
+    }, 2000);
+}
+
+// Elder asks for water
+function elderAskForWater() {
+    const cat = GameState.catData;
+    const apprentices = ['Squirrelpaw', 'Spiderpaw', 'an apprentice'];
+    const apprentice = apprentices[Math.floor(Math.random() * apprentices.length)];
+    
+    showSpeechBubble(cat.name, 'My throat is parched. Could someone fetch water?');
+    
+    setTimeout(() => {
+        showMessage(`${apprentice} dips their head respectfully.`);
+        showSpeechBubble(apprentice, 'Of course, elder! I\'ll be right back!');
+        setTimeout(() => {
+            showMessage(`${apprentice} runs to soak moss in the stream...`);
+            setTimeout(() => {
+                showMessage(`${apprentice} returns with dripping moss!`);
+                showSpeechBubble(apprentice, 'Fresh and cool, just for you!');
+                setTimeout(() => {
+                    cat.thirst = Math.min(100, cat.thirst + 45);
+                    showMessage('Refreshing! You\'re a good apprentice.');
+                    cat.experience += 2;
+                    updateGameUI();
+                    saveGameData();
+                }, 2000);
+            }, 2500);
+        }, 2000);
+    }, 2000);
+}
+
+// Elder tells a story
+function elderTellStory() {
+    const cat = GameState.catData;
+    
+    const stories = [
+        'Gather round, young ones! Let me tell you about the Great Battle of Sunningrocks...',
+        'Back in my day, we walked through snow taller than a kit to patrol the borders!',
+        'I remember when Firestar first came to ThunderClan... just a kittypet, he was!',
+        'Have I told you about the time the river flooded and RiverClan needed our help?',
+        'Let me share the wisdom of the warrior code. It has guided us for generations...',
+        'The old forest was beautiful. Sometimes I still dream of Sunningrocks...',
+        'I once fought a badger single-pawed! Well... almost single-pawed.',
+        'Young warriors these days have it easy! In my time, we faced dangers you couldn\'t imagine!'
+    ];
+    
+    const story = stories[Math.floor(Math.random() * stories.length)];
+    showSpeechBubble(cat.name, story);
+    
+    setTimeout(() => {
+        const reactions = [
+            'Several kits and apprentices gather around to listen.',
+            'A few young cats sit down, eyes wide with wonder.',
+            'Even some warriors pause their duties to hear your tale.',
+            'The younger cats lean in, eager to learn from your experience.'
+        ];
+        showMessage(reactions[Math.floor(Math.random() * reactions.length)]);
+        cat.experience += 5;
+        updateGameUI();
+        saveGameData();
+    }, 2500);
 }
 
 // Kit asks a warrior to take them outside
