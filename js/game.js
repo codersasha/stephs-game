@@ -9396,104 +9396,193 @@ function talkToAncestor(name) {
     showMessage(`${name} speaks to you from the stars.`);
 }
 
-// Visit dreams - talk to a random living cat!
+// Visit dreams - pick which cat to visit and what to say!
 function visitDreams() {
     const livingCats = [
-        { name: 'Firestar', role: 'leader' },
-        { name: 'Sandstorm', role: 'warrior' },
-        { name: 'Graystripe', role: 'warrior' },
-        { name: 'Leafpool', role: 'medicine cat' },
-        { name: 'Brambleclaw', role: 'deputy' },
-        { name: 'Squirrelflight', role: 'warrior' },
-        { name: 'Cinderpelt', role: 'medicine cat' },
-        { name: 'Dustpelt', role: 'warrior' }
+        { name: 'Firestar', role: 'Leader', clan: 'ThunderClan' },
+        { name: 'Sandstorm', role: 'Warrior', clan: 'ThunderClan' },
+        { name: 'Graystripe', role: 'Warrior', clan: 'ThunderClan' },
+        { name: 'Leafpool', role: 'Medicine Cat', clan: 'ThunderClan' },
+        { name: 'Brambleclaw', role: 'Deputy', clan: 'ThunderClan' },
+        { name: 'Squirrelflight', role: 'Warrior', clan: 'ThunderClan' },
+        { name: 'Leopardstar', role: 'Leader', clan: 'RiverClan' },
+        { name: 'Mistyfoot', role: 'Deputy', clan: 'RiverClan' },
+        { name: 'Mothwing', role: 'Medicine Cat', clan: 'RiverClan' },
+        { name: 'Blackstar', role: 'Leader', clan: 'ShadowClan' },
+        { name: 'Russetfur', role: 'Deputy', clan: 'ShadowClan' },
+        { name: 'Littlecloud', role: 'Medicine Cat', clan: 'ShadowClan' },
+        { name: 'Onestar', role: 'Leader', clan: 'WindClan' },
+        { name: 'Ashfoot', role: 'Deputy', clan: 'WindClan' },
+        { name: 'Barkface', role: 'Medicine Cat', clan: 'WindClan' }
     ];
     
-    const cat = livingCats[Math.floor(Math.random() * livingCats.length)];
-    
     const starclanScreen = document.getElementById('starclan-screen');
+    
+    // First, show cat selection screen
+    let catListHTML = livingCats.map(cat => `
+        <button class="starclan-btn cat-to-visit" data-name="${cat.name}" data-role="${cat.role}" data-clan="${cat.clan}" 
+                style="margin: 5px; padding: 10px 15px; font-size: 12px;">
+            ${cat.name} (${cat.role} - ${cat.clan})
+        </button>
+    `).join('');
+    
     starclanScreen.innerHTML = `
         <div class="starclan-bg"></div>
         <div class="starclan-view">
-            <h2>Visiting ${cat.name}'s Dream</h2>
-            <p class="starclan-message">${cat.name} is sleeping... You appear in their dream as a starry spirit.</p>
-            <div class="dream-chat">
-                <p class="dream-cat-says">"${cat.name} looks up at you with wonder..."</p>
-                <p class="dream-cat-says" style="color: #aaa; font-style: italic;">"A StarClan cat! Do you have a message for me?"</p>
+            <h2>Visit a Cat's Dream</h2>
+            <p class="starclan-message">Choose which cat to visit in their dreams...</p>
+            <div class="cat-selection" style="display: flex; flex-wrap: wrap; justify-content: center; max-height: 300px; overflow-y: auto; padding: 10px;">
+                ${catListHTML}
             </div>
-            <div class="dream-options">
-                <button class="starclan-btn dream-choice" data-msg="warning">Give a Warning</button>
-                <button class="starclan-btn dream-choice" data-msg="encouragement">Give Encouragement</button>
-                <button class="starclan-btn dream-choice" data-msg="prophecy">Share a Prophecy</button>
-                <button class="starclan-btn dream-choice" data-msg="blessing">Give a Blessing</button>
-            </div>
-            <button class="starclan-btn" id="leave-dream" style="margin-top: 20px;">Leave the Dream</button>
+            <button class="starclan-btn" id="back-to-starclan" style="margin-top: 20px;">Back</button>
         </div>
     `;
     
-    const responses = {
+    // Add click handlers for cat selection
+    document.querySelectorAll('.cat-to-visit').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const catName = btn.dataset.name;
+            const catRole = btn.dataset.role;
+            const catClan = btn.dataset.clan;
+            showDreamMessageOptions(catName, catRole, catClan);
+        });
+    });
+    
+    document.getElementById('back-to-starclan')?.addEventListener('click', returnToStarClanMenu);
+}
+
+// Show message options for the selected cat
+function showDreamMessageOptions(catName, catRole, catClan) {
+    const starclanScreen = document.getElementById('starclan-screen');
+    
+    // Custom messages you can say
+    const messageOptions = [
+        { id: 'warning', text: 'Give a Warning', icon: '!' },
+        { id: 'encouragement', text: 'Give Encouragement', icon: '+' },
+        { id: 'prophecy', text: 'Share a Prophecy', icon: '*' },
+        { id: 'blessing', text: 'Give a Blessing', icon: '~' },
+        { id: 'secret', text: 'Tell a Secret', icon: '?' },
+        { id: 'guidance', text: 'Offer Guidance', icon: '>' }
+    ];
+    
+    let messageButtonsHTML = messageOptions.map(opt => `
+        <button class="starclan-btn dream-message-choice" data-msg="${opt.id}" style="margin: 5px; padding: 12px 20px;">
+            ${opt.text}
+        </button>
+    `).join('');
+    
+    starclanScreen.innerHTML = `
+        <div class="starclan-bg"></div>
+        <div class="starclan-view">
+            <h2>Visiting ${catName}'s Dream</h2>
+            <p class="starclan-message">${catName} is sleeping in the ${catClan} camp...</p>
+            <p style="color: #e1bee7; font-style: italic;">You appear in their dream as a starry spirit. ${catName} looks up at you with wonder.</p>
+            <p style="color: #aaa; margin: 15px 0;">"A StarClan cat! Do you have a message for me?"</p>
+            <h3 style="color: #ffd700; margin-top: 20px;">What do you say?</h3>
+            <div class="message-options" style="display: flex; flex-wrap: wrap; justify-content: center; margin: 15px 0;">
+                ${messageButtonsHTML}
+            </div>
+            <button class="starclan-btn" id="choose-different-cat" style="margin-top: 15px;">Choose Different Cat</button>
+            <button class="starclan-btn" id="leave-dream" style="margin-top: 10px;">Leave the Dream</button>
+        </div>
+    `;
+    
+    // Message responses
+    const yourMessages = {
         warning: [
-            `"Beware, ${cat.name}. Danger lurks in the shadows..."`,
-            `"Dark times are coming. Stay alert, young ${cat.role}."`,
-            `"Trust your instincts. Not all cats are as they seem..."`
+            `"Beware, ${catName}. Danger lurks in the shadows..."`,
+            `"Dark times are coming. Stay alert, ${catRole}."`,
+            `"Trust your instincts. Not all cats are as they seem..."`,
+            `"A storm approaches ${catClan}. Be ready."`
         ],
         encouragement: [
-            `"You are brave and strong, ${cat.name}. Your clan is proud of you!"`,
+            `"You are brave and strong, ${catName}. ${catClan} is proud of you!"`,
             `"Have faith in yourself. You will do great things!"`,
-            `"StarClan watches over you always. Never give up!"`
+            `"StarClan watches over you always. Never give up!"`,
+            `"Your courage inspires all of ${catClan}!"`
         ],
         prophecy: [
             `"When fire meets water, a new path will open..."`,
             `"The moon will guide you when all seems lost..."`,
-            `"Three will become one, and the clans will survive..."`
+            `"Three will become one, and the clans will survive..."`,
+            `"Beware the darkness that hides in plain sight..."`
         ],
         blessing: [
-            `"May StarClan light your path, ${cat.name}."`,
+            `"May StarClan light your path, ${catName}."`,
             `"I give you the blessing of courage and wisdom."`,
-            `"Go in peace, knowing your ancestors watch over you."`
+            `"Go in peace, knowing your ancestors watch over you."`,
+            `"May you find the strength you need within yourself."`
+        ],
+        secret: [
+            `"There is a traitor among you... watch carefully."`,
+            `"The one you trust most holds a hidden truth."`,
+            `"Your ancestors have watched your journey with pride."`,
+            `"Someone in your Clan needs your help more than you know."`
+        ],
+        guidance: [
+            `"Follow your heart, ${catName}. It will not lead you astray."`,
+            `"Sometimes the hardest path is the right one."`,
+            `"Listen to the elders. They have seen much."`,
+            `"The answers you seek are closer than you think."`
         ]
     };
     
     const catResponses = {
-        warning: `${cat.name} nods solemnly. "I will be careful. Thank you for the warning..."`,
-        encouragement: `${cat.name}'s eyes shine with hope. "Thank you! I won't let you down!"`,
-        prophecy: `${cat.name} looks puzzled but determined. "I... I will remember your words..."`,
-        blessing: `${cat.name} bows their head gratefully. "Thank you, ancestor. I am honored."`
+        warning: `${catName} nods solemnly. "I will be careful. Thank you for the warning..."`,
+        encouragement: `${catName}'s eyes shine with hope. "Thank you! I won't let you down!"`,
+        prophecy: `${catName} looks puzzled but determined. "I... I will remember your words..."`,
+        blessing: `${catName} bows their head gratefully. "Thank you, ancestor. I am honored."`,
+        secret: `${catName}'s eyes widen. "I... I understand. I will keep watch."`,
+        guidance: `${catName} dips their head respectfully. "I will follow your wisdom."`
     };
     
-    document.querySelectorAll('.dream-choice').forEach(btn => {
+    // Add event listeners
+    document.querySelectorAll('.dream-message-choice').forEach(btn => {
         btn.addEventListener('click', () => {
             const msgType = btn.dataset.msg;
-            const yourMessage = responses[msgType][Math.floor(Math.random() * responses[msgType].length)];
+            const yourMessage = yourMessages[msgType][Math.floor(Math.random() * yourMessages[msgType].length)];
             const catResponse = catResponses[msgType];
             
-            document.querySelector('.dream-chat').innerHTML = `
-                <p class="dream-you-say" style="color: #ffd700; margin-bottom: 15px;">You say: ${yourMessage}</p>
-                <p class="dream-cat-says" style="color: #e1bee7;">${catResponse}</p>
+            starclanScreen.innerHTML = `
+                <div class="starclan-bg"></div>
+                <div class="starclan-view">
+                    <h2>${catName}'s Dream</h2>
+                    <div class="dream-conversation" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <p style="color: #ffd700; font-size: 16px; margin-bottom: 20px;">You say: ${yourMessage}</p>
+                        <p style="color: #e1bee7; font-size: 14px;">${catResponse}</p>
+                    </div>
+                    <p style="color: #aaa; font-style: italic; margin: 20px 0;">The dream begins to fade... ${catName} will remember your visit.</p>
+                    <button class="starclan-btn" id="visit-another" style="margin: 10px;">Visit Another Cat</button>
+                    <button class="starclan-btn" id="leave-dream" style="margin: 10px;">Return to StarClan</button>
+                </div>
             `;
-            document.querySelector('.dream-options').innerHTML = `
-                <p style="color: #aaa; font-style: italic;">The dream begins to fade...</p>
-            `;
+            
+            document.getElementById('visit-another')?.addEventListener('click', visitDreams);
+            document.getElementById('leave-dream')?.addEventListener('click', returnToStarClanMenu);
         });
     });
     
-    document.getElementById('leave-dream')?.addEventListener('click', () => {
-        // Restore the original StarClan screen
-        starclanScreen.innerHTML = `
-            <div class="starclan-bg"></div>
-            <h2>Welcome to StarClan</h2>
-            <p class="starclan-message">You have joined your warrior ancestors among the stars.</p>
-            <div class="starclan-options">
-                <button class="starclan-btn" id="stay-starclan">Stay in StarClan</button>
-                <button class="starclan-btn" id="visit-dreams">Visit a Cat's Dream</button>
-                <button class="starclan-btn portal-btn" id="restart-portal">Portal to New Life</button>
-            </div>
-        `;
-        // Re-add event listeners
-        document.getElementById('stay-starclan')?.addEventListener('click', stayInStarClan);
-        document.getElementById('visit-dreams')?.addEventListener('click', visitDreams);
-        document.getElementById('restart-portal')?.addEventListener('click', restartGame);
-    });
+    document.getElementById('choose-different-cat')?.addEventListener('click', visitDreams);
+    document.getElementById('leave-dream')?.addEventListener('click', returnToStarClanMenu);
+}
+
+// Return to StarClan menu
+function returnToStarClanMenu() {
+    const starclanScreen = document.getElementById('starclan-screen');
+    starclanScreen.innerHTML = `
+        <div class="starclan-bg"></div>
+        <h2>Welcome to StarClan</h2>
+        <p class="starclan-message">You have joined your warrior ancestors among the stars.</p>
+        <div class="starclan-options">
+            <button class="starclan-btn" id="stay-starclan">Stay in StarClan</button>
+            <button class="starclan-btn" id="visit-dreams">Visit a Cat's Dream</button>
+            <button class="starclan-btn portal-btn" id="restart-portal">Portal to New Life</button>
+        </div>
+    `;
+    // Re-add event listeners
+    document.getElementById('stay-starclan')?.addEventListener('click', stayInStarClan);
+    document.getElementById('visit-dreams')?.addEventListener('click', visitDreams);
+    document.getElementById('restart-portal')?.addEventListener('click', restartGame);
 }
 
 // Restart game
