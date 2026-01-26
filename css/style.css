@@ -126,6 +126,11 @@ body {
     z-index: 10;
     cursor: pointer;
     transition: transform 0.3s, box-shadow 0.3s;
+    /* Mobile/touch support */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 #secret-moon:hover {
