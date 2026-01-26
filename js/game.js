@@ -168,12 +168,182 @@ const CLANS = {
     star: { name: 'StarClan', color: '#ffd700' }
 };
 
+// ============= SOUND SYSTEM =============
+let audioContext = null;
+let soundEnabled = true;
+
+function initAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioContext;
+}
+
+// Play a simple tone
+function playTone(frequency, duration, type = 'sine', volume = 0.3) {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = type;
+        gainNode.gain.value = volume;
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+        
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + duration);
+    } catch (e) { }
+}
+
+// Cat meow sound
+function playSoundMeow() {
+    if (!soundEnabled) return;
+    playTone(600, 0.1, 'sine', 0.2);
+    setTimeout(() => playTone(500, 0.15, 'sine', 0.25), 100);
+    setTimeout(() => playTone(400, 0.2, 'sine', 0.2), 200);
+}
+
+// Cat hiss sound
+function playSoundHiss() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        const bufferSize = ctx.sampleRate * 0.3;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+        }
+        const source = ctx.createBufferSource();
+        const gainNode = ctx.createGain();
+        source.buffer = buffer;
+        source.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        gainNode.gain.value = 0.15;
+        source.start();
+    } catch (e) { }
+}
+
+// Click/UI sound
+function playSoundClick() {
+    playTone(800, 0.05, 'square', 0.1);
+}
+
+// Success/positive sound
+function playSoundSuccess() {
+    playTone(523, 0.1, 'sine', 0.2);
+    setTimeout(() => playTone(659, 0.1, 'sine', 0.2), 100);
+    setTimeout(() => playTone(784, 0.15, 'sine', 0.25), 200);
+}
+
+// Fail/negative sound
+function playSoundFail() {
+    playTone(300, 0.15, 'sawtooth', 0.15);
+    setTimeout(() => playTone(200, 0.2, 'sawtooth', 0.1), 150);
+}
+
+// Attack/scratch sound
+function playSoundAttack() {
+    playTone(150, 0.05, 'sawtooth', 0.3);
+    setTimeout(() => playTone(200, 0.05, 'sawtooth', 0.25), 30);
+    setTimeout(() => playTone(100, 0.1, 'sawtooth', 0.2), 60);
+}
+
+// Hurt sound
+function playSoundHurt() {
+    playTone(200, 0.1, 'sawtooth', 0.2);
+    setTimeout(() => playTone(150, 0.15, 'sawtooth', 0.15), 80);
+}
+
+// Eating sound
+function playSoundEat() {
+    playTone(300, 0.05, 'square', 0.1);
+    setTimeout(() => playTone(350, 0.05, 'square', 0.1), 80);
+    setTimeout(() => playTone(300, 0.05, 'square', 0.1), 160);
+}
+
+// Drinking sound
+function playSoundDrink() {
+    playTone(500, 0.03, 'sine', 0.1);
+    setTimeout(() => playTone(550, 0.03, 'sine', 0.1), 50);
+    setTimeout(() => playTone(500, 0.03, 'sine', 0.1), 100);
+    setTimeout(() => playTone(550, 0.03, 'sine', 0.1), 150);
+}
+
+// Walking/step sound
+function playSoundStep() {
+    playTone(100 + Math.random() * 50, 0.03, 'triangle', 0.05);
+}
+
+// Level up / ceremony sound
+function playSoundLevelUp() {
+    playTone(392, 0.15, 'sine', 0.2);
+    setTimeout(() => playTone(523, 0.15, 'sine', 0.25), 150);
+    setTimeout(() => playTone(659, 0.15, 'sine', 0.3), 300);
+    setTimeout(() => playTone(784, 0.3, 'sine', 0.35), 450);
+}
+
+// Night/sleep sound
+function playSoundNight() {
+    playTone(200, 0.5, 'sine', 0.1);
+    setTimeout(() => playTone(180, 0.5, 'sine', 0.08), 400);
+    setTimeout(() => playTone(160, 0.6, 'sine', 0.06), 800);
+}
+
+// Morning sound
+function playSoundMorning() {
+    playTone(400, 0.1, 'sine', 0.15);
+    setTimeout(() => playTone(500, 0.1, 'sine', 0.2), 150);
+    setTimeout(() => playTone(600, 0.15, 'sine', 0.25), 300);
+}
+
+// Danger/threat sound
+function playSoundDanger() {
+    playTone(150, 0.1, 'sawtooth', 0.3);
+    setTimeout(() => playTone(120, 0.1, 'sawtooth', 0.3), 150);
+    setTimeout(() => playTone(150, 0.1, 'sawtooth', 0.3), 300);
+}
+
+// Death sound
+function playSoundDeath() {
+    playTone(400, 0.2, 'sine', 0.2);
+    setTimeout(() => playTone(300, 0.3, 'sine', 0.15), 200);
+    setTimeout(() => playTone(200, 0.4, 'sine', 0.1), 500);
+    setTimeout(() => playTone(100, 0.5, 'sine', 0.05), 900);
+}
+
+// StarClan mystical sound
+function playSoundStarClan() {
+    playTone(600, 0.3, 'sine', 0.1);
+    setTimeout(() => playTone(800, 0.3, 'sine', 0.1), 200);
+    setTimeout(() => playTone(1000, 0.3, 'sine', 0.1), 400);
+    setTimeout(() => playTone(1200, 0.4, 'sine', 0.08), 600);
+}
+
+// Toggle sound on/off
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    const btn = document.getElementById('sound-toggle');
+    if (btn) btn.textContent = soundEnabled ? '🔊' : '🔇';
+    showMessage(soundEnabled ? 'Sound ON' : 'Sound OFF');
+    if (soundEnabled) playSoundClick();
+}
+
 // Initialize game
 document.addEventListener('DOMContentLoaded', () => {
     initHomeScreen();
     setupEventListeners();
     setupMultiplayerListeners();
     createCatsSVG();
+    
+    // Initialize audio on first user interaction
+    document.addEventListener('click', () => initAudio(), { once: true });
+    document.addEventListener('touchstart', () => initAudio(), { once: true });
 });
 
 // Create warrior cats SVG scene
@@ -591,6 +761,8 @@ function showScreen(screenName) {
 // Start the game (from home screen)
 function startGame() {
     if (GameState.currentScreen === 'home') {
+        playSoundClick();
+        playSoundSuccess();
         showScreen('mode'); // Go to mode selection (single/multiplayer)
     }
 }
@@ -5554,6 +5726,7 @@ function interactWithLocation(locationKey) {
             title.textContent = 'Water';
             desc.textContent = `Fresh water for drinking. (Drinks today: ${GameState.drinksToday}/5)`;
             addAction(actions, 'Drink', () => {
+                playSoundDrink();
                 cat.thirst = Math.min(100, cat.thirst + 40);
                 GameState.drinksToday++;
                 showMessage('Refreshing water!');
@@ -6011,6 +6184,7 @@ function eatFromPile() {
         }
     }
     
+    playSoundEat();
     cat.hunger = Math.min(100, cat.hunger + 35);
     
     // Leaders can eat whenever - no limit message
@@ -6630,6 +6804,7 @@ if (!window.battleState) {
 
 // Start a battle encounter
 function startBattle(threatType) {
+    playSoundDanger();
     const cat = GameState.catData;
     
     const threatInfo = {
@@ -7028,6 +7203,8 @@ function battleAttack(attackType) {
     
     if (!battle || battle.battleOver || battle.turn !== 'player') return;
     
+    playSoundAttack();
+    
     let damage = 0;
     let hitChance = 0.8;
     let message = '';
@@ -7106,6 +7283,7 @@ function enemyAttack() {
     const hitChance = 0.7;
     
     if (Math.random() < hitChance) {
+        playSoundHurt();
         const damage = battle.threatDamage + Math.floor(Math.random() * 5);
         battle.playerHealth -= damage;
         battle.message = `The ${battle.threatName} attacks you! (-${damage} damage!)`;
@@ -7443,6 +7621,7 @@ function checkMealsForNight() {
 
 function startNight() {
     GameState.isNight = true;
+    playSoundNight();
     const cat = GameState.catData;
     
     // Gathering happens every 10 moons! Kits and Elders stay home.
@@ -7622,6 +7801,8 @@ function endNight() {
     GameState.stepsToday = 0; // Reset step count for new day
     GameState.isGatheringNight = false;
     
+    playSoundMorning();
+    
     const cat = GameState.catData;
     // Heal a bit from sleeping
     cat.health = Math.min(100, cat.health + 10);
@@ -7749,6 +7930,8 @@ function checkRankUp() {
 function holdClanMeeting(ceremonyType, catName) {
     const cat = GameState.catData;
     const clanName = CLANS[cat.clan]?.name || 'the clan';
+    
+    playSoundLevelUp();
     
     // Leader calls from High Rock
     showMessage('Firestar calls from the High Rock: "Let all cats old enough to catch their own prey gather!"');
@@ -9914,6 +10097,8 @@ function showMessage(text) {
 // Go to StarClan
 function goToStarClan() {
     clearInterval(gameLoopInterval);
+    playSoundDeath();
+    setTimeout(() => playSoundStarClan(), 1500);
     GameState.catData.inStarClan = true;
     saveGameData();
     showScreen('starclan');
@@ -9922,6 +10107,8 @@ function goToStarClan() {
 // Go to Dark Forest (for evil cats)
 function goToDarkForest() {
     clearInterval(gameLoopInterval);
+    playSoundDeath();
+    setTimeout(() => playSoundDanger(), 1500);
     GameState.catData.inDarkForest = true;
     saveGameData();
     showDarkForestScreen();
