@@ -468,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function createCatsSVG() {
     const catsScene = document.getElementById('cats-scene');
     catsScene.innerHTML = `
-        <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <!-- Glow filters -->
                 <filter id="eyeGlow">
@@ -585,101 +585,73 @@ function createCatsSVG() {
                 </path>
             </g>
             
-            <!-- Cat 3 - BLACKSTAR (ShadowClan Leader) - VERY ANGRY AND HISSING! -->
-            <g transform="translate(260, 95)" class="cat-blackstar">
-                <!-- Shaking animation - he's furious! -->
-                <animateTransform attributeName="transform" type="translate" values="260,95;262,93;258,95;260,94;260,95" dur="0.3s" repeatCount="indefinite" additive="replace"/>
-                
-                <!-- HUGE red angry aura behind him -->
-                <ellipse cx="50" cy="50" rx="70" ry="50" fill="#ff0000" opacity="0.15">
-                    <animate attributeName="opacity" values="0.15;0.3;0.15" dur="0.5s" repeatCount="indefinite"/>
-                </ellipse>
-                
-                <!-- Angry shadow aura - pulsing red -->
-                <ellipse cx="45" cy="75" rx="50" ry="15" fill="#660000" opacity="0.8">
-                    <animate attributeName="opacity" values="0.6;1;0.6" dur="0.4s" repeatCount="indefinite"/>
-                </ellipse>
-                
-                <!-- Dark angry mist -->
-                <ellipse cx="50" cy="70" rx="60" ry="20" fill="#330000" opacity="0.5">
-                    <animate attributeName="rx" values="60;70;60" dur="0.8s" repeatCount="indefinite"/>
-                </ellipse>
-                
-                <!-- Body - arched back (angry) -->
-                <ellipse cx="40" cy="50" rx="32" ry="26" fill="#0a0a0a" transform="rotate(-15 40 50)"/>
-                <ellipse cx="40" cy="50" rx="29" ry="23" fill="#1a1a1a" transform="rotate(-15 40 50)"/>
-                
-                <!-- Fur standing on end - more spikes! -->
-                <path d="M15 40 L10 30 L20 38 M22 35 L18 25 L27 32 M30 30 L28 18 L35 28 M40 28 L40 15 L45 26 M50 30 L52 20 L55 28" stroke="#1a1a1a" stroke-width="4" fill="none"/>
-                
-                <!-- Head - tilted aggressively -->
-                <circle cx="78" cy="28" r="22" fill="#1a1a1a"/>
-                
-                <!-- Ears - flattened back (VERY angry) -->
-                <polygon points="58,25 50,5 72,20" fill="#1a1a1a"/>
-                <polygon points="88,20 105,5 95,25" fill="#1a1a1a"/>
-                <polygon points="60,22 54,10 70,18" fill="#330000"/>
-                <polygon points="90,18 100,10 93,22" fill="#330000"/>
-                
-                <!-- ANGRY EYES - HUGE glowing red - super scary! -->
-                <ellipse cx="70" cy="25" rx="6" ry="4" fill="#ff0000" filter="url(#eyeGlow)">
-                    <animate attributeName="fill" values="#ff0000;#ff3300;#ff0000" dur="0.2s" repeatCount="indefinite"/>
-                    <animate attributeName="ry" values="4;3;4" dur="0.3s" repeatCount="indefinite"/>
-                </ellipse>
-                <ellipse cx="88" cy="25" rx="6" ry="4" fill="#ff0000" filter="url(#eyeGlow)">
-                    <animate attributeName="fill" values="#ff0000;#ff3300;#ff0000" dur="0.2s" repeatCount="indefinite"/>
-                    <animate attributeName="ry" values="4;3;4" dur="0.3s" repeatCount="indefinite"/>
-                </ellipse>
-                <!-- Angry eye slits -->
-                <ellipse cx="70" cy="25" rx="2" ry="3" fill="#000"/>
-                <ellipse cx="88" cy="25" rx="2" ry="3" fill="#000"/>
-                
-                <!-- ANGRY eyebrows - thick and scary -->
-                <line x1="64" y1="19" x2="74" y2="22" stroke="#0a0a0a" stroke-width="4"/>
-                <line x1="84" y1="22" x2="94" y2="19" stroke="#0a0a0a" stroke-width="4"/>
-                
-                <!-- HUGE OPEN MOUTH - HISSING with BIG FANGS -->
-                <ellipse cx="79" cy="42" rx="12" ry="10" fill="#1a0000"/>
-                <ellipse cx="79" cy="40" rx="10" ry="7" fill="#330000"/>
-                <!-- BIG Fangs! -->
-                <polygon points="71,36 73,50 76,36" fill="#fff"/>
-                <polygon points="82,36 85,50 87,36" fill="#fff"/>
-                <!-- More teeth -->
-                <polygon points="74,38 75,44 77,38" fill="#ddd"/>
-                <polygon points="81,38 83,44 84,38" fill="#ddd"/>
-                <!-- Tongue sticking out -->
-                <ellipse cx="79" cy="46" rx="5" ry="4" fill="#cc0000"/>
-                
-                <!-- Whiskers - bristled and angry -->
-                <line x1="62" y1="35" x2="40" y2="28" stroke="#666" stroke-width="1.5"/>
-                <line x1="62" y1="38" x2="40" y2="42" stroke="#666" stroke-width="1.5"/>
-                <line x1="62" y1="41" x2="42" y2="50" stroke="#666" stroke-width="1.5"/>
-                <line x1="96" y1="35" x2="118" y2="28" stroke="#666" stroke-width="1.5"/>
-                <line x1="96" y1="38" x2="118" y2="42" stroke="#666" stroke-width="1.5"/>
-                <line x1="96" y1="41" x2="116" y2="50" stroke="#666" stroke-width="1.5"/>
-                
-                <!-- Claws extended - BIG and scary -->
-                <g fill="#fff">
-                    <path d="M90 55 L100 45 L96 56" />
-                    <path d="M94 60 L106 50 L100 62" />
-                    <path d="M97 65 L110 56 L103 67" />
-                </g>
-                
-                <!-- Tail - HUGE puffed up and bristled -->
-                <path d="M5 55 Q-20 35 -12 10" stroke="#1a1a1a" stroke-width="18" fill="none" stroke-linecap="round">
-                    <animate attributeName="stroke-width" values="18;22;18" dur="0.2s" repeatCount="indefinite"/>
-                </path>
-                <!-- Fur spikes on tail -->
-                <path d="M-8 20 L-20 12 M-5 28 L-18 22 M-2 36 L-15 32 M0 44 L-12 42" stroke="#1a1a1a" stroke-width="4" fill="none"/>
-                
-                <!-- Leader star - ANGRY RED FIRE -->
-                <circle cx="78" cy="3" r="5" fill="#ff0000" filter="url(#eyeGlow)">
-                    <animate attributeName="fill" values="#ff0000;#ff6600;#ff0000" dur="0.3s" repeatCount="indefinite"/>
-                    <animate attributeName="r" values="5;7;5" dur="0.5s" repeatCount="indefinite"/>
+            <!-- Cat 3 - BLACKSTAR - SUPER ANGRY!!! -->
+            <g transform="translate(290, 100)">
+                <!-- BRIGHT RED DANGER CIRCLE BEHIND HIM -->
+                <circle cx="30" cy="40" r="55" fill="#ff0000" opacity="0.3">
+                    <animate attributeName="opacity" values="0.2;0.5;0.2" dur="0.5s" repeatCount="indefinite"/>
+                    <animate attributeName="r" values="55;65;55" dur="0.5s" repeatCount="indefinite"/>
                 </circle>
                 
-                <!-- ANGRY text -->
-                <text x="78" y="95" text-anchor="middle" fill="#ff0000" font-size="10" font-weight="bold" style="text-shadow: 0 0 8px #ff0000, 0 0 15px #ff6600;">BLACKSTAR</text>
+                <!-- Body - black cat arched angrily -->
+                <ellipse cx="25" cy="45" rx="25" ry="18" fill="#1a1a1a"/>
+                
+                <!-- Fur spikes standing up -->
+                <path d="M5 35 L0 25 L10 33 M15 30 L12 18 L22 28 M28 28 L28 15 L35 26 M40 32 L45 22 L42 30" stroke="#1a1a1a" stroke-width="3" fill="none"/>
+                
+                <!-- Head -->
+                <circle cx="55" cy="30" r="18" fill="#1a1a1a"/>
+                
+                <!-- Flattened angry ears -->
+                <polygon points="40,25 32,8 52,22" fill="#1a1a1a"/>
+                <polygon points="65,22 78,8 70,25" fill="#1a1a1a"/>
+                <polygon points="42,23 36,12 50,20" fill="#440000"/>
+                <polygon points="67,20 74,12 68,23" fill="#440000"/>
+                
+                <!-- HUGE ANGRY RED EYES -->
+                <ellipse cx="48" cy="28" rx="5" ry="4" fill="#ff0000">
+                    <animate attributeName="fill" values="#ff0000;#ffff00;#ff0000" dur="0.3s" repeatCount="indefinite"/>
+                </ellipse>
+                <ellipse cx="62" cy="28" rx="5" ry="4" fill="#ff0000">
+                    <animate attributeName="fill" values="#ff0000;#ffff00;#ff0000" dur="0.3s" repeatCount="indefinite"/>
+                </ellipse>
+                <!-- Angry slits -->
+                <ellipse cx="48" cy="28" rx="2" ry="3" fill="#000"/>
+                <ellipse cx="62" cy="28" rx="2" ry="3" fill="#000"/>
+                
+                <!-- ANGRY EYEBROWS -->
+                <line x1="42" y1="22" x2="52" y2="25" stroke="#ff0000" stroke-width="3"/>
+                <line x1="58" y1="25" x2="68" y2="22" stroke="#ff0000" stroke-width="3"/>
+                
+                <!-- OPEN MOUTH WITH FANGS - HISSING! -->
+                <ellipse cx="55" cy="42" rx="10" ry="8" fill="#330000"/>
+                <ellipse cx="55" cy="40" rx="8" ry="5" fill="#660000"/>
+                <!-- BIG WHITE FANGS -->
+                <polygon points="48,38 50,50 53,38" fill="#ffffff"/>
+                <polygon points="57,38 60,50 62,38" fill="#ffffff"/>
+                <!-- Red tongue -->
+                <ellipse cx="55" cy="45" rx="4" ry="3" fill="#ff0000"/>
+                
+                <!-- Whiskers -->
+                <line x1="42" y1="38" x2="25" y2="32" stroke="#888" stroke-width="1"/>
+                <line x1="42" y1="42" x2="25" y2="48" stroke="#888" stroke-width="1"/>
+                <line x1="68" y1="38" x2="85" y2="32" stroke="#888" stroke-width="1"/>
+                <line x1="68" y1="42" x2="85" y2="48" stroke="#888" stroke-width="1"/>
+                
+                <!-- Puffed tail -->
+                <path d="M0 50 Q-15 35 -8 15" stroke="#1a1a1a" stroke-width="12" fill="none" stroke-linecap="round">
+                    <animate attributeName="stroke-width" values="12;16;12" dur="0.3s" repeatCount="indefinite"/>
+                </path>
+                
+                <!-- RED ANGRY STAR above head -->
+                <circle cx="55" cy="8" r="5" fill="#ff0000">
+                    <animate attributeName="fill" values="#ff0000;#ffff00;#ff0000" dur="0.4s" repeatCount="indefinite"/>
+                    <animate attributeName="r" values="5;8;5" dur="0.4s" repeatCount="indefinite"/>
+                </circle>
+                
+                <!-- NAME IN RED -->
+                <text x="40" y="85" fill="#ff0000" font-size="11" font-weight="bold">BLACKSTAR</text>
+                <text x="30" y="95" fill="#ff6600" font-size="8">(ANGRY!!!)</text>
             </g>
             
             <!-- Animated stars with glow -->
