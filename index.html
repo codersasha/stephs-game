@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Warrior Cats the Game</title>
-    <link rel="stylesheet" href="css/style.css?v=20260126e">
+    <link rel="stylesheet" href="css/style.css?v=20260126f">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
     <!-- PeerJS for multiplayer -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -31,17 +31,134 @@
             <h2>How do you want to play?</h2>
             <div class="mode-buttons">
                 <button class="mode-btn single-player" id="single-player-btn">
-                    <span class="mode-icon">1</span>
+                    <span class="mode-icon">
+                        <svg viewBox="0 0 60 60" width="50" height="50">
+                            <!-- Single cat silhouette -->
+                            <ellipse cx="30" cy="42" rx="15" ry="12" fill="#8B4513"/>
+                            <circle cx="30" cy="25" r="12" fill="#8B4513"/>
+                            <!-- Ears -->
+                            <polygon points="22,18 18,8 26,15" fill="#8B4513"/>
+                            <polygon points="38,18 42,8 34,15" fill="#8B4513"/>
+                            <polygon points="22,17 19,10 25,15" fill="#FFB6C1"/>
+                            <polygon points="38,17 41,10 35,15" fill="#FFB6C1"/>
+                            <!-- Face -->
+                            <ellipse cx="25" cy="24" rx="3" ry="4" fill="#90EE90"/>
+                            <ellipse cx="35" cy="24" rx="3" ry="4" fill="#90EE90"/>
+                            <circle cx="25" cy="24" r="2" fill="black"/>
+                            <circle cx="35" cy="24" r="2" fill="black"/>
+                            <ellipse cx="30" cy="29" rx="2" ry="1.5" fill="#FFB6C1"/>
+                            <!-- Whiskers -->
+                            <line x1="18" y1="27" x2="10" y2="25" stroke="#8B4513" stroke-width="1"/>
+                            <line x1="18" y1="29" x2="10" y2="30" stroke="#8B4513" stroke-width="1"/>
+                            <line x1="42" y1="27" x2="50" y2="25" stroke="#8B4513" stroke-width="1"/>
+                            <line x1="42" y1="29" x2="50" y2="30" stroke="#8B4513" stroke-width="1"/>
+                            <!-- Tail -->
+                            <path d="M45,42 Q55,35 50,50" stroke="#8B4513" stroke-width="5" fill="none" stroke-linecap="round"/>
+                        </svg>
+                    </span>
                     <span class="mode-name">Play Alone</span>
                     <span class="mode-desc">Adventure by yourself</span>
                 </button>
                 <button class="mode-btn host-game" id="host-game-btn">
-                    <span class="mode-icon">+</span>
+                    <span class="mode-icon">
+                        <svg viewBox="0 0 80 60" width="65" height="50">
+                            <!-- Leader cat (center, with crown) -->
+                            <ellipse cx="40" cy="45" rx="12" ry="10" fill="#FFD700"/>
+                            <circle cx="40" cy="30" r="10" fill="#FFD700"/>
+                            <!-- Leader ears -->
+                            <polygon points="33,24 30,15 37,21" fill="#FFD700"/>
+                            <polygon points="47,24 50,15 43,21" fill="#FFD700"/>
+                            <polygon points="33,23 31,17 36,21" fill="#FFB6C1"/>
+                            <polygon points="47,23 49,17 44,21" fill="#FFB6C1"/>
+                            <!-- Crown! -->
+                            <polygon points="32,18 35,8 40,14 45,8 48,18" fill="#FFD700" stroke="#FFA500" stroke-width="1"/>
+                            <circle cx="35" cy="12" r="2" fill="#FF6347"/>
+                            <circle cx="40" cy="10" r="2" fill="#87CEEB"/>
+                            <circle cx="45" cy="12" r="2" fill="#90EE90"/>
+                            <!-- Leader face -->
+                            <ellipse cx="36" cy="29" rx="2" ry="3" fill="#87CEEB"/>
+                            <ellipse cx="44" cy="29" rx="2" ry="3" fill="#87CEEB"/>
+                            <circle cx="36" cy="29" r="1.5" fill="black"/>
+                            <circle cx="44" cy="29" r="1.5" fill="black"/>
+                            <ellipse cx="40" cy="33" rx="1.5" ry="1" fill="#FFB6C1"/>
+                            
+                            <!-- Left follower cat -->
+                            <ellipse cx="15" cy="48" rx="10" ry="8" fill="#808080"/>
+                            <circle cx="15" cy="36" r="8" fill="#808080"/>
+                            <polygon points="9,31 7,24 13,29" fill="#808080"/>
+                            <polygon points="21,31 23,24 17,29" fill="#808080"/>
+                            <ellipse cx="12" cy="35" rx="2" ry="2.5" fill="#90EE90"/>
+                            <ellipse cx="18" cy="35" rx="2" ry="2.5" fill="#90EE90"/>
+                            <circle cx="12" cy="35" r="1" fill="black"/>
+                            <circle cx="18" cy="35" r="1" fill="black"/>
+                            
+                            <!-- Right follower cat -->
+                            <ellipse cx="65" cy="48" rx="10" ry="8" fill="#D2691E"/>
+                            <circle cx="65" cy="36" r="8" fill="#D2691E"/>
+                            <polygon points="59,31 57,24 63,29" fill="#D2691E"/>
+                            <polygon points="71,31 73,24 67,29" fill="#D2691E"/>
+                            <ellipse cx="62" cy="35" rx="2" ry="2.5" fill="#FFD700"/>
+                            <ellipse cx="68" cy="35" rx="2" ry="2.5" fill="#FFD700"/>
+                            <circle cx="62" cy="35" r="1" fill="black"/>
+                            <circle cx="68" cy="35" r="1" fill="black"/>
+                            
+                            <!-- Star sparkles -->
+                            <text x="5" y="15" font-size="8" fill="#FFD700">✦</text>
+                            <text x="72" y="18" font-size="8" fill="#FFD700">✦</text>
+                        </svg>
+                    </span>
                     <span class="mode-name">Start a Clan</span>
                     <span class="mode-desc">Host a game for friends</span>
                 </button>
                 <button class="mode-btn join-game" id="join-game-btn">
-                    <span class="mode-icon">></span>
+                    <span class="mode-icon">
+                        <svg viewBox="0 0 80 60" width="65" height="50">
+                            <!-- Group of cats on right -->
+                            <ellipse cx="55" cy="45" rx="10" ry="8" fill="#4A4A4A"/>
+                            <circle cx="55" cy="33" r="8" fill="#4A4A4A"/>
+                            <polygon points="49,28 47,21 53,26" fill="#4A4A4A"/>
+                            <polygon points="61,28 63,21 57,26" fill="#4A4A4A"/>
+                            <ellipse cx="52" cy="32" rx="2" ry="2.5" fill="#87CEEB"/>
+                            <ellipse cx="58" cy="32" rx="2" ry="2.5" fill="#87CEEB"/>
+                            <circle cx="52" cy="32" r="1" fill="black"/>
+                            <circle cx="58" cy="32" r="1" fill="black"/>
+                            
+                            <ellipse cx="70" cy="48" rx="8" ry="7" fill="#A0522D"/>
+                            <circle cx="70" cy="38" r="7" fill="#A0522D"/>
+                            <polygon points="65,34 63,28 68,32" fill="#A0522D"/>
+                            <polygon points="75,34 77,28 72,32" fill="#A0522D"/>
+                            <ellipse cx="68" cy="37" rx="1.5" ry="2" fill="#90EE90"/>
+                            <ellipse cx="72" cy="37" rx="1.5" ry="2" fill="#90EE90"/>
+                            <circle cx="68" cy="37" r="1" fill="black"/>
+                            <circle cx="72" cy="37" r="1" fill="black"/>
+                            
+                            <!-- Arrow pointing to group -->
+                            <path d="M25,35 L40,35" stroke="#FFD700" stroke-width="3" fill="none"/>
+                            <polygon points="40,35 34,30 34,40" fill="#FFD700"/>
+                            
+                            <!-- Joining cat on left (walking toward group) -->
+                            <ellipse cx="15" cy="45" rx="10" ry="8" fill="#FFA500"/>
+                            <circle cx="15" cy="32" r="9" fill="#FFA500"/>
+                            <!-- Ears -->
+                            <polygon points="9,26 6,17 13,23" fill="#FFA500"/>
+                            <polygon points="21,26 24,17 17,23" fill="#FFA500"/>
+                            <polygon points="9,25 7,19 12,23" fill="#FFB6C1"/>
+                            <polygon points="21,25 23,19 18,23" fill="#FFB6C1"/>
+                            <!-- Happy face looking right -->
+                            <ellipse cx="13" cy="31" rx="2" ry="3" fill="#90EE90"/>
+                            <ellipse cx="19" cy="31" rx="2" ry="3" fill="#90EE90"/>
+                            <circle cx="14" cy="31" r="1.5" fill="black"/>
+                            <circle cx="20" cy="31" r="1.5" fill="black"/>
+                            <ellipse cx="17" cy="35" rx="1.5" ry="1" fill="#FFB6C1"/>
+                            <!-- Happy mouth -->
+                            <path d="M14,37 Q17,40 20,37" stroke="#333" stroke-width="1" fill="none"/>
+                            <!-- Walking legs -->
+                            <line x1="10" y1="50" x2="8" y2="56" stroke="#FFA500" stroke-width="3" stroke-linecap="round"/>
+                            <line x1="20" y1="50" x2="22" y2="56" stroke="#FFA500" stroke-width="3" stroke-linecap="round"/>
+                            <!-- Tail wagging -->
+                            <path d="M5,42 Q-2,35 2,28" stroke="#FFA500" stroke-width="4" fill="none" stroke-linecap="round"/>
+                        </svg>
+                    </span>
                     <span class="mode-name">Join a Clan</span>
                     <span class="mode-desc">Join a friend's game</span>
                 </button>
