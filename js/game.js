@@ -10411,7 +10411,7 @@ function showMessage(text) {
     
     setTimeout(() => {
         msgElement.classList.remove('show');
-    }, 2500);
+    }, 5000); // 5 seconds - longer so you can read it!
 }
 
 // Go to StarClan
