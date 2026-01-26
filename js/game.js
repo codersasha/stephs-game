@@ -857,6 +857,207 @@ function showScreen(screenName) {
     updateMultiplayerChatVisibility();
 }
 
+// ============= EASTER EGG =============
+let easterEggActive = false;
+let easterEggClickCount = 0;
+
+function triggerEasterEgg() {
+    easterEggClickCount++;
+    
+    // Play a mystical sound
+    playTone(800, 0.2, 'sine', 0.5);
+    setTimeout(() => playTone(1000, 0.2, 'sine', 0.4), 100);
+    setTimeout(() => playTone(1200, 0.3, 'sine', 0.3), 200);
+    
+    const moon = document.getElementById('secret-moon');
+    
+    if (easterEggClickCount === 1) {
+        // First click - moon glows brighter
+        moon.style.boxShadow = '0 0 80px 40px rgba(255, 250, 205, 0.8), 0 0 120px 60px rgba(255, 215, 0, 0.5)';
+        showEasterEggMessage('The moon glows brighter... ✨');
+    } else if (easterEggClickCount === 2) {
+        // Second click - stars start dancing
+        moon.style.boxShadow = '0 0 100px 50px rgba(255, 250, 205, 1), 0 0 150px 80px rgba(255, 215, 0, 0.7)';
+        showEasterEggMessage('StarClan is watching... 🌟');
+        document.querySelector('.stars-bg').style.animation = 'twinkle 0.5s ease-in-out infinite, moveStars 5s linear infinite';
+    } else if (easterEggClickCount >= 3) {
+        // Third click - FULL EASTER EGG!
+        activateFullEasterEgg();
+    }
+}
+
+function showEasterEggMessage(text) {
+    let msg = document.getElementById('easter-egg-msg');
+    if (!msg) {
+        msg = document.createElement('div');
+        msg.id = 'easter-egg-msg';
+        msg.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #ffd700;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 9999;
+            text-shadow: 0 0 10px #ffd700;
+            border: 3px solid #ffd700;
+            animation: easterPop 0.5s ease-out;
+        `;
+        document.body.appendChild(msg);
+    }
+    msg.textContent = text;
+    msg.style.display = 'block';
+    
+    setTimeout(() => {
+        msg.style.display = 'none';
+    }, 2000);
+}
+
+function activateFullEasterEgg() {
+    if (easterEggActive) return;
+    easterEggActive = true;
+    
+    // Create epic StarClan vision overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'easter-egg-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(ellipse at center, rgba(100, 50, 150, 0.95) 0%, rgba(20, 10, 40, 0.98) 100%);
+        z-index: 9998;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        animation: easterFadeIn 1s ease-out;
+    `;
+    
+    // Add floating stars
+    for (let i = 0; i < 50; i++) {
+        const star = document.createElement('div');
+        star.style.cssText = `
+            position: absolute;
+            width: ${3 + Math.random() * 5}px;
+            height: ${3 + Math.random() * 5}px;
+            background: #ffd700;
+            border-radius: 50%;
+            left: ${Math.random() * 100}%;
+            top: ${Math.random() * 100}%;
+            animation: starFloat ${2 + Math.random() * 3}s ease-in-out infinite;
+            animation-delay: ${Math.random() * 2}s;
+            box-shadow: 0 0 10px #ffd700, 0 0 20px #fff;
+        `;
+        overlay.appendChild(star);
+    }
+    
+    // Secret message from StarClan
+    const message = document.createElement('div');
+    message.style.cssText = `
+        text-align: center;
+        z-index: 10;
+        animation: messageReveal 2s ease-out;
+    `;
+    message.innerHTML = `
+        <div style="font-size: 60px; margin-bottom: 20px;">🌙✨🐱✨🌙</div>
+        <h1 style="color: #ffd700; font-size: 36px; text-shadow: 0 0 20px #ffd700, 0 0 40px #ff6600; margin-bottom: 20px;">
+            YOU FOUND THE SECRET!
+        </h1>
+        <p style="color: #e1bee7; font-size: 20px; max-width: 500px; line-height: 1.6; margin-bottom: 30px;">
+            A voice echoes from StarClan...<br><br>
+            <em style="color: #ffd700;">"Greetings, young warrior. You have discovered the hidden moon of our ancestors. 
+            May the stars light your path forever!"</em>
+        </p>
+        <div style="font-size: 40px; animation: catDance 0.5s ease-in-out infinite;">
+            🐱 🌟 🐱 🌟 🐱
+        </div>
+        <p style="color: #aaa; font-size: 14px; margin-top: 30px;">
+            Made with ❤️ for Steph
+        </p>
+        <button onclick="closeEasterEgg()" style="
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border: none;
+            border-radius: 25px;
+            color: #1a1a2e;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+        " onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 0 30px rgba(255, 215, 0, 0.8)';"
+           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px rgba(255, 215, 0, 0.5)';">
+            Return to the Forest 🌲
+        </button>
+    `;
+    overlay.appendChild(message);
+    
+    document.body.appendChild(overlay);
+    
+    // Add CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes easterFadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes starFloat {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
+            50% { transform: translateY(-20px) scale(1.2); opacity: 0.7; }
+        }
+        @keyframes messageReveal {
+            0% { opacity: 0; transform: translateY(50px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes catDance {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes easterPop {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Play epic sound sequence
+    playTone(400, 0.3, 'sine', 0.6);
+    setTimeout(() => playTone(500, 0.3, 'sine', 0.6), 200);
+    setTimeout(() => playTone(600, 0.3, 'sine', 0.6), 400);
+    setTimeout(() => playTone(800, 0.5, 'sine', 0.7), 600);
+    setTimeout(() => playTone(1000, 0.3, 'sine', 0.5), 900);
+    setTimeout(() => playTone(1200, 0.4, 'sine', 0.4), 1100);
+}
+
+function closeEasterEgg() {
+    const overlay = document.getElementById('easter-egg-overlay');
+    if (overlay) {
+        overlay.style.animation = 'easterFadeIn 0.5s ease-out reverse';
+        setTimeout(() => {
+            overlay.remove();
+            easterEggActive = false;
+            easterEggClickCount = 0;
+            
+            // Reset moon and stars
+            const moon = document.getElementById('secret-moon');
+            if (moon) moon.style.boxShadow = '';
+            const stars = document.querySelector('.stars-bg');
+            if (stars) stars.style.animation = '';
+        }, 500);
+    }
+    
+    playTone(600, 0.2, 'sine', 0.4);
+    setTimeout(() => playTone(400, 0.3, 'sine', 0.3), 150);
+}
+
 // Start the game (from home screen)
 function startGame() {
     if (GameState.currentScreen === 'home') {
