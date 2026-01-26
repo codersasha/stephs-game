@@ -631,8 +631,6 @@ function createCatsSVG() {
                     <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
                 </circle>
                 
-                <!-- Name -->
-                <text x="75" y="88" text-anchor="middle" fill="#9370db" font-size="8" font-weight="bold" style="text-shadow: 1px 1px 2px black;">Blackstar</text>
             </g>
             
             <!-- Animated stars with glow -->
@@ -857,205 +855,263 @@ function showScreen(screenName) {
     updateMultiplayerChatVisibility();
 }
 
-// ============= EASTER EGG =============
+// ============= EASTER EGG - CAT DANCE PARTY! =============
 let easterEggActive = false;
-let easterEggClickCount = 0;
+let danceInterval = null;
+let musicInterval = null;
 
 function triggerEasterEgg() {
-    easterEggClickCount++;
-    
-    // Play a mystical sound
-    playTone(800, 0.2, 'sine', 0.5);
-    setTimeout(() => playTone(1000, 0.2, 'sine', 0.4), 100);
-    setTimeout(() => playTone(1200, 0.3, 'sine', 0.3), 200);
-    
-    const moon = document.getElementById('secret-moon');
-    
-    if (easterEggClickCount === 1) {
-        // First click - moon glows brighter
-        moon.style.boxShadow = '0 0 80px 40px rgba(255, 250, 205, 0.8), 0 0 120px 60px rgba(255, 215, 0, 0.5)';
-        showEasterEggMessage('The moon glows brighter... ✨');
-    } else if (easterEggClickCount === 2) {
-        // Second click - stars start dancing
-        moon.style.boxShadow = '0 0 100px 50px rgba(255, 250, 205, 1), 0 0 150px 80px rgba(255, 215, 0, 0.7)';
-        showEasterEggMessage('StarClan is watching... 🌟');
-        document.querySelector('.stars-bg').style.animation = 'twinkle 0.5s ease-in-out infinite, moveStars 5s linear infinite';
-    } else if (easterEggClickCount >= 3) {
-        // Third click - FULL EASTER EGG!
-        activateFullEasterEgg();
+    if (easterEggActive) {
+        stopCatDanceParty();
+    } else {
+        startCatDanceParty();
     }
 }
 
-function showEasterEggMessage(text) {
-    let msg = document.getElementById('easter-egg-msg');
-    if (!msg) {
-        msg = document.createElement('div');
-        msg.id = 'easter-egg-msg';
-        msg.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: #ffd700;
-            padding: 20px 40px;
-            border-radius: 15px;
-            font-size: 24px;
-            font-weight: bold;
-            z-index: 9999;
-            text-shadow: 0 0 10px #ffd700;
-            border: 3px solid #ffd700;
-            animation: easterPop 0.5s ease-out;
-        `;
-        document.body.appendChild(msg);
-    }
-    msg.textContent = text;
-    msg.style.display = 'block';
-    
-    setTimeout(() => {
-        msg.style.display = 'none';
-    }, 2000);
-}
-
-function activateFullEasterEgg() {
-    if (easterEggActive) return;
+function startCatDanceParty() {
     easterEggActive = true;
     
-    // Create epic StarClan vision overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'easter-egg-overlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(ellipse at center, rgba(100, 50, 150, 0.95) 0%, rgba(20, 10, 40, 0.98) 100%);
-        z-index: 9998;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        animation: easterFadeIn 1s ease-out;
-    `;
+    const catsScene = document.getElementById('cats-scene');
+    const svg = catsScene.querySelector('svg');
     
-    // Add floating stars
-    for (let i = 0; i < 50; i++) {
-        const star = document.createElement('div');
-        star.style.cssText = `
-            position: absolute;
-            width: ${3 + Math.random() * 5}px;
-            height: ${3 + Math.random() * 5}px;
-            background: #ffd700;
-            border-radius: 50%;
-            left: ${Math.random() * 100}%;
-            top: ${Math.random() * 100}%;
-            animation: starFloat ${2 + Math.random() * 3}s ease-in-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-            box-shadow: 0 0 10px #ffd700, 0 0 20px #fff;
-        `;
-        overlay.appendChild(star);
-    }
-    
-    // Secret message from StarClan
-    const message = document.createElement('div');
-    message.style.cssText = `
-        text-align: center;
-        z-index: 10;
-        animation: messageReveal 2s ease-out;
-    `;
-    message.innerHTML = `
-        <div style="font-size: 60px; margin-bottom: 20px;">🌙✨🐱✨🌙</div>
-        <h1 style="color: #ffd700; font-size: 36px; text-shadow: 0 0 20px #ffd700, 0 0 40px #ff6600; margin-bottom: 20px;">
-            YOU FOUND THE SECRET!
-        </h1>
-        <p style="color: #e1bee7; font-size: 20px; max-width: 500px; line-height: 1.6; margin-bottom: 30px;">
-            A voice echoes from StarClan...<br><br>
-            <em style="color: #ffd700;">"Greetings, young warrior. You have discovered the hidden moon of our ancestors. 
-            May the stars light your path forever!"</em>
-        </p>
-        <div style="font-size: 40px; animation: catDance 0.5s ease-in-out infinite;">
-            🐱 🌟 🐱 🌟 🐱
-        </div>
-        <p style="color: #aaa; font-size: 14px; margin-top: 30px;">
-            Made with ❤️ for Steph
-        </p>
-        <button onclick="closeEasterEgg()" style="
-            margin-top: 20px;
-            padding: 15px 40px;
-            font-size: 18px;
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-            border: none;
-            border-radius: 25px;
-            color: #1a1a2e;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            transition: transform 0.2s, box-shadow 0.2s;
-        " onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 0 30px rgba(255, 215, 0, 0.8)';"
-           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px rgba(255, 215, 0, 0.5)';">
-            Return to the Forest 🌲
-        </button>
-    `;
-    overlay.appendChild(message);
-    
-    document.body.appendChild(overlay);
-    
-    // Add CSS animations
+    // Add dance party CSS
     const style = document.createElement('style');
+    style.id = 'dance-party-style';
     style.textContent = `
-        @keyframes easterFadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
+        @keyframes catBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(-5deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(-15px) rotate(5deg); }
         }
-        @keyframes starFloat {
-            0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
-            50% { transform: translateY(-20px) scale(1.2); opacity: 0.7; }
+        @keyframes catSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        @keyframes messageReveal {
-            0% { opacity: 0; transform: translateY(50px); }
-            100% { opacity: 1; transform: translateY(0); }
+        @keyframes discoColors {
+            0% { fill: #ff0000; }
+            16% { fill: #ff8800; }
+            33% { fill: #ffff00; }
+            50% { fill: #00ff00; }
+            66% { fill: #0088ff; }
+            83% { fill: #8800ff; }
+            100% { fill: #ff0000; }
         }
-        @keyframes catDance {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        @keyframes partyPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
         }
-        @keyframes easterPop {
-            0% { transform: translate(-50%, -50%) scale(0); }
-            50% { transform: translate(-50%, -50%) scale(1.2); }
-            100% { transform: translate(-50%, -50%) scale(1); }
+        .dancing-cat {
+            animation: catBounce 0.4s ease-in-out infinite !important;
+        }
+        .disco-ball {
+            animation: catSpin 3s linear infinite;
         }
     `;
     document.head.appendChild(style);
     
-    // Play epic sound sequence
-    playTone(400, 0.3, 'sine', 0.6);
-    setTimeout(() => playTone(500, 0.3, 'sine', 0.6), 200);
-    setTimeout(() => playTone(600, 0.3, 'sine', 0.6), 400);
-    setTimeout(() => playTone(800, 0.5, 'sine', 0.7), 600);
-    setTimeout(() => playTone(1000, 0.3, 'sine', 0.5), 900);
-    setTimeout(() => playTone(1200, 0.4, 'sine', 0.4), 1100);
+    // Make existing cats dance
+    const cats = svg.querySelectorAll('g[class*="cat"]');
+    cats.forEach((cat, i) => {
+        cat.style.animation = `catBounce 0.4s ease-in-out infinite`;
+        cat.style.animationDelay = `${i * 0.1}s`;
+    });
+    
+    // Add disco lights overlay
+    const discoLights = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    discoLights.id = 'disco-lights';
+    discoLights.innerHTML = `
+        <circle cx="50" cy="30" r="40" opacity="0.3">
+            <animate attributeName="fill" values="#ff0000;#ffff00;#00ff00;#0088ff;#ff00ff;#ff0000" dur="1s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="0.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="200" cy="20" r="50" opacity="0.3">
+            <animate attributeName="fill" values="#00ff00;#0088ff;#ff00ff;#ff0000;#ffff00;#00ff00" dur="1.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="0.6s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="350" cy="30" r="45" opacity="0.3">
+            <animate attributeName="fill" values="#ff00ff;#ff0000;#ffff00;#00ff00;#0088ff;#ff00ff" dur="0.8s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="0.4s" repeatCount="indefinite"/>
+        </circle>
+    `;
+    svg.insertBefore(discoLights, svg.firstChild);
+    
+    // Add MORE dancing cats joining the party!
+    const extraCats = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    extraCats.id = 'party-cats';
+    
+    const catColors = ['#ff6b35', '#808080', '#f5deb3', '#8b4513', '#ffffff', '#1a1a1a', '#daa520', '#cd853f'];
+    const catNames = ['Party Cat', 'DJ Whiskers', 'Disco Paw', 'Boogie Fur', 'Dance Master', 'Groove Kit'];
+    
+    for (let i = 0; i < 6; i++) {
+        const x = 20 + (i * 65);
+        const y = 160 + (i % 2) * 15;
+        const color = catColors[i % catColors.length];
+        const delay = i * 0.15;
+        
+        extraCats.innerHTML += `
+            <g class="party-cat" style="animation: catBounce 0.4s ease-in-out infinite; animation-delay: ${delay}s;">
+                <!-- Body -->
+                <ellipse cx="${x + 20}" cy="${y}" rx="15" ry="10" fill="${color}"/>
+                <!-- Head -->
+                <circle cx="${x + 32}" cy="${y - 5}" r="8" fill="${color}"/>
+                <!-- Ears -->
+                <polygon points="${x + 27},${y - 10} ${x + 29},${y - 18} ${x + 33},${y - 10}" fill="${color}"/>
+                <polygon points="${x + 33},${y - 10} ${x + 36},${y - 17} ${x + 38},${y - 9}" fill="${color}"/>
+                <!-- Eyes -->
+                <circle cx="${x + 30}" cy="${y - 5}" r="2" fill="#ffd700">
+                    <animate attributeName="fill" values="#ffd700;#ff69b4;#00ffff;#ffd700" dur="0.5s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="${x + 35}" cy="${y - 5}" r="2" fill="#ffd700">
+                    <animate attributeName="fill" values="#00ffff;#ffd700;#ff69b4;#00ffff" dur="0.5s" repeatCount="indefinite"/>
+                </circle>
+                <!-- Tail wagging -->
+                <path d="M${x + 5} ${y} Q${x - 5} ${y - 10} ${x - 2} ${y - 15}" stroke="${color}" stroke-width="4" fill="none">
+                    <animate attributeName="d" values="M${x + 5} ${y} Q${x - 5} ${y - 10} ${x - 2} ${y - 15};M${x + 5} ${y} Q${x - 10} ${y - 5} ${x - 8} ${y - 18};M${x + 5} ${y} Q${x - 5} ${y - 10} ${x - 2} ${y - 15}" dur="0.3s" repeatCount="indefinite"/>
+                </path>
+            </g>
+        `;
+    }
+    svg.appendChild(extraCats);
+    
+    // Add disco ball
+    const discoBall = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    discoBall.id = 'disco-ball';
+    discoBall.innerHTML = `
+        <line x1="200" y1="0" x2="200" y2="15" stroke="#888" stroke-width="2"/>
+        <circle cx="200" cy="25" r="12" fill="#ccc" class="disco-ball">
+            <animate attributeName="fill" values="#ffffff;#aaaaaa;#ffffff" dur="0.2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="197" cy="22" r="2" fill="#fff"/>
+        <circle cx="203" cy="22" r="2" fill="#fff"/>
+        <circle cx="200" cy="28" r="2" fill="#fff"/>
+        <circle cx="195" cy="27" r="1.5" fill="#fff"/>
+        <circle cx="205" cy="27" r="1.5" fill="#fff"/>
+    `;
+    svg.appendChild(discoBall);
+    
+    // Add "PARTY!" text
+    const partyText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    partyText.id = 'party-text';
+    partyText.setAttribute('x', '200');
+    partyText.setAttribute('y', '55');
+    partyText.setAttribute('text-anchor', 'middle');
+    partyText.setAttribute('font-size', '16');
+    partyText.setAttribute('font-weight', 'bold');
+    partyText.innerHTML = `
+        <tspan fill="#ff0000">C</tspan><tspan fill="#ff8800">A</tspan><tspan fill="#ffff00">T</tspan>
+        <tspan fill="#00ff00"> </tspan>
+        <tspan fill="#00ffff">P</tspan><tspan fill="#0088ff">A</tspan><tspan fill="#8800ff">R</tspan>
+        <tspan fill="#ff00ff">T</tspan><tspan fill="#ff0088">Y</tspan><tspan fill="#ff0000">!</tspan>
+        <animate attributeName="y" values="55;50;55" dur="0.5s" repeatCount="indefinite"/>
+    `;
+    svg.appendChild(partyText);
+    
+    // Play dance music!
+    playDanceMusic();
+    
+    // Show party message
+    showPartyMessage('🎉 CAT DANCE PARTY! 🎉');
 }
 
-function closeEasterEgg() {
-    const overlay = document.getElementById('easter-egg-overlay');
-    if (overlay) {
-        overlay.style.animation = 'easterFadeIn 0.5s ease-out reverse';
-        setTimeout(() => {
-            overlay.remove();
-            easterEggActive = false;
-            easterEggClickCount = 0;
-            
-            // Reset moon and stars
-            const moon = document.getElementById('secret-moon');
-            if (moon) moon.style.boxShadow = '';
-            const stars = document.querySelector('.stars-bg');
-            if (stars) stars.style.animation = '';
-        }, 500);
+function playDanceMusic() {
+    // Create a catchy beat loop
+    const playBeat = () => {
+        // Bass drum
+        playTone(80, 0.1, 'square', 0.6);
+        // Hi-hat
+        setTimeout(() => playTone(800, 0.03, 'square', 0.2), 125);
+        // Snare
+        setTimeout(() => playTone(200, 0.08, 'sawtooth', 0.4), 250);
+        // Hi-hat
+        setTimeout(() => playTone(800, 0.03, 'square', 0.2), 375);
+    };
+    
+    // Play melody notes
+    const melodyNotes = [523, 587, 659, 784, 659, 587, 523, 392];
+    let noteIndex = 0;
+    
+    const playMelody = () => {
+        playTone(melodyNotes[noteIndex], 0.15, 'sine', 0.4);
+        noteIndex = (noteIndex + 1) % melodyNotes.length;
+    };
+    
+    // Start the music loops
+    playBeat();
+    musicInterval = setInterval(() => {
+        playBeat();
+        if (Math.random() > 0.5) playMelody();
+    }, 500);
+}
+
+function showPartyMessage(text) {
+    let msg = document.getElementById('party-msg');
+    if (!msg) {
+        msg = document.createElement('div');
+        msg.id = 'party-msg';
+        msg.style.cssText = `
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff0080, #ff8c00, #ffff00, #00ff00, #00ffff, #8000ff);
+            background-size: 400% 400%;
+            animation: gradientShift 1s ease infinite;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 9999;
+            text-shadow: 2px 2px 4px black;
+        `;
+        document.body.appendChild(msg);
+        
+        // Add gradient animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes gradientShift {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    msg.textContent = text;
+    msg.style.display = 'block';
+}
+
+function stopCatDanceParty() {
+    easterEggActive = false;
+    
+    // Stop music
+    if (musicInterval) {
+        clearInterval(musicInterval);
+        musicInterval = null;
     }
     
-    playTone(600, 0.2, 'sine', 0.4);
-    setTimeout(() => playTone(400, 0.3, 'sine', 0.3), 150);
+    // Remove party elements
+    document.getElementById('disco-lights')?.remove();
+    document.getElementById('party-cats')?.remove();
+    document.getElementById('disco-ball')?.remove();
+    document.getElementById('party-text')?.remove();
+    document.getElementById('dance-party-style')?.remove();
+    document.getElementById('party-msg')?.remove();
+    
+    // Reset original cats
+    const catsScene = document.getElementById('cats-scene');
+    const svg = catsScene?.querySelector('svg');
+    if (svg) {
+        const cats = svg.querySelectorAll('g[class*="cat"]');
+        cats.forEach(cat => {
+            cat.style.animation = '';
+        });
+    }
+    
+    // Play stop sound
+    playTone(400, 0.2, 'sine', 0.3);
+    setTimeout(() => playTone(300, 0.3, 'sine', 0.2), 100);
 }
 
 // Start the game (from home screen)
