@@ -8440,10 +8440,18 @@ function checkMealsForNight() {
     }
 }
 
-function startNight() {
+function startNight(fromMultiplayer = false) {
+    // If already night, don't restart
+    if (GameState.isNight && !fromMultiplayer) return;
+    
     GameState.isNight = true;
     playSoundNight();
     const cat = GameState.catData;
+    
+    // In multiplayer, sync night to all players!
+    if (GameState.isMultiplayer && !fromMultiplayer) {
+        broadcastNightSync('start');
+    }
     
     // Gathering happens every 10 moons! Kits and Elders stay home.
     const isGatheringNight = cat.age > 0 && cat.age % 10 === 0;
@@ -8617,7 +8625,7 @@ function showGatheringNews() {
 // Guard to prevent multiple endNight calls
 let isEndingNight = false;
 
-function endNight() {
+function endNight(fromMultiplayer = false) {
     // CRITICAL: Prevent multiple calls!
     if (isEndingNight) {
         console.log('[endNight] BLOCKED - already ending night!');
@@ -8636,6 +8644,11 @@ function endNight() {
     GameState.drinksToday = 0; // Reset drink count for new day
     GameState.stepsToday = 0; // Reset step count for new day
     GameState.isGatheringNight = false;
+    
+    // In multiplayer, sync morning to all players!
+    if (GameState.isMultiplayer && !fromMultiplayer) {
+        broadcastNightSync('end');
+    }
     
     playSoundMorning();
     
@@ -12537,6 +12550,34 @@ function handlePeerData(peerId, data) {
                 renderGameWorld();
             }
             break;
+        
+        case 'nightSync':
+            // Sync night/day with other players!
+            console.log('[nightSync] Received:', data.action, 'from', data.senderName);
+            
+            if (data.action === 'start') {
+                // Someone started night - we should go to night too!
+                if (!GameState.isNight) {
+                    showMessage(`${data.senderName} is going to sleep... Night falls for everyone!`);
+                    setTimeout(() => {
+                        startNight(true); // true = from multiplayer, don't re-broadcast
+                    }, 1000);
+                }
+            } else if (data.action === 'end') {
+                // Someone woke up - morning for everyone!
+                if (GameState.isNight) {
+                    showMessage(`The sun rises! A new day begins.`);
+                    setTimeout(() => {
+                        endNight(true); // true = from multiplayer, don't re-broadcast
+                    }, 1000);
+                }
+            }
+            
+            // If host, re-broadcast to all other clients
+            if (GameState.isHost) {
+                broadcastToAll(data);
+            }
+            break;
             
         case 'playerLeft':
             delete GameState.otherPlayers[data.peerId];
@@ -12624,6 +12665,25 @@ function broadcastToAll(data) {
             conn.send(data);
         }
     });
+}
+
+// Broadcast night/day sync to all players
+function broadcastNightSync(action) {
+    const message = {
+        type: 'nightSync',
+        action: action, // 'start' or 'end'
+        senderName: GameState.catData?.name || 'Someone'
+    };
+    
+    console.log('[broadcastNightSync] Sending:', action);
+    
+    if (GameState.isHost) {
+        // Host broadcasts to all clients
+        broadcastToAll(message);
+    } else if (GameState.hostConnection?.open) {
+        // Client sends to host, who will broadcast to everyone
+        GameState.hostConnection.send(message);
+    }
 }
 
 // Broadcast all player data to all peers (host only)
