@@ -133,6 +133,66 @@ function initializeNightsSlept(cat) {
     return cat.nightsSlept;
 }
 
+// ============= PARTY SYSTEM LOGIC =============
+
+// Party state object for testing
+function createPartyState() {
+    return {
+        isActive: false,
+        musicPlaying: false,
+        hasDiscoLights: false,
+        hasDancingCats: false,
+        hasPartyText: false
+    };
+}
+
+// Start party - returns new state
+function startParty(state) {
+    return {
+        isActive: true,
+        musicPlaying: true,
+        hasDiscoLights: true,
+        hasDancingCats: true,
+        hasPartyText: true
+    };
+}
+
+// Stop party - returns new state
+function stopParty(state) {
+    return {
+        isActive: false,
+        musicPlaying: false,
+        hasDiscoLights: false,
+        hasDancingCats: false,
+        hasPartyText: false
+    };
+}
+
+// Toggle party - returns new state
+function toggleParty(state) {
+    if (state.isActive) {
+        return stopParty(state);
+    } else {
+        return startParty(state);
+    }
+}
+
+// Validate party state has all required elements
+function validatePartyState(state) {
+    if (!state.isActive) {
+        // If party is not active, all elements should be off
+        return !state.musicPlaying && !state.hasDiscoLights && !state.hasDancingCats && !state.hasPartyText;
+    } else {
+        // If party is active, all elements should be on
+        return state.musicPlaying && state.hasDiscoLights && state.hasDancingCats && state.hasPartyText;
+    }
+}
+
+// Check if party can start (always true - no requirements!)
+function canStartParty() {
+    return true; // Party can start from anywhere - no moon tap required!
+}
+
 // Export for testing (works in both Node.js and browser)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -150,6 +210,13 @@ if (typeof module !== 'undefined' && module.exports) {
         validateCatData,
         initializeNightsSlept,
         simulateSleepOneNight,
-        simulateSleepNights
+        simulateSleepNights,
+        // Party system
+        createPartyState,
+        startParty,
+        stopParty,
+        toggleParty,
+        validatePartyState,
+        canStartParty
     };
 }

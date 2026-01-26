@@ -16,7 +16,14 @@ const {
     validateCatData,
     initializeNightsSlept,
     simulateSleepOneNight,
-    simulateSleepNights
+    simulateSleepNights,
+    // Party system
+    createPartyState,
+    startParty,
+    stopParty,
+    toggleParty,
+    validatePartyState,
+    canStartParty
 } = require('../js/game-logic.js');
 
 // Simple test framework
@@ -386,6 +393,87 @@ test('Age should increment by exactly 1 each night, not more', () => {
     // Sleep another night
     result = simulateSleepOneNight({ ...kit, age: result.age, nightsSlept: result.nightsSlept });
     assertEqual(result.age, 3, 'After 3 nights: age should be 3');
+});
+
+// ============= PARTY SYSTEM TESTS =============
+console.log('\n🎉 PARTY SYSTEM TESTS');
+
+test('Party can start without tapping moon first', () => {
+    assertTrue(canStartParty(), 'Party should be able to start from anywhere');
+});
+
+test('New party state should be inactive', () => {
+    const state = createPartyState();
+    assertFalse(state.isActive, 'New party state should not be active');
+    assertFalse(state.musicPlaying, 'Music should not be playing');
+    assertFalse(state.hasDiscoLights, 'Disco lights should not be on');
+    assertFalse(state.hasDancingCats, 'Dancing cats should not be showing');
+    assertFalse(state.hasPartyText, 'Party text should not be showing');
+});
+
+test('Starting party should activate all party elements', () => {
+    const state = createPartyState();
+    const newState = startParty(state);
+    
+    assertTrue(newState.isActive, 'Party should be active');
+    assertTrue(newState.musicPlaying, 'Music should be playing');
+    assertTrue(newState.hasDiscoLights, 'Disco lights should be on');
+    assertTrue(newState.hasDancingCats, 'Dancing cats should be showing');
+    assertTrue(newState.hasPartyText, 'Party text should be showing');
+});
+
+test('Stopping party should deactivate all party elements', () => {
+    const activeState = startParty(createPartyState());
+    const stoppedState = stopParty(activeState);
+    
+    assertFalse(stoppedState.isActive, 'Party should not be active');
+    assertFalse(stoppedState.musicPlaying, 'Music should not be playing');
+    assertFalse(stoppedState.hasDiscoLights, 'Disco lights should be off');
+    assertFalse(stoppedState.hasDancingCats, 'Dancing cats should not be showing');
+    assertFalse(stoppedState.hasPartyText, 'Party text should not be showing');
+});
+
+test('Toggle party should start party when inactive', () => {
+    const state = createPartyState();
+    const newState = toggleParty(state);
+    
+    assertTrue(newState.isActive, 'Toggling inactive party should activate it');
+});
+
+test('Toggle party should stop party when active', () => {
+    const activeState = startParty(createPartyState());
+    const newState = toggleParty(activeState);
+    
+    assertFalse(newState.isActive, 'Toggling active party should deactivate it');
+});
+
+test('Party state should be valid when active (all elements on)', () => {
+    const state = startParty(createPartyState());
+    assertTrue(validatePartyState(state), 'Active party with all elements should be valid');
+});
+
+test('Party state should be valid when inactive (all elements off)', () => {
+    const state = createPartyState();
+    assertTrue(validatePartyState(state), 'Inactive party with no elements should be valid');
+});
+
+test('Party state should be invalid if active but missing elements', () => {
+    const badState = {
+        isActive: true,
+        musicPlaying: true,
+        hasDiscoLights: false,  // Missing!
+        hasDancingCats: true,
+        hasPartyText: true
+    };
+    assertFalse(validatePartyState(badState), 'Active party missing disco lights should be invalid');
+});
+
+test('Double toggle should return to original state', () => {
+    const state = createPartyState();
+    const toggled1 = toggleParty(state);
+    const toggled2 = toggleParty(toggled1);
+    
+    assertEqual(toggled2.isActive, state.isActive, 'Double toggle should return to original active state');
 });
 
 // ============= SUMMARY =============

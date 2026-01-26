@@ -372,6 +372,66 @@
             assertEqual(result.age, 3);
         });
         
+        // PARTY SYSTEM TESTS
+        section('🎉 PARTY SYSTEM TESTS');
+        
+        test('Party can start without tapping moon first', () => {
+            assertTrue(canStartParty());
+        });
+        
+        test('New party state should be inactive', () => {
+            const state = createPartyState();
+            assertFalse(state.isActive);
+            assertFalse(state.musicPlaying);
+            assertFalse(state.hasDiscoLights);
+        });
+        
+        test('Starting party should activate all elements', () => {
+            const state = createPartyState();
+            const newState = startParty(state);
+            assertTrue(newState.isActive);
+            assertTrue(newState.musicPlaying);
+            assertTrue(newState.hasDiscoLights);
+            assertTrue(newState.hasDancingCats);
+            assertTrue(newState.hasPartyText);
+        });
+        
+        test('Stopping party should deactivate all elements', () => {
+            const activeState = startParty(createPartyState());
+            const stoppedState = stopParty(activeState);
+            assertFalse(stoppedState.isActive);
+            assertFalse(stoppedState.musicPlaying);
+        });
+        
+        test('Toggle party starts when inactive', () => {
+            const state = createPartyState();
+            const newState = toggleParty(state);
+            assertTrue(newState.isActive);
+        });
+        
+        test('Toggle party stops when active', () => {
+            const activeState = startParty(createPartyState());
+            const newState = toggleParty(activeState);
+            assertFalse(newState.isActive);
+        });
+        
+        test('Active party state is valid (all elements on)', () => {
+            const state = startParty(createPartyState());
+            assertTrue(validatePartyState(state));
+        });
+        
+        test('Inactive party state is valid (all elements off)', () => {
+            const state = createPartyState();
+            assertTrue(validatePartyState(state));
+        });
+        
+        test('Double toggle returns to original state', () => {
+            const state = createPartyState();
+            const toggled1 = toggleParty(state);
+            const toggled2 = toggleParty(toggled1);
+            assertEqual(toggled2.isActive, state.isActive);
+        });
+        
         // SUMMARY
         const summaryDiv = document.createElement('div');
         summaryDiv.className = `summary ${testsFailed > 0 ? 'fail' : 'pass'}`;
