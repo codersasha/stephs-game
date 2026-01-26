@@ -8432,7 +8432,22 @@ function showGatheringNews() {
     }, delay + 2000);
 }
 
+// Guard to prevent multiple endNight calls
+let isEndingNight = false;
+
 function endNight() {
+    // CRITICAL: Prevent multiple calls!
+    if (isEndingNight) {
+        console.log('[endNight] BLOCKED - already ending night!');
+        return;
+    }
+    isEndingNight = true;
+    
+    // Reset the guard after a delay
+    setTimeout(() => {
+        isEndingNight = false;
+    }, 3000);
+    
     GameState.isNight = false;
     GameState.dayStartTime = Date.now();
     GameState.mealsToday = 0; // Reset meal count for new day
@@ -8691,7 +8706,16 @@ function toggleSit() {
     renderGameWorld();
 }
 
+// Guard to prevent sleep spam
+let isTryingToSleep = false;
+
 function toggleRest() {
+    // CRITICAL: Prevent spamming the sleep button!
+    if (isTryingToSleep) {
+        console.log('[toggleRest] BLOCKED - already sleeping!');
+        return;
+    }
+    
     // Check if it's night
     if (!GameState.isNight) {
         showMessage('It is daytime! You can only sleep at night.');
@@ -8706,6 +8730,9 @@ function toggleRest() {
         showMessage('You need to be in a den to sleep through the night!');
         return;
     }
+    
+    // Set the guard
+    isTryingToSleep = true;
     
     // Sleep through the night
     GameState.isSleeping = true;
@@ -8723,6 +8750,11 @@ function toggleRest() {
         GameState.isSleeping = false;
         document.getElementById('emote-sleep').classList.remove('active');
         endNight();
+        
+        // Reset the guard after endNight completes
+        setTimeout(() => {
+            isTryingToSleep = false;
+        }, 1000);
     }, 2000);
 }
 
