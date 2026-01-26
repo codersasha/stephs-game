@@ -1342,6 +1342,9 @@ function selectSaveSlot(slot) {
         GameState.catData = saveData;
         GameState.selectedClan = saveData.clan;
         
+        // Debug: log loaded save data
+        console.log(`[LOADED SAVE] name=${saveData.name}, rank=${saveData.rank}, age=${saveData.age}, nightsSlept=${saveData.nightsSlept}`);
+        
         // Fix for old saves that don't have nightsSlept
         if (GameState.catData.nightsSlept === undefined) {
             // For kits, set nightsSlept based on age (since age increases with nights)
@@ -1351,6 +1354,7 @@ function selectSaveSlot(slot) {
                 // Non-kits don't need this tracking
                 GameState.catData.nightsSlept = 6;
             }
+            console.log(`[FIXED OLD SAVE] nightsSlept now = ${GameState.catData.nightsSlept}`);
         }
         
         startGameplay();
@@ -1672,6 +1676,9 @@ function beginAdventure() {
         // Track nights slept for kit->apprentice progression
         nightsSlept: 0
     };
+    
+    // Debug: log new cat creation
+    console.log(`[NEW CAT CREATED] name=${fullName}, rank=${rankName}, age=${GameState.catData.age}, nightsSlept=${GameState.catData.nightsSlept}`);
     
     // Assign mentor if starting as an apprentice
     if (rankName === 'Apprentice' && !isLoner && !isKittypet) {
@@ -8436,13 +8443,21 @@ function endNight() {
     playSoundMorning();
     
     const cat = GameState.catData;
+    
+    // Debug: log before changing age
+    console.log(`[endNight] BEFORE: age=${cat.age}, nightsSlept=${cat.nightsSlept}, rank=${cat.rank}`);
+    
     // Heal a bit from sleeping
     cat.health = Math.min(100, cat.health + 10);
-    cat.age += 1;
+    
+    // IMPORTANT: Only increment age by 1!
+    cat.age = (cat.age || 0) + 1;
     
     // Track nights slept for kit progression
-    if (!cat.nightsSlept) cat.nightsSlept = 0;
-    cat.nightsSlept += 1;
+    cat.nightsSlept = (cat.nightsSlept || 0) + 1;
+    
+    // Debug: log after changing age
+    console.log(`[endNight] AFTER: age=${cat.age}, nightsSlept=${cat.nightsSlept}, rank=${cat.rank}`);
     
     checkRankUp();
     

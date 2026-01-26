@@ -331,6 +331,47 @@
             assertEqual(initializeNightsSlept(kit), 2);
         });
         
+        // AGING SIMULATION TESTS (THE MOST IMPORTANT!)
+        section('🌙 AGING SIMULATION TESTS');
+        
+        test('New kit (age 0) sleeping 1 night should become age 1', () => {
+            const kit = { rank: 'Kit', age: 0, nightsSlept: 0 };
+            const result = simulateSleepOneNight(kit);
+            assertEqual(result.age, 1);
+            assertEqual(result.nightsSlept, 1);
+        });
+        
+        test('New kit (age 0) sleeping 1 night should NOT become age 13!', () => {
+            const kit = { rank: 'Kit', age: 0, nightsSlept: 0 };
+            const result = simulateSleepOneNight(kit);
+            assertTrue(result.age < 10);
+        });
+        
+        test('New kit sleeping 6 nights should become apprentice at age 6', () => {
+            const kit = { rank: 'Kit', age: 0, nightsSlept: 0 };
+            const result = simulateSleepNights(kit, 6);
+            assertEqual(result.age, 6);
+            assertEqual(result.nightsSlept, 6);
+            assertEqual(result.rank, 'Apprentice');
+        });
+        
+        test('Kit sleeping 5 nights should still be a kit', () => {
+            const kit = { rank: 'Kit', age: 0, nightsSlept: 0 };
+            const result = simulateSleepNights(kit, 5);
+            assertEqual(result.age, 5);
+            assertEqual(result.rank, 'Kit');
+        });
+        
+        test('Age increments by exactly 1 each night', () => {
+            let cat = { rank: 'Kit', age: 0, nightsSlept: 0 };
+            let result = simulateSleepOneNight(cat);
+            assertEqual(result.age, 1);
+            result = simulateSleepOneNight({ ...cat, age: result.age, nightsSlept: result.nightsSlept });
+            assertEqual(result.age, 2);
+            result = simulateSleepOneNight({ ...cat, age: result.age, nightsSlept: result.nightsSlept });
+            assertEqual(result.age, 3);
+        });
+        
         // SUMMARY
         const summaryDiv = document.createElement('div');
         summaryDiv.className = `summary ${testsFailed > 0 ? 'fail' : 'pass'}`;

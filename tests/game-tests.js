@@ -14,7 +14,9 @@ const {
     calculateThirstDecrease,
     shouldShadowClanKillKit,
     validateCatData,
-    initializeNightsSlept
+    initializeNightsSlept,
+    simulateSleepOneNight,
+    simulateSleepNights
 } = require('../js/game-logic.js');
 
 // Simple test framework
@@ -336,6 +338,54 @@ test('Non-kit without nightsSlept should get 6', () => {
 test('Cat with existing nightsSlept should keep it', () => {
     const kit = { rank: 'Kit', age: 5, nightsSlept: 2 };
     assertEqual(initializeNightsSlept(kit), 2);
+});
+
+// ============= AGING SIMULATION TESTS =============
+console.log('\n🌙 AGING SIMULATION TESTS (THE MOST IMPORTANT!)');
+
+test('New kit (age 0) sleeping 1 night should become age 1', () => {
+    const kit = { rank: 'Kit', age: 0, nightsSlept: 0 };
+    const result = simulateSleepOneNight(kit);
+    assertEqual(result.age, 1, 'Age should be 1 after 1 sleep');
+    assertEqual(result.nightsSlept, 1, 'nightsSlept should be 1 after 1 sleep');
+});
+
+test('New kit (age 0) sleeping 1 night should NOT become age 13!', () => {
+    const kit = { rank: 'Kit', age: 0, nightsSlept: 0 };
+    const result = simulateSleepOneNight(kit);
+    assertTrue(result.age < 10, `Age should NOT jump to ${result.age}! Should be 1.`);
+});
+
+test('New kit sleeping 6 nights should become apprentice at age 6', () => {
+    const kit = { rank: 'Kit', age: 0, nightsSlept: 0 };
+    const result = simulateSleepNights(kit, 6);
+    assertEqual(result.age, 6, 'Age should be 6 after 6 sleeps');
+    assertEqual(result.nightsSlept, 6, 'nightsSlept should be 6');
+    assertEqual(result.rank, 'Apprentice', 'Should become Apprentice at 6 nights');
+});
+
+test('Kit sleeping 5 nights should still be a kit', () => {
+    const kit = { rank: 'Kit', age: 0, nightsSlept: 0 };
+    const result = simulateSleepNights(kit, 5);
+    assertEqual(result.age, 5, 'Age should be 5 after 5 sleeps');
+    assertEqual(result.nightsSlept, 5, 'nightsSlept should be 5');
+    assertEqual(result.rank, 'Kit', 'Should still be a Kit at 5 nights');
+});
+
+test('Age should increment by exactly 1 each night, not more', () => {
+    const kit = { rank: 'Kit', age: 0, nightsSlept: 0 };
+    
+    // Sleep 1 night
+    let result = simulateSleepOneNight(kit);
+    assertEqual(result.age, 1, 'After 1 night: age should be 1');
+    
+    // Sleep another night
+    result = simulateSleepOneNight({ ...kit, age: result.age, nightsSlept: result.nightsSlept });
+    assertEqual(result.age, 2, 'After 2 nights: age should be 2');
+    
+    // Sleep another night
+    result = simulateSleepOneNight({ ...kit, age: result.age, nightsSlept: result.nightsSlept });
+    assertEqual(result.age, 3, 'After 3 nights: age should be 3');
 });
 
 // ============= SUMMARY =============

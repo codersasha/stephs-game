@@ -47,6 +47,32 @@ function shouldKitBecomeApprentice(cat) {
     return cat.rank === 'Kit' && (cat.nightsSlept || 0) >= 6;
 }
 
+// Simulate sleeping one night - returns new age and nightsSlept
+function simulateSleepOneNight(cat) {
+    const newAge = (cat.age || 0) + 1;
+    const newNightsSlept = (cat.nightsSlept || 0) + 1;
+    return { age: newAge, nightsSlept: newNightsSlept };
+}
+
+// Simulate sleeping multiple nights - returns final state
+function simulateSleepNights(cat, numNights) {
+    let age = cat.age || 0;
+    let nightsSlept = cat.nightsSlept || 0;
+    let rank = cat.rank;
+    
+    for (let i = 0; i < numNights; i++) {
+        age += 1;
+        nightsSlept += 1;
+        
+        // Check for rank up
+        if (rank === 'Kit' && nightsSlept >= 6) {
+            rank = 'Apprentice';
+        }
+    }
+    
+    return { age, nightsSlept, rank };
+}
+
 // Check if apprentice should become warrior
 function shouldApprenticeBecomeWarrior(cat) {
     return cat.rank === 'Apprentice' && cat.experience >= 100;
@@ -122,6 +148,8 @@ if (typeof module !== 'undefined' && module.exports) {
         calculateThirstDecrease,
         shouldShadowClanKillKit,
         validateCatData,
-        initializeNightsSlept
+        initializeNightsSlept,
+        simulateSleepOneNight,
+        simulateSleepNights
     };
 }
