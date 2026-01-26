@@ -2074,6 +2074,11 @@ function enterDen(denType) {
         leader: 'the Leader\'s Den'
     };
     showMessage(`You entered ${denNames[denType] || 'the den'}.`);
+    
+    // Send position update in multiplayer so others can see you in the den!
+    if (GameState.isMultiplayer) {
+        sendPositionUpdate();
+    }
 }
 
 // Render inside of a den
@@ -2152,6 +2157,9 @@ function renderDenInterior(denType) {
         </g>
     `;
     
+    // Add other players (multiplayer) - so you can see clanmates in the den!
+    denHTML += renderOtherPlayers();
+    
     // Add player cat
     denHTML += renderPlayerCat();
     
@@ -2169,6 +2177,11 @@ function renderDenInterior(denType) {
         GameState.playerY = 250;
         renderGameWorld();
         showMessage('You left the den.');
+        
+        // Send position update in multiplayer
+        if (GameState.isMultiplayer) {
+            sendPositionUpdate();
+        }
     });
     
     // Nursery-specific handlers
