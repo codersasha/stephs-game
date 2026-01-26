@@ -1091,7 +1091,7 @@ function stopCatDanceParty() {
         musicInterval = null;
     }
     
-    // Remove party elements
+    // Remove party elements from home screen
     document.getElementById('disco-lights')?.remove();
     document.getElementById('party-cats')?.remove();
     document.getElementById('disco-ball')?.remove();
@@ -1099,7 +1099,13 @@ function stopCatDanceParty() {
     document.getElementById('dance-party-style')?.remove();
     document.getElementById('party-msg')?.remove();
     
-    // Reset original cats
+    // Remove party elements from game screen
+    document.getElementById('game-disco-lights')?.remove();
+    document.getElementById('game-party-cats')?.remove();
+    document.getElementById('game-disco-ball')?.remove();
+    document.getElementById('game-party-text')?.remove();
+    
+    // Reset original cats on home screen
     const catsScene = document.getElementById('cats-scene');
     const svg = catsScene?.querySelector('svg');
     if (svg) {
@@ -1109,9 +1115,167 @@ function stopCatDanceParty() {
         });
     }
     
+    // Reset game world NPCs
+    const gameWorld = document.getElementById('game-world');
+    if (gameWorld) {
+        const npcs = gameWorld.querySelectorAll('.npc-cat, .clan-cat');
+        npcs.forEach(npc => {
+            npc.style.animation = '';
+        });
+    }
+    
     // Play stop sound
     playTone(400, 0.2, 'sine', 0.3);
     setTimeout(() => playTone(300, 0.3, 'sine', 0.2), 100);
+}
+
+// Add party effects to the game world!
+function addGamePartyEffects() {
+    if (!easterEggActive) return;
+    
+    const gameWorld = document.getElementById('game-world');
+    if (!gameWorld) return;
+    
+    const svg = gameWorld.querySelector('svg');
+    if (!svg) return;
+    
+    // Remove old party elements first
+    document.getElementById('game-disco-lights')?.remove();
+    document.getElementById('game-party-cats')?.remove();
+    document.getElementById('game-disco-ball')?.remove();
+    document.getElementById('game-party-text')?.remove();
+    
+    // Add disco lights overlay
+    const discoLights = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    discoLights.id = 'game-disco-lights';
+    discoLights.innerHTML = `
+        <circle cx="100" cy="50" r="80" opacity="0.25">
+            <animate attributeName="fill" values="#ff0000;#ffff00;#00ff00;#0088ff;#ff00ff;#ff0000" dur="1s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.15;0.35;0.15" dur="0.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="350" cy="80" r="100" opacity="0.25">
+            <animate attributeName="fill" values="#00ff00;#0088ff;#ff00ff;#ff0000;#ffff00;#00ff00" dur="1.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.15;0.35;0.15" dur="0.6s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="225" cy="300" r="90" opacity="0.25">
+            <animate attributeName="fill" values="#ff00ff;#ff0000;#ffff00;#00ff00;#0088ff;#ff00ff" dur="0.8s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.15;0.35;0.15" dur="0.4s" repeatCount="indefinite"/>
+        </circle>
+    `;
+    svg.appendChild(discoLights);
+    
+    // Add disco ball at top
+    const discoBall = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    discoBall.id = 'game-disco-ball';
+    discoBall.innerHTML = `
+        <line x1="225" y1="0" x2="225" y2="25" stroke="#888" stroke-width="3"/>
+        <circle cx="225" cy="40" r="18" fill="#ccc">
+            <animate attributeName="fill" values="#ffffff;#888888;#ffffff" dur="0.3s" repeatCount="indefinite"/>
+            <animateTransform attributeName="transform" type="rotate" values="0 225 40;360 225 40" dur="4s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="220" cy="35" r="3" fill="#fff"/>
+        <circle cx="230" cy="35" r="3" fill="#fff"/>
+        <circle cx="225" cy="45" r="3" fill="#fff"/>
+        <circle cx="218" cy="42" r="2" fill="#fff"/>
+        <circle cx="232" cy="42" r="2" fill="#fff"/>
+    `;
+    svg.appendChild(discoBall);
+    
+    // Add party cats at the bottom of the screen!
+    const partyCats = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    partyCats.id = 'game-party-cats';
+    
+    const catColors = ['#ff6b35', '#808080', '#f5deb3', '#8b4513', '#ffffff', '#1a1a1a', '#daa520', '#cd853f', '#ff69b4', '#00ffff'];
+    
+    for (let i = 0; i < 8; i++) {
+        const x = 30 + (i * 55);
+        const y = 380;
+        const color = catColors[i % catColors.length];
+        const delay = i * 0.12;
+        
+        partyCats.innerHTML += `
+            <g style="animation: catBounce 0.4s ease-in-out infinite; animation-delay: ${delay}s;">
+                <!-- Body -->
+                <ellipse cx="${x + 15}" cy="${y}" rx="12" ry="8" fill="${color}"/>
+                <!-- Head -->
+                <circle cx="${x + 25}" cy="${y - 4}" r="7" fill="${color}"/>
+                <!-- Ears -->
+                <polygon points="${x + 20},${y - 8} ${x + 22},${y - 15} ${x + 26},${y - 8}" fill="${color}"/>
+                <polygon points="${x + 26},${y - 8} ${x + 29},${y - 14} ${x + 31},${y - 7}" fill="${color}"/>
+                <!-- Party eyes! -->
+                <circle cx="${x + 23}" cy="${y - 4}" r="2" fill="#ffd700">
+                    <animate attributeName="fill" values="#ffd700;#ff69b4;#00ffff;#ffd700" dur="0.4s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="${x + 28}" cy="${y - 4}" r="2" fill="#ffd700">
+                    <animate attributeName="fill" values="#00ffff;#ffd700;#ff69b4;#00ffff" dur="0.4s" repeatCount="indefinite"/>
+                </circle>
+                <!-- Wagging tail -->
+                <path d="M${x + 3} ${y} Q${x - 5} ${y - 8} ${x - 2} ${y - 12}" stroke="${color}" stroke-width="3" fill="none">
+                    <animate attributeName="d" values="M${x + 3} ${y} Q${x - 5} ${y - 8} ${x - 2} ${y - 12};M${x + 3} ${y} Q${x - 8} ${y - 4} ${x - 6} ${y - 14};M${x + 3} ${y} Q${x - 5} ${y - 8} ${x - 2} ${y - 12}" dur="0.25s" repeatCount="indefinite"/>
+                </path>
+            </g>
+        `;
+    }
+    svg.appendChild(partyCats);
+    
+    // Add bouncing text
+    const partyText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    partyText.id = 'game-party-text';
+    partyText.setAttribute('x', '225');
+    partyText.setAttribute('y', '70');
+    partyText.setAttribute('text-anchor', 'middle');
+    partyText.setAttribute('font-size', '20');
+    partyText.setAttribute('font-weight', 'bold');
+    partyText.innerHTML = `
+        <tspan fill="#ff0000">🎉</tspan>
+        <tspan fill="#ff0000">C</tspan><tspan fill="#ff8800">A</tspan><tspan fill="#ffff00">T</tspan>
+        <tspan fill="#00ff00"> </tspan>
+        <tspan fill="#00ffff">P</tspan><tspan fill="#0088ff">A</tspan><tspan fill="#8800ff">R</tspan>
+        <tspan fill="#ff00ff">T</tspan><tspan fill="#ff0088">Y</tspan>
+        <tspan fill="#ff0000">🎉</tspan>
+        <animate attributeName="y" values="70;62;70" dur="0.4s" repeatCount="indefinite"/>
+    `;
+    svg.appendChild(partyText);
+    
+    // Make existing NPCs dance too!
+    const npcs = gameWorld.querySelectorAll('.npc-cat, .clan-cat');
+    npcs.forEach((npc, i) => {
+        npc.style.animation = `catBounce 0.4s ease-in-out infinite`;
+        npc.style.animationDelay = `${i * 0.1}s`;
+    });
+}
+
+// Toggle party in game (press P or tap party button)
+function toggleGameParty() {
+    if (easterEggActive) {
+        stopCatDanceParty();
+    } else {
+        // Start party in game!
+        easterEggActive = true;
+        
+        // Add the CSS if not already added
+        if (!document.getElementById('dance-party-style')) {
+            const style = document.createElement('style');
+            style.id = 'dance-party-style';
+            style.textContent = `
+                @keyframes catBounce {
+                    0%, 100% { transform: translateY(0) rotate(0deg); }
+                    25% { transform: translateY(-15px) rotate(-5deg); }
+                    50% { transform: translateY(0) rotate(0deg); }
+                    75% { transform: translateY(-15px) rotate(5deg); }
+                }
+                @keyframes catSpin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        addGamePartyEffects();
+        playDanceMusic();
+        showPartyMessage('🎉 CAT DANCE PARTY! 🎉');
+    }
 }
 
 // Start the game (from home screen)
@@ -1727,6 +1891,11 @@ function renderGameWorld() {
         renderDarkForest();
     } else {
         renderForest();
+    }
+    
+    // Add party effects if party is active!
+    if (easterEggActive) {
+        setTimeout(() => addGamePartyEffects(), 50);
     }
 }
 
@@ -5810,6 +5979,10 @@ function handleKeyDown(e) {
         case ' ':
         case 'Enter':
             checkLocationAction();
+            break;
+        case 'p':
+        case 'P':
+            toggleGameParty();
             break;
     }
 }
