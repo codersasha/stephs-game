@@ -6190,9 +6190,8 @@ function restInDen() {
     }
     
     cat.health = Math.min(100, cat.health + 25);
-    cat.age += 1;
-    checkRankUp();
-    showMessage('You had a good rest! (+1 moon old)');
+    // Age is added in endNight() - not here!
+    showMessage('You had a good rest!');
     updateGameUI();
     saveGameData();
 }
@@ -7894,10 +7893,8 @@ function performAction(action) {
             
         case 'rest':
             cat.health = Math.min(100, cat.health + 20);
-            // Age up when resting
-            cat.age += 1;
-            checkRankUp();
-            message = '😴 You feel rested! (+1 moon old)';
+            // Age is added in endNight() - not here!
+            message = '😴 You feel rested!';
             break;
     }
     
