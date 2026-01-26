@@ -920,6 +920,18 @@ function selectSaveSlot(slot) {
         // Load existing game (use saved clan, not selected one)
         GameState.catData = saveData;
         GameState.selectedClan = saveData.clan;
+        
+        // Fix for old saves that don't have nightsSlept
+        if (GameState.catData.nightsSlept === undefined) {
+            // For kits, set nightsSlept based on age (since age increases with nights)
+            if (GameState.catData.rank === 'Kit') {
+                GameState.catData.nightsSlept = GameState.catData.age || 0;
+            } else {
+                // Non-kits don't need this tracking
+                GameState.catData.nightsSlept = 6;
+            }
+        }
+        
         startGameplay();
     } else {
         // New game - go to name screen
@@ -1235,7 +1247,9 @@ function beginAdventure() {
         // Your kits!
         kits: [],
         // Mentor (for apprentices)
-        mentor: null
+        mentor: null,
+        // Track nights slept for kit->apprentice progression
+        nightsSlept: 0
     };
     
     // Assign mentor if starting as an apprentice
