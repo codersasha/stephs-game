@@ -34,6 +34,10 @@ const GameState = {
     drinksToday: 0,
     stepsToday: 0,
     isGatheringNight: false,
+    // Seasons and Weather (realistic!)
+    season: 'newleaf', // newleaf (spring), greenleaf (summer), leaf-fall (autumn), leaf-bare (winter)
+    weather: 'sunny', // sunny, cloudy, rainy, snowy, stormy
+    temperature: 'warm', // cold, cool, warm, hot
     // Emotion/pose
     currentEmotion: 'normal',
     isSitting: false,
@@ -332,6 +336,120 @@ function toggleSound() {
     if (btn) btn.textContent = soundEnabled ? '🔊' : '🔇';
     showMessage(soundEnabled ? 'Sound ON' : 'Sound OFF');
     if (soundEnabled) playSoundClick();
+}
+
+// ============= SEASONS & WEATHER SYSTEM =============
+const SEASONS = ['newleaf', 'greenleaf', 'leaf-fall', 'leaf-bare'];
+const SEASON_NAMES = {
+    'newleaf': 'Newleaf (Spring)',
+    'greenleaf': 'Greenleaf (Summer)',
+    'leaf-fall': 'Leaf-fall (Autumn)',
+    'leaf-bare': 'Leaf-bare (Winter)'
+};
+
+// Update season based on cat's age (every 3 moons = new season)
+function updateSeason() {
+    const cat = GameState.catData;
+    if (!cat) return;
+    
+    const seasonIndex = Math.floor(cat.age / 3) % 4;
+    const newSeason = SEASONS[seasonIndex];
+    
+    if (newSeason !== GameState.season) {
+        GameState.season = newSeason;
+        showMessage(`The season has changed to ${SEASON_NAMES[newSeason]}!`);
+        updateWeatherForSeason();
+    }
+}
+
+// Update weather based on season
+function updateWeatherForSeason() {
+    const season = GameState.season;
+    const roll = Math.random();
+    
+    if (season === 'leaf-bare') {
+        // Winter: cold, often snowy
+        GameState.temperature = 'cold';
+        if (roll < 0.4) GameState.weather = 'snowy';
+        else if (roll < 0.6) GameState.weather = 'cloudy';
+        else if (roll < 0.8) GameState.weather = 'stormy';
+        else GameState.weather = 'sunny';
+    } else if (season === 'newleaf') {
+        // Spring: cool, often rainy
+        GameState.temperature = 'cool';
+        if (roll < 0.35) GameState.weather = 'rainy';
+        else if (roll < 0.5) GameState.weather = 'cloudy';
+        else GameState.weather = 'sunny';
+    } else if (season === 'greenleaf') {
+        // Summer: hot, mostly sunny
+        GameState.temperature = 'hot';
+        if (roll < 0.15) GameState.weather = 'stormy';
+        else if (roll < 0.25) GameState.weather = 'cloudy';
+        else GameState.weather = 'sunny';
+    } else if (season === 'leaf-fall') {
+        // Autumn: cool, mixed weather
+        GameState.temperature = 'cool';
+        if (roll < 0.3) GameState.weather = 'rainy';
+        else if (roll < 0.5) GameState.weather = 'cloudy';
+        else if (roll < 0.6) GameState.weather = 'stormy';
+        else GameState.weather = 'sunny';
+    }
+}
+
+// Random weather change (called occasionally)
+function randomWeatherChange() {
+    if (Math.random() < 0.1) { // 10% chance each time
+        updateWeatherForSeason();
+        const weatherMessages = {
+            'sunny': 'The sun breaks through the clouds!',
+            'cloudy': 'Clouds gather overhead...',
+            'rainy': 'Rain begins to fall...',
+            'snowy': 'Snow starts to fall gently...',
+            'stormy': 'A storm is brewing!'
+        };
+        showMessage(weatherMessages[GameState.weather]);
+    }
+}
+
+// Get prey availability based on season (affects hunting)
+function getPreyMultiplier() {
+    switch (GameState.season) {
+        case 'greenleaf': return 1.5; // Lots of prey in summer
+        case 'newleaf': return 1.2; // Good prey in spring
+        case 'leaf-fall': return 0.8; // Less prey in autumn
+        case 'leaf-bare': return 0.4; // Very little prey in winter
+        default: return 1.0;
+    }
+}
+
+// Get weather effect on activities
+function getWeatherEffect() {
+    switch (GameState.weather) {
+        case 'stormy': return { huntingPenalty: 0.5, healthDrain: 2, message: 'The storm makes everything harder!' };
+        case 'rainy': return { huntingPenalty: 0.7, healthDrain: 1, message: 'The rain makes hunting difficult.' };
+        case 'snowy': return { huntingPenalty: 0.6, healthDrain: 1, message: 'Snow covers the prey trails.' };
+        case 'cloudy': return { huntingPenalty: 0.9, healthDrain: 0, message: '' };
+        case 'sunny': return { huntingPenalty: 1.0, healthDrain: 0, message: '' };
+        default: return { huntingPenalty: 1.0, healthDrain: 0, message: '' };
+    }
+}
+
+// Get season/weather display for UI
+function getSeasonWeatherDisplay() {
+    const seasonEmojis = {
+        'newleaf': '🌸',
+        'greenleaf': '☀️',
+        'leaf-fall': '🍂',
+        'leaf-bare': '❄️'
+    };
+    const weatherEmojis = {
+        'sunny': '☀️',
+        'cloudy': '☁️',
+        'rainy': '🌧️',
+        'snowy': '🌨️',
+        'stormy': '⛈️'
+    };
+    return `${seasonEmojis[GameState.season] || '🌿'} ${weatherEmojis[GameState.weather] || ''}`;
 }
 
 // Initialize game
@@ -1320,7 +1438,10 @@ function updateGameUI() {
         document.getElementById('cat-rank').textContent = cat.rank;
     }
     
-    document.getElementById('cat-age').textContent = `${cat.age} moons`;
+    document.getElementById('cat-age').textContent = `${cat.age} moons ${getSeasonWeatherDisplay()}`;
+    
+    // Update season based on age
+    updateSeason();
     
     // Show mentor for apprentices
     const mentorEl = document.getElementById('cat-mentor');
@@ -3361,6 +3482,9 @@ function renderForest() {
             <circle cx="545" cy="38" r="12" fill="${skyColor}"/>
         `;
     }
+    
+    // WEATHER EFFECTS overlay
+    worldHTML += renderWeatherEffects();
     
     worldHTML += `</svg>`;
     
@@ -5492,6 +5616,30 @@ function movePlayer(dx, dy) {
     // Count steps and check for night - 100 steps = night time and age up!
     if (moved && !GameState.isNight) {
         GameState.stepsToday++;
+        
+        // REALISTIC: Hunger and thirst decrease as you walk!
+        const cat = GameState.catData;
+        if (cat && !cat.inStarClan && !cat.inDarkForest) {
+            // Decrease hunger every 5 steps
+            if (GameState.stepsToday % 5 === 0) {
+                cat.hunger = Math.max(0, cat.hunger - 1);
+            }
+            // Decrease thirst every 3 steps (you get thirsty faster!)
+            if (GameState.stepsToday % 3 === 0) {
+                cat.thirst = Math.max(0, cat.thirst - 1);
+            }
+            // Weather effects - bad weather drains health slowly
+            const weatherEffect = getWeatherEffect();
+            if (weatherEffect.healthDrain > 0 && GameState.stepsToday % 20 === 0) {
+                cat.health = Math.max(1, cat.health - weatherEffect.healthDrain);
+            }
+            // Random weather change
+            if (GameState.stepsToday % 50 === 0) {
+                randomWeatherChange();
+            }
+            updateGameUI();
+        }
+        
         if (GameState.stepsToday >= 100) {
             showMessage('You have walked all day. Night is falling...');
             setTimeout(() => startNight(), 1500);
@@ -6276,12 +6424,48 @@ function startHuntingGame() {
         return;
     }
     
+    // REALISTIC: Check if prey is even available based on season!
+    const preyChance = getPreyMultiplier() * getWeatherEffect().huntingPenalty;
+    
+    if (Math.random() > preyChance) {
+        // No prey found due to season/weather
+        const noPreyMessages = {
+            'leaf-bare': 'The snow covers everything... no prey in sight.',
+            'leaf-fall': 'The leaves rustle but no prey appears...',
+            'newleaf': 'The rain scared all the prey away...',
+            'greenleaf': 'It\'s too hot, the prey is hiding...'
+        };
+        const weatherMessages = {
+            'stormy': 'The storm has scared all the prey away!',
+            'rainy': 'The rain makes it hard to find prey...',
+            'snowy': 'Snow covers the prey trails...'
+        };
+        
+        if (GameState.weather === 'stormy' || GameState.weather === 'rainy' || GameState.weather === 'snowy') {
+            showMessage(weatherMessages[GameState.weather]);
+        } else {
+            showMessage(noPreyMessages[GameState.season] || 'You search but find no prey...');
+        }
+        return;
+    }
+    
     huntingGameActive = true;
     mousePosition = { x: 200 + Math.random() * 200, y: 150 + Math.random() * 200 };
     
-    showMessage('A mouse! Quick, click on it to catch it!');
+    // REALISTIC: Different message based on season
+    const huntMessages = {
+        'greenleaf': 'A fat mouse! The hunting is good in greenleaf!',
+        'newleaf': 'A mouse! Prey is returning in newleaf!',
+        'leaf-fall': 'A mouse! Quick, before leaf-bare comes!',
+        'leaf-bare': 'A mouse! Rare prey in leaf-bare - don\'t miss!'
+    };
+    showMessage(huntMessages[GameState.season] || 'A mouse! Quick, click on it!');
     
     renderHuntingGame();
+    
+    // REALISTIC: Mouse moves faster in warm weather, slower in cold
+    const mouseSpeed = GameState.temperature === 'cold' ? 1000 : 
+                       GameState.temperature === 'hot' ? 600 : 800;
     
     // Mouse moves around
     mouseInterval = setInterval(() => {
@@ -6291,7 +6475,7 @@ function startHuntingGame() {
             mousePosition.y = 100 + Math.random() * 300;
             renderHuntingGame();
         }
-    }, 800); // Mouse moves every 0.8 seconds
+    }, mouseSpeed);
     
     // Time limit - 8 seconds to catch
     huntingTimeout = setTimeout(() => {
@@ -6367,11 +6551,31 @@ function endHuntingGame(caught) {
     const cat = GameState.catData;
     
     if (caught) {
-        cat.hunger = Math.min(100, cat.hunger + 35);
+        // REALISTIC: Prey gives more food in greenleaf, less in leaf-bare
+        const foodAmount = {
+            'greenleaf': 45, // Fat prey in summer!
+            'newleaf': 35,
+            'leaf-fall': 30,
+            'leaf-bare': 20 // Skinny prey in winter...
+        };
+        const amount = foodAmount[GameState.season] || 35;
+        cat.hunger = Math.min(100, cat.hunger + amount);
         cat.experience += 15;
-        showMessage('Great catch! You caught the mouse!');
+        
+        const catchMessages = {
+            'greenleaf': 'Great catch! The mouse is fat from greenleaf!',
+            'newleaf': 'Great catch! Prey is plentiful in newleaf!',
+            'leaf-fall': 'Good catch! Store up before leaf-bare!',
+            'leaf-bare': 'You caught it! Every catch matters in leaf-bare...'
+        };
+        showMessage(catchMessages[GameState.season] || 'Great catch!');
     } else {
-        showMessage('The mouse escaped into its hole...');
+        const escapeMessages = {
+            'leaf-bare': 'The mouse escaped... Prey is precious in leaf-bare.',
+            'greenleaf': 'The mouse escaped! But there\'s plenty more prey.',
+            'default': 'The mouse escaped into its hole...'
+        };
+        showMessage(escapeMessages[GameState.season] || escapeMessages['default']);
     }
     
     updateGameUI();
@@ -9849,6 +10053,105 @@ function triggerNPCResponse(playerText) {
     }
     
     showSpeechBubble(npc, response);
+}
+
+// Render weather effects overlay (rain, snow, etc.)
+function renderWeatherEffects() {
+    const weather = GameState.weather;
+    const season = GameState.season;
+    let effectsHTML = '';
+    
+    if (weather === 'rainy') {
+        // Rain drops falling
+        for (let i = 0; i < 50; i++) {
+            const x = Math.random() * 1200;
+            const y = Math.random() * 1000;
+            const delay = Math.random() * 2;
+            effectsHTML += `
+                <line x1="${x}" y1="${y}" x2="${x - 5}" y2="${y + 20}" stroke="#6688aa" stroke-width="1.5" opacity="0.6">
+                    <animate attributeName="y1" values="${y};${y + 300}" dur="0.5s" repeatCount="indefinite" begin="${delay}s"/>
+                    <animate attributeName="y2" values="${y + 20};${y + 320}" dur="0.5s" repeatCount="indefinite" begin="${delay}s"/>
+                </line>
+            `;
+        }
+        // Darker overlay for rain
+        effectsHTML += `<rect x="0" y="0" width="1200" height="1000" fill="#334466" opacity="0.2"/>`;
+    } else if (weather === 'snowy') {
+        // Snowflakes falling
+        for (let i = 0; i < 40; i++) {
+            const x = Math.random() * 1200;
+            const y = Math.random() * 1000;
+            const size = 2 + Math.random() * 4;
+            const delay = Math.random() * 5;
+            effectsHTML += `
+                <circle cx="${x}" cy="${y}" r="${size}" fill="white" opacity="0.8">
+                    <animate attributeName="cy" values="${y};${y + 500}" dur="4s" repeatCount="indefinite" begin="${delay}s"/>
+                    <animate attributeName="cx" values="${x};${x + 20};${x - 20};${x}" dur="3s" repeatCount="indefinite" begin="${delay}s"/>
+                </circle>
+            `;
+        }
+        // Snow on ground
+        effectsHTML += `<rect x="0" y="800" width="1200" height="200" fill="white" opacity="0.3"/>`;
+    } else if (weather === 'stormy') {
+        // Heavy rain + lightning flashes
+        for (let i = 0; i < 80; i++) {
+            const x = Math.random() * 1200;
+            const y = Math.random() * 1000;
+            const delay = Math.random() * 1;
+            effectsHTML += `
+                <line x1="${x}" y1="${y}" x2="${x - 8}" y2="${y + 30}" stroke="#5577aa" stroke-width="2" opacity="0.7">
+                    <animate attributeName="y1" values="${y};${y + 400}" dur="0.3s" repeatCount="indefinite" begin="${delay}s"/>
+                    <animate attributeName="y2" values="${y + 30};${y + 430}" dur="0.3s" repeatCount="indefinite" begin="${delay}s"/>
+                </line>
+            `;
+        }
+        // Dark storm overlay with lightning flash
+        effectsHTML += `
+            <rect x="0" y="0" width="1200" height="1000" fill="#223344" opacity="0.35"/>
+            <rect x="0" y="0" width="1200" height="1000" fill="white" opacity="0">
+                <animate attributeName="opacity" values="0;0.3;0" dur="5s" repeatCount="indefinite"/>
+            </rect>
+        `;
+    } else if (weather === 'cloudy') {
+        // Light overlay
+        effectsHTML += `<rect x="0" y="0" width="1200" height="1000" fill="#556677" opacity="0.1"/>`;
+    }
+    
+    // Season-specific effects
+    if (season === 'leaf-fall' && weather !== 'rainy' && weather !== 'snowy') {
+        // Falling leaves in autumn
+        for (let i = 0; i < 15; i++) {
+            const x = Math.random() * 1200;
+            const y = Math.random() * 500;
+            const delay = Math.random() * 8;
+            const colors = ['#CD853F', '#8B4513', '#DAA520', '#B8860B', '#D2691E'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            effectsHTML += `
+                <ellipse cx="${x}" cy="${y}" rx="5" ry="3" fill="${color}" opacity="0.8">
+                    <animate attributeName="cy" values="${y};${y + 600}" dur="6s" repeatCount="indefinite" begin="${delay}s"/>
+                    <animate attributeName="cx" values="${x};${x + 50};${x - 30};${x + 20}" dur="4s" repeatCount="indefinite" begin="${delay}s"/>
+                    <animateTransform attributeName="transform" type="rotate" values="0;180;360" dur="3s" repeatCount="indefinite" begin="${delay}s"/>
+                </ellipse>
+            `;
+        }
+    }
+    
+    if (season === 'newleaf' && weather === 'sunny') {
+        // Flower petals in spring
+        for (let i = 0; i < 10; i++) {
+            const x = Math.random() * 1200;
+            const y = Math.random() * 300;
+            const delay = Math.random() * 10;
+            effectsHTML += `
+                <ellipse cx="${x}" cy="${y}" rx="4" ry="2" fill="#ffb6c1" opacity="0.6">
+                    <animate attributeName="cy" values="${y};${y + 700}" dur="8s" repeatCount="indefinite" begin="${delay}s"/>
+                    <animate attributeName="cx" values="${x};${x + 30};${x - 20}" dur="5s" repeatCount="indefinite" begin="${delay}s"/>
+                </ellipse>
+            `;
+        }
+    }
+    
+    return effectsHTML;
 }
 
 function renderSpeechBubbles() {
