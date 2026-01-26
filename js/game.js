@@ -329,6 +329,204 @@ function playSoundStarClan() {
     setTimeout(() => playTone(1200, 0.5, 'sine', 0.4), 600);
 }
 
+// Purr sound - rumbling
+function playSoundPurr() {
+    if (!soundEnabled) return;
+    for (let i = 0; i < 8; i++) {
+        setTimeout(() => playTone(80 + Math.random() * 20, 0.12, 'sine', 0.4), i * 100);
+    }
+}
+
+// Hunting/pounce sound
+function playSoundPounce() {
+    if (!soundEnabled) return;
+    playTone(200, 0.08, 'triangle', 0.6);
+    setTimeout(() => playTone(300, 0.08, 'triangle', 0.7), 50);
+    setTimeout(() => playTone(400, 0.1, 'triangle', 0.8), 100);
+}
+
+// Catch prey sound
+function playSoundCatch() {
+    if (!soundEnabled) return;
+    playTone(500, 0.1, 'square', 0.5);
+    setTimeout(() => playTone(700, 0.1, 'square', 0.6), 80);
+    setTimeout(() => playTone(600, 0.15, 'square', 0.5), 160);
+}
+
+// Splash sound (for RiverClan/water)
+function playSoundSplash() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        const bufferSize = ctx.sampleRate * 0.3;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            const decay = Math.exp(-i / (bufferSize * 0.15));
+            data[i] = (Math.random() * 2 - 1) * decay * 0.7;
+        }
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 800;
+        const gain = ctx.createGain();
+        gain.gain.value = 0.8;
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        source.start();
+    } catch(e) {}
+}
+
+// Wind whoosh sound
+function playSoundWind() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        const bufferSize = ctx.sampleRate * 0.5;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            const envelope = Math.sin(Math.PI * i / bufferSize);
+            data[i] = (Math.random() * 2 - 1) * envelope * 0.4;
+        }
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 400;
+        filter.Q.value = 1;
+        const gain = ctx.createGain();
+        gain.gain.value = 0.6;
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        source.start();
+    } catch(e) {}
+}
+
+// Thunder/lightning sound
+function playSoundThunder() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        const bufferSize = ctx.sampleRate * 0.8;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            const decay = Math.exp(-i / (bufferSize * 0.3));
+            data[i] = (Math.random() * 2 - 1) * decay * 0.9;
+        }
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 200;
+        const gain = ctx.createGain();
+        gain.gain.value = 1.0;
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        source.start();
+    } catch(e) {}
+}
+
+// Rain drops sound
+function playSoundRain() {
+    if (!soundEnabled) return;
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+            playTone(1000 + Math.random() * 500, 0.03, 'sine', 0.3);
+        }, i * 50 + Math.random() * 100);
+    }
+}
+
+// Bird chirp sound
+function playSoundBird() {
+    if (!soundEnabled) return;
+    playTone(1200, 0.08, 'sine', 0.5);
+    setTimeout(() => playTone(1400, 0.06, 'sine', 0.5), 80);
+    setTimeout(() => playTone(1300, 0.08, 'sine', 0.4), 150);
+}
+
+// Healing/medicine sound
+function playSoundHeal() {
+    if (!soundEnabled) return;
+    playTone(400, 0.15, 'sine', 0.5);
+    setTimeout(() => playTone(500, 0.15, 'sine', 0.6), 120);
+    setTimeout(() => playTone(600, 0.2, 'sine', 0.6), 240);
+    setTimeout(() => playTone(800, 0.25, 'sine', 0.5), 360);
+}
+
+// Footsteps running fast
+function playSoundRun() {
+    if (!soundEnabled) return;
+    for (let i = 0; i < 4; i++) {
+        setTimeout(() => {
+            playTone(100 + Math.random() * 80, 0.04, 'triangle', 0.4);
+        }, i * 60);
+    }
+}
+
+// Warning/alert sound
+function playSoundWarning() {
+    if (!soundEnabled) return;
+    playTone(800, 0.15, 'square', 0.6);
+    setTimeout(() => playTone(600, 0.15, 'square', 0.6), 200);
+    setTimeout(() => playTone(800, 0.15, 'square', 0.6), 400);
+}
+
+// Kit mew sound (smaller meow)
+function playSoundMew() {
+    if (!soundEnabled) return;
+    playTone(800, 0.1, 'sine', 0.6);
+    setTimeout(() => playTone(700, 0.12, 'sine', 0.7), 80);
+    setTimeout(() => playTone(600, 0.15, 'sine', 0.5), 160);
+}
+
+// Yowl/battle cry sound
+function playSoundYowl() {
+    if (!soundEnabled) return;
+    playTone(400, 0.2, 'sawtooth', 0.7);
+    setTimeout(() => playTone(600, 0.25, 'sawtooth', 0.8), 150);
+    setTimeout(() => playTone(500, 0.3, 'sawtooth', 0.6), 350);
+}
+
+// Victory/win sound
+function playSoundVictory() {
+    if (!soundEnabled) return;
+    playTone(523, 0.15, 'sine', 0.7);
+    setTimeout(() => playTone(659, 0.15, 'sine', 0.7), 120);
+    setTimeout(() => playTone(784, 0.15, 'sine', 0.7), 240);
+    setTimeout(() => playTone(1047, 0.3, 'sine', 0.9), 360);
+}
+
+// Rustling leaves sound
+function playSoundRustle() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        const bufferSize = ctx.sampleRate * 0.2;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * 0.3 * Math.exp(-i / (bufferSize * 0.5));
+        }
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 2000;
+        const gain = ctx.createGain();
+        gain.gain.value = 0.5;
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        source.start();
+    } catch(e) {}
+}
+
 // Toggle sound on/off
 function toggleSound() {
     soundEnabled = !soundEnabled;
@@ -399,7 +597,16 @@ function updateWeatherForSeason() {
 // Random weather change (called occasionally)
 function randomWeatherChange() {
     if (Math.random() < 0.1) { // 10% chance each time
+        const oldWeather = GameState.weather;
         updateWeatherForSeason();
+        
+        // Play weather sounds when weather changes
+        if (GameState.weather !== oldWeather) {
+            if (GameState.weather === 'rainy') playSoundRain();
+            else if (GameState.weather === 'stormy') playSoundThunder();
+            else if (GameState.weather === 'snowy') playSoundWind();
+        }
+        
         const weatherMessages = {
             'sunny': 'The sun breaks through the clouds!',
             'cloudy': 'Clouds gather overhead...',
@@ -4366,11 +4573,13 @@ function moveIntoBarn() {
 function barnHunt() {
     const cat = GameState.catData;
     
+    playSoundPounce();
     showMessage('You stalk through the hay bales, listening for mice...');
     
     setTimeout(() => {
         // 70% success - barn mice are plentiful!
         if (Math.random() < 0.7) {
+            playSoundCatch();
             cat.hunger = Math.min(100, cat.hunger + 35);
             const catches = ['a fat mouse', 'two mice', 'a plump vole', 'a sleepy mouse'];
             const caught = catches[Math.floor(Math.random() * catches.length)];
@@ -5595,17 +5804,20 @@ function askToJoinClan(clanName) {
 
 // Loner hunting (harder than clan hunting)
 function lonerHunt() {
+    playSoundPounce();
     showMessage('You stalk through the forest alone...');
     
     setTimeout(() => {
         // 50% success rate for loners (no training)
         if (Math.random() < 0.5) {
+            playSoundCatch();
             const cat = GameState.catData;
             cat.hunger = Math.min(100, cat.hunger + 30);
             showMessage('You caught a mouse! It\'s not much, but it\'s yours.');
             updateGameUI();
             saveGameData();
         } else {
+            playSoundRustle();
             showMessage('The prey escapes. Hunting alone is hard...');
         }
     }, 2000);
@@ -8078,6 +8290,7 @@ function battleAttack(attackType) {
                 battle.threatHealth = 0;
                 battle.message = `You defeated the ${battle.threatName}! You are victorious!`;
                 battle.battleOver = true;
+                playSoundVictory();
                 cat.experience += 30;
                 cat.health = battle.playerHealth;
                 updateGameUI();
@@ -8227,6 +8440,7 @@ function askForHealing() {
     const cat = GameState.catData;
     const healAmount = 20;
     
+    playSoundHeal();
     cat.health = Math.min(100, cat.health + healAmount);
     showMessage(`💊 The medicine cat healed you! (+${healAmount} health)`);
     updateGameUI();
@@ -8717,33 +8931,41 @@ function performAction(action) {
     
     switch (action) {
         case 'hunt':
+            playSoundPounce();
             if (Math.random() > 0.3) {
+                setTimeout(() => playSoundCatch(), 300);
                 cat.hunger = Math.min(100, cat.hunger + 30);
                 cat.experience += 10;
                 message = '🎯 You caught a mouse! Yummy!';
             } else {
+                setTimeout(() => playSoundRustle(), 300);
                 message = '🐭 The mouse got away...';
             }
             break;
             
         case 'drink':
+            playSoundSplash();
             cat.thirst = Math.min(100, cat.thirst + 40);
             message = '💧 Refreshing water!';
             break;
             
         case 'patrol':
+            playSoundRun();
             if (Math.random() > 0.7) {
                 // Enemy encounter
+                setTimeout(() => playSoundYowl(), 200);
                 cat.health = Math.max(0, cat.health - 15);
                 cat.experience += 20;
                 message = '⚔️ You fought off an intruder! (-15 health)';
             } else {
+                setTimeout(() => playSoundBird(), 300);
                 cat.experience += 5;
                 message = '👁️ Territory is safe!';
             }
             break;
             
         case 'rest':
+            playSoundPurr();
             cat.health = Math.min(100, cat.health + 20);
             // Age is added in endNight() - not here!
             message = '😴 You feel rested!';
@@ -8977,6 +9199,7 @@ function toggleRest() {
 
 function doPurr() {
     GameState.currentEmotion = 'happy';
+    playSoundPurr();
     showSpeechBubble('player', '*purrrrrr*');
     showMessage('You purr happily! Your clanmates smile.');
     
@@ -9008,6 +9231,7 @@ function doPurr() {
 
 function doHiss() {
     GameState.currentEmotion = 'mad';
+    playSoundHiss();
     showSpeechBubble('player', '*HISSSSS!*');
     showMessage('You hiss! Your fur stands on end!');
     
@@ -9605,6 +9829,13 @@ function toggleHide() {
 }
 
 function doMeow() {
+    // Kits make a mew, older cats make a meow
+    const cat = GameState.catData;
+    if (cat && cat.rank === 'Kit') {
+        playSoundMew();
+    } else {
+        playSoundMeow();
+    }
     showSpeechBubble('player', 'Meow!');
     
     // Random clanmate responds with speech bubble
