@@ -8312,30 +8312,47 @@ function startGameLoop() {
             const isKittypet = cat.isKittypet || playerClan === 'kittypet';
             
             if (currentTerritory && !isInOwnTerritory && !isLoner && !isKittypet) {
-                // 40% chance of being chased!
-                if (Math.random() < 0.40) {
-                    const clanNames = { thunder: 'ThunderClan', river: 'RiverClan', shadow: 'ShadowClan', wind: 'WindClan' };
-                    const enemyClan = clanNames[currentTerritory];
-                    const warriors = ['a patrol', 'border guards', 'enemy warriors', 'a hunting party'];
-                    const chasers = warriors[Math.floor(Math.random() * warriors.length)];
-                    
-                    GameState.justChasedOut = true;
-                    setTimeout(() => { GameState.justChasedOut = false; }, 30000); // Can't be chased again for 30s
-                    
-                    showMessage(`${chasers} from ${enemyClan} spotted you trespassing!`);
-                    
-                    setTimeout(() => {
-                        showMessage(`"Get out of our territory, intruder!" They chase you away!`);
-                        cat.health -= 10;
+                const clanNames = { thunder: 'ThunderClan', river: 'RiverClan', shadow: 'ShadowClan', wind: 'WindClan' };
+                const enemyClan = clanNames[currentTerritory];
+                
+                // KITS GET CAUGHT if they're in enemy territory without an escort!
+                if (cat.rank === 'Kit' && !GameState.followingWarrior) {
+                    // 80% chance of getting caught as a helpless kit!
+                    if (Math.random() < 0.80) {
+                        GameState.justChasedOut = true;
+                        setTimeout(() => { GameState.justChasedOut = false; }, 60000);
                         
-                        // Push player back toward center of map
-                        GameState.playerX = 600;
-                        GameState.playerY = 500;
+                        showMessage(`Oh no! ${enemyClan} warriors found you alone in their territory!`);
                         
-                        updateGameUI();
-                        saveGameData();
-                        renderGameWorld();
-                    }, 2000);
+                        setTimeout(() => {
+                            kitCaughtByEnemyClan(currentTerritory, enemyClan);
+                        }, 2000);
+                        return;
+                    }
+                } else {
+                    // 40% chance of being chased!
+                    if (Math.random() < 0.40) {
+                        const warriors = ['a patrol', 'border guards', 'enemy warriors', 'a hunting party'];
+                        const chasers = warriors[Math.floor(Math.random() * warriors.length)];
+                        
+                        GameState.justChasedOut = true;
+                        setTimeout(() => { GameState.justChasedOut = false; }, 30000); // Can't be chased again for 30s
+                        
+                        showMessage(`${chasers} from ${enemyClan} spotted you trespassing!`);
+                        
+                        setTimeout(() => {
+                            showMessage(`"Get out of our territory, intruder!" They chase you away!`);
+                            cat.health -= 10;
+                            
+                            // Push player back toward center of map
+                            GameState.playerX = 600;
+                            GameState.playerY = 500;
+                            
+                            updateGameUI();
+                            saveGameData();
+                            renderGameWorld();
+                        }, 2000);
+                    }
                 }
             }
         }
@@ -10967,6 +10984,174 @@ function startRaid() {
 }
 
 // When you get stolen by another clan
+// Kit caught wandering into enemy territory alone!
+function kitCaughtByEnemyClan(clanKey, clanName) {
+    const cat = GameState.catData;
+    const oldClan = CLANS[cat.clan]?.name || 'your clan';
+    
+    showMessage(`"Look what we have here... a ${oldClan} kit all alone!"`);
+    
+    setTimeout(() => {
+        const catcherNames = {
+            thunder: ['Brambleclaw', 'Dustpelt', 'Graystripe'],
+            river: ['Hawkfrost', 'Mistyfoot', 'Stormfur'],
+            shadow: ['Russetfur', 'Rowanclaw', 'Oakfur'],
+            wind: ['Mudclaw', 'Onewhisker', 'Webfoot']
+        };
+        const catchers = catcherNames[clanKey] || ['a warrior'];
+        const catcher = catchers[Math.floor(Math.random() * catchers.length)];
+        
+        showMessage(`${catcher} picks you up by the scruff. "You're coming with us, little one."`);
+        
+        setTimeout(() => {
+            // Show the popup with options
+            showKitCaughtPopup(clanKey, clanName, catcher);
+        }, 2500);
+    }, 2500);
+}
+
+// Show popup when kit is caught
+function showKitCaughtPopup(clanKey, clanName, catcher) {
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = `CAUGHT BY ${clanName.toUpperCase()}!`;
+    desc.textContent = `${catcher} has caught you trespassing in ${clanName} territory! You're just a helpless kit... What happens now is up to them.`;
+    actions.innerHTML = '';
+    
+    popup.classList.remove('hidden');
+    
+    // Different outcomes based on clan
+    const outcomes = [];
+    
+    if (clanKey === 'shadow') {
+        // ShadowClan is meanest - might keep you or hurt you
+        outcomes.push({ weight: 40, action: 'keep', text: 'Keep as Prisoner' });
+        outcomes.push({ weight: 30, action: 'hurt', text: 'Teach a Lesson' });
+        outcomes.push({ weight: 30, action: 'return', text: 'Return with Warning' });
+    } else if (clanKey === 'river') {
+        // RiverClan is kinder
+        outcomes.push({ weight: 20, action: 'keep', text: 'Keep for Now' });
+        outcomes.push({ weight: 10, action: 'hurt', text: 'Scare Them' });
+        outcomes.push({ weight: 70, action: 'return', text: 'Return Safely' });
+    } else if (clanKey === 'wind') {
+        // WindClan is fair
+        outcomes.push({ weight: 30, action: 'keep', text: 'Hold Until Rescued' });
+        outcomes.push({ weight: 20, action: 'hurt', text: 'Chase Away' });
+        outcomes.push({ weight: 50, action: 'return', text: 'Escort Home' });
+    } else {
+        // ThunderClan is usually kind
+        outcomes.push({ weight: 15, action: 'keep', text: 'Keep Until Parents Come' });
+        outcomes.push({ weight: 15, action: 'hurt', text: 'Scold Harshly' });
+        outcomes.push({ weight: 70, action: 'return', text: 'Bring Home Safely' });
+    }
+    
+    // Pick a random outcome based on weights
+    const totalWeight = outcomes.reduce((sum, o) => sum + o.weight, 0);
+    let random = Math.random() * totalWeight;
+    let selectedOutcome = outcomes[0];
+    
+    for (const outcome of outcomes) {
+        random -= outcome.weight;
+        if (random <= 0) {
+            selectedOutcome = outcome;
+            break;
+        }
+    }
+    
+    // Show what happens
+    setTimeout(() => {
+        executeKitCaughtOutcome(clanKey, clanName, catcher, selectedOutcome.action);
+    }, 1000);
+}
+
+// Execute the outcome when kit is caught
+function executeKitCaughtOutcome(clanKey, clanName, catcher, outcome) {
+    const cat = GameState.catData;
+    const oldClan = CLANS[cat.clan]?.name || 'your clan';
+    
+    closePopup();
+    
+    if (outcome === 'keep') {
+        // Kit is kept by the enemy clan!
+        showMessage(`${catcher}: "This kit belongs to ${clanName} now."`);
+        
+        setTimeout(() => {
+            showMessage(`You are carried into ${clanName}'s camp as a prisoner...`);
+            
+            setTimeout(() => {
+                // Change clan!
+                cat.clan = clanKey;
+                GameState.selectedClan = clanKey;
+                GameState.currentLocation = 'camp';
+                GameState.playerX = 225;
+                GameState.playerY = 250;
+                
+                showMessage(`You are now a kit of ${clanName}. Maybe you can escape one day...`);
+                
+                renderGameWorld();
+                updateGameUI();
+                saveGameData();
+            }, 2500);
+        }, 2500);
+        
+    } else if (outcome === 'hurt') {
+        // Kit gets hurt/scared
+        showMessage(`${catcher}: "Let's teach this kit a lesson about trespassing!"`);
+        
+        setTimeout(() => {
+            const damage = 15 + Math.floor(Math.random() * 10);
+            cat.health -= damage;
+            
+            showMessage(`The ${clanName} cats scratch and hiss at you! (-${damage} health)`);
+            
+            setTimeout(() => {
+                showMessage(`They throw you back across the border. "Don't come back!"`);
+                
+                // Return to own territory
+                GameState.playerX = 600;
+                GameState.playerY = 500;
+                
+                if (cat.health <= 0) {
+                    catDeath(clanName);
+                } else {
+                    renderGameWorld();
+                    updateGameUI();
+                    saveGameData();
+                }
+            }, 2500);
+        }, 2500);
+        
+    } else {
+        // Kit is returned home
+        showMessage(`${catcher}: "You're lucky we're not monsters. Let's get you home."`);
+        
+        setTimeout(() => {
+            showMessage(`${catcher} carries you back to the border...`);
+            
+            setTimeout(() => {
+                showMessage(`"Tell your ${oldClan} to watch their kits better!"`);
+                
+                // Return to camp
+                GameState.currentLocation = 'camp';
+                GameState.playerX = 225;
+                GameState.playerY = 250;
+                
+                setTimeout(() => {
+                    showMessage(`You made it home safe, but the Clan is upset you wandered off!`);
+                    cat.experience = Math.max(0, cat.experience - 5);
+                    
+                    renderGameWorld();
+                    updateGameUI();
+                    saveGameData();
+                }, 2500);
+            }, 2500);
+        }, 2500);
+    }
+}
+
 function getStolenByClan(clanKey, clanName) {
     const cat = GameState.catData;
     const oldClan = CLANS[cat.clan]?.name || 'your clan';
