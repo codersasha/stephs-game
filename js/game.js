@@ -857,6 +857,7 @@ function showScreen(screenName) {
 
 // ============= EASTER EGG - CAT DANCE PARTY! =============
 let easterEggActive = false;
+let easterEggUnlocked = false; // TRUE only if you tapped the moon on the home screen!
 let danceInterval = null;
 let musicInterval = null;
 
@@ -864,6 +865,9 @@ function triggerEasterEgg() {
     if (easterEggActive) {
         stopCatDanceParty();
     } else {
+        // Tapping the moon UNLOCKS the party for this session!
+        easterEggUnlocked = true;
+        console.log('[triggerEasterEgg] Easter egg UNLOCKED by tapping moon!');
         startCatDanceParty();
     }
 }
@@ -1356,13 +1360,19 @@ function addGamePartyEffects() {
 
 // Toggle party in game (press P or tap party button)
 function toggleGameParty() {
-    console.log('[toggleGameParty] Called! easterEggActive=' + easterEggActive);
+    console.log('[toggleGameParty] Called! easterEggActive=' + easterEggActive + ', easterEggUnlocked=' + easterEggUnlocked);
+    
+    // Party ONLY works if you tapped the moon on the home screen first!
+    if (!easterEggUnlocked) {
+        console.log('[toggleGameParty] Party NOT unlocked - moon was not tapped!');
+        // Don't tell them what to do - it's a secret!
+        return;
+    }
     
     if (easterEggActive) {
         stopCatDanceParty();
         showMessage('Party stopped!');
     } else {
-        // Start party in game - works even if you didn't tap the moon!
         startPartyInGame();
     }
 }
@@ -1415,6 +1425,16 @@ function startGame() {
     if (GameState.currentScreen === 'home') {
         playSoundClick();
         playSoundSuccess();
+        
+        // Reset easter egg - must tap moon on home screen each time to unlock party!
+        // If party is active, it stays active. If not, you need to tap moon next time.
+        if (!easterEggActive) {
+            easterEggUnlocked = false;
+            console.log('[startGame] Easter egg reset - moon not tapped this time');
+        } else {
+            console.log('[startGame] Easter egg stays unlocked - party is active!');
+        }
+        
         showScreen('mode'); // Go to mode selection (single/multiplayer)
     }
 }
@@ -12291,6 +12311,14 @@ function restartGame() {
     localStorage.removeItem(`warriorcats_save_${GameState.selectedSlot}`);
     GameState.catData = null;
     GameState.selectedSlot = null;
+    
+    // Stop any party and reset easter egg
+    if (easterEggActive) {
+        stopCatDanceParty();
+    }
+    easterEggUnlocked = false;
+    console.log('[restartGame] Easter egg reset');
+    
     showScreen('clan');
 }
 
