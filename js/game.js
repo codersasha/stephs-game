@@ -204,20 +204,20 @@ function playTone(frequency, duration, type = 'sine', volume = 0.3) {
     } catch (e) { }
 }
 
-// Cat meow sound
+// Cat meow sound - LOUD!
 function playSoundMeow() {
     if (!soundEnabled) return;
-    playTone(600, 0.1, 'sine', 0.2);
-    setTimeout(() => playTone(500, 0.15, 'sine', 0.25), 100);
-    setTimeout(() => playTone(400, 0.2, 'sine', 0.2), 200);
+    playTone(600, 0.15, 'sine', 0.7);
+    setTimeout(() => playTone(500, 0.2, 'sine', 0.8), 100);
+    setTimeout(() => playTone(400, 0.25, 'sine', 0.7), 200);
 }
 
-// Cat hiss sound
+// Cat hiss sound - LOUD!
 function playSoundHiss() {
     if (!soundEnabled) return;
     try {
         const ctx = initAudio();
-        const bufferSize = ctx.sampleRate * 0.3;
+        const bufferSize = ctx.sampleRate * 0.4;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
@@ -228,105 +228,105 @@ function playSoundHiss() {
         source.buffer = buffer;
         source.connect(gainNode);
         gainNode.connect(ctx.destination);
-        gainNode.gain.value = 0.15;
+        gainNode.gain.value = 0.6;
         source.start();
     } catch (e) { }
 }
 
-// Click/UI sound
+// Click/UI sound - LOUD!
 function playSoundClick() {
-    playTone(800, 0.05, 'square', 0.1);
+    playTone(800, 0.08, 'square', 0.5);
 }
 
-// Success/positive sound
+// Success/positive sound - LOUD!
 function playSoundSuccess() {
-    playTone(523, 0.1, 'sine', 0.2);
-    setTimeout(() => playTone(659, 0.1, 'sine', 0.2), 100);
-    setTimeout(() => playTone(784, 0.15, 'sine', 0.25), 200);
+    playTone(523, 0.15, 'sine', 0.7);
+    setTimeout(() => playTone(659, 0.15, 'sine', 0.7), 100);
+    setTimeout(() => playTone(784, 0.2, 'sine', 0.8), 200);
 }
 
-// Fail/negative sound
+// Fail/negative sound - LOUD!
 function playSoundFail() {
-    playTone(300, 0.15, 'sawtooth', 0.15);
-    setTimeout(() => playTone(200, 0.2, 'sawtooth', 0.1), 150);
+    playTone(300, 0.2, 'sawtooth', 0.6);
+    setTimeout(() => playTone(200, 0.25, 'sawtooth', 0.5), 150);
 }
 
-// Attack/scratch sound
+// Attack/scratch sound - LOUD!
 function playSoundAttack() {
-    playTone(150, 0.05, 'sawtooth', 0.3);
-    setTimeout(() => playTone(200, 0.05, 'sawtooth', 0.25), 30);
-    setTimeout(() => playTone(100, 0.1, 'sawtooth', 0.2), 60);
+    playTone(150, 0.08, 'sawtooth', 0.8);
+    setTimeout(() => playTone(200, 0.08, 'sawtooth', 0.7), 30);
+    setTimeout(() => playTone(100, 0.12, 'sawtooth', 0.6), 60);
 }
 
-// Hurt sound
+// Hurt sound - LOUD!
 function playSoundHurt() {
-    playTone(200, 0.1, 'sawtooth', 0.2);
-    setTimeout(() => playTone(150, 0.15, 'sawtooth', 0.15), 80);
+    playTone(200, 0.15, 'sawtooth', 0.7);
+    setTimeout(() => playTone(150, 0.2, 'sawtooth', 0.6), 80);
 }
 
-// Eating sound
+// Eating sound - LOUD!
 function playSoundEat() {
-    playTone(300, 0.05, 'square', 0.1);
-    setTimeout(() => playTone(350, 0.05, 'square', 0.1), 80);
-    setTimeout(() => playTone(300, 0.05, 'square', 0.1), 160);
+    playTone(300, 0.08, 'square', 0.5);
+    setTimeout(() => playTone(350, 0.08, 'square', 0.5), 80);
+    setTimeout(() => playTone(300, 0.08, 'square', 0.5), 160);
 }
 
-// Drinking sound
+// Drinking sound - LOUD!
 function playSoundDrink() {
-    playTone(500, 0.03, 'sine', 0.1);
-    setTimeout(() => playTone(550, 0.03, 'sine', 0.1), 50);
-    setTimeout(() => playTone(500, 0.03, 'sine', 0.1), 100);
-    setTimeout(() => playTone(550, 0.03, 'sine', 0.1), 150);
+    playTone(500, 0.06, 'sine', 0.5);
+    setTimeout(() => playTone(550, 0.06, 'sine', 0.5), 50);
+    setTimeout(() => playTone(500, 0.06, 'sine', 0.5), 100);
+    setTimeout(() => playTone(550, 0.06, 'sine', 0.5), 150);
 }
 
-// Walking/step sound
+// Walking/step sound - LOUD!
 function playSoundStep() {
-    playTone(100 + Math.random() * 50, 0.03, 'triangle', 0.05);
+    playTone(100 + Math.random() * 50, 0.05, 'triangle', 0.3);
 }
 
-// Level up / ceremony sound
+// Level up / ceremony sound - LOUD!
 function playSoundLevelUp() {
-    playTone(392, 0.15, 'sine', 0.2);
-    setTimeout(() => playTone(523, 0.15, 'sine', 0.25), 150);
-    setTimeout(() => playTone(659, 0.15, 'sine', 0.3), 300);
-    setTimeout(() => playTone(784, 0.3, 'sine', 0.35), 450);
+    playTone(392, 0.2, 'sine', 0.7);
+    setTimeout(() => playTone(523, 0.2, 'sine', 0.8), 150);
+    setTimeout(() => playTone(659, 0.2, 'sine', 0.9), 300);
+    setTimeout(() => playTone(784, 0.4, 'sine', 1.0), 450);
 }
 
-// Night/sleep sound
+// Night/sleep sound - LOUD!
 function playSoundNight() {
-    playTone(200, 0.5, 'sine', 0.1);
-    setTimeout(() => playTone(180, 0.5, 'sine', 0.08), 400);
-    setTimeout(() => playTone(160, 0.6, 'sine', 0.06), 800);
+    playTone(200, 0.6, 'sine', 0.5);
+    setTimeout(() => playTone(180, 0.6, 'sine', 0.4), 400);
+    setTimeout(() => playTone(160, 0.7, 'sine', 0.3), 800);
 }
 
-// Morning sound
+// Morning sound - LOUD!
 function playSoundMorning() {
-    playTone(400, 0.1, 'sine', 0.15);
-    setTimeout(() => playTone(500, 0.1, 'sine', 0.2), 150);
-    setTimeout(() => playTone(600, 0.15, 'sine', 0.25), 300);
+    playTone(400, 0.15, 'sine', 0.6);
+    setTimeout(() => playTone(500, 0.15, 'sine', 0.7), 150);
+    setTimeout(() => playTone(600, 0.2, 'sine', 0.8), 300);
 }
 
-// Danger/threat sound
+// Danger/threat sound - LOUD!
 function playSoundDanger() {
-    playTone(150, 0.1, 'sawtooth', 0.3);
-    setTimeout(() => playTone(120, 0.1, 'sawtooth', 0.3), 150);
-    setTimeout(() => playTone(150, 0.1, 'sawtooth', 0.3), 300);
+    playTone(150, 0.15, 'sawtooth', 0.8);
+    setTimeout(() => playTone(120, 0.15, 'sawtooth', 0.8), 150);
+    setTimeout(() => playTone(150, 0.15, 'sawtooth', 0.8), 300);
 }
 
-// Death sound
+// Death sound - LOUD!
 function playSoundDeath() {
-    playTone(400, 0.2, 'sine', 0.2);
-    setTimeout(() => playTone(300, 0.3, 'sine', 0.15), 200);
-    setTimeout(() => playTone(200, 0.4, 'sine', 0.1), 500);
-    setTimeout(() => playTone(100, 0.5, 'sine', 0.05), 900);
+    playTone(400, 0.3, 'sine', 0.7);
+    setTimeout(() => playTone(300, 0.4, 'sine', 0.6), 200);
+    setTimeout(() => playTone(200, 0.5, 'sine', 0.5), 500);
+    setTimeout(() => playTone(100, 0.6, 'sine', 0.4), 900);
 }
 
-// StarClan mystical sound
+// StarClan mystical sound - LOUD!
 function playSoundStarClan() {
-    playTone(600, 0.3, 'sine', 0.1);
-    setTimeout(() => playTone(800, 0.3, 'sine', 0.1), 200);
-    setTimeout(() => playTone(1000, 0.3, 'sine', 0.1), 400);
-    setTimeout(() => playTone(1200, 0.4, 'sine', 0.08), 600);
+    playTone(600, 0.4, 'sine', 0.5);
+    setTimeout(() => playTone(800, 0.4, 'sine', 0.5), 200);
+    setTimeout(() => playTone(1000, 0.4, 'sine', 0.5), 400);
+    setTimeout(() => playTone(1200, 0.5, 'sine', 0.4), 600);
 }
 
 // Toggle sound on/off
