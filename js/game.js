@@ -1082,6 +1082,88 @@ function showPartyMessage(text) {
     msg.style.display = 'block';
 }
 
+// Add disco overlay for when there's no SVG (fallback)
+function addDiscoOverlay() {
+    // Remove old overlay
+    document.getElementById('disco-overlay')?.remove();
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'disco-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 50;
+        overflow: hidden;
+    `;
+    
+    // Add colorful disco lights
+    for (let i = 0; i < 6; i++) {
+        const light = document.createElement('div');
+        light.style.cssText = `
+            position: absolute;
+            width: ${100 + Math.random() * 100}px;
+            height: ${100 + Math.random() * 100}px;
+            border-radius: 50%;
+            left: ${Math.random() * 100}%;
+            top: ${Math.random() * 100}%;
+            opacity: 0.3;
+            animation: discoLight${i} 1s ease-in-out infinite;
+        `;
+        overlay.appendChild(light);
+    }
+    
+    // Add dancing cat emojis at bottom
+    const catRow = document.createElement('div');
+    catRow.style.cssText = `
+        position: absolute;
+        bottom: 80px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 40px;
+        animation: catBounce 0.4s ease-in-out infinite;
+    `;
+    catRow.innerHTML = '🐱 🎉 🐱 🎵 🐱 🎉 🐱 🎵 🐱';
+    overlay.appendChild(catRow);
+    
+    // Add "CAT PARTY!" text
+    const partyText = document.createElement('div');
+    partyText.style.cssText = `
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        color: #ffd700;
+        text-shadow: 2px 2px 4px black, 0 0 20px #ff00ff;
+        animation: catBounce 0.5s ease-in-out infinite;
+    `;
+    partyText.innerHTML = '🎉 CAT PARTY! 🎉';
+    overlay.appendChild(partyText);
+    
+    // Add keyframe animation styles
+    const style = document.createElement('style');
+    style.id = 'disco-overlay-style';
+    style.textContent = `
+        @keyframes discoLight0 { 0%, 100% { background: rgba(255,0,0,0.3); } 50% { background: rgba(255,255,0,0.3); } }
+        @keyframes discoLight1 { 0%, 100% { background: rgba(0,255,0,0.3); } 50% { background: rgba(0,255,255,0.3); } }
+        @keyframes discoLight2 { 0%, 100% { background: rgba(0,0,255,0.3); } 50% { background: rgba(255,0,255,0.3); } }
+        @keyframes discoLight3 { 0%, 100% { background: rgba(255,0,255,0.3); } 50% { background: rgba(255,255,0,0.3); } }
+        @keyframes discoLight4 { 0%, 100% { background: rgba(255,128,0,0.3); } 50% { background: rgba(0,255,128,0.3); } }
+        @keyframes discoLight5 { 0%, 100% { background: rgba(128,0,255,0.3); } 50% { background: rgba(255,0,128,0.3); } }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(overlay);
+    console.log('[addDiscoOverlay] Disco overlay added!');
+}
+
 function stopCatDanceParty() {
     easterEggActive = false;
     
@@ -1104,6 +1186,10 @@ function stopCatDanceParty() {
     document.getElementById('game-party-cats')?.remove();
     document.getElementById('game-disco-ball')?.remove();
     document.getElementById('game-party-text')?.remove();
+    
+    // Remove disco overlay
+    document.getElementById('disco-overlay')?.remove();
+    document.getElementById('disco-overlay-style')?.remove();
     
     // Reset original cats on home screen
     const catsScene = document.getElementById('cats-scene');
@@ -1131,19 +1217,35 @@ function stopCatDanceParty() {
 
 // Add party effects to the game world!
 function addGamePartyEffects() {
-    if (!easterEggActive) return;
+    console.log('[addGamePartyEffects] Starting...');
+    
+    if (!easterEggActive) {
+        console.log('[addGamePartyEffects] Party not active, returning');
+        return;
+    }
     
     const gameWorld = document.getElementById('game-world');
-    if (!gameWorld) return;
+    if (!gameWorld) {
+        console.log('[addGamePartyEffects] No game-world found!');
+        return;
+    }
     
     const svg = gameWorld.querySelector('svg');
-    if (!svg) return;
+    if (!svg) {
+        console.log('[addGamePartyEffects] No SVG in game-world, adding disco overlay div instead');
+        // Add a colorful disco overlay even without SVG
+        addDiscoOverlay();
+        return;
+    }
+    
+    console.log('[addGamePartyEffects] Found SVG, adding party effects!');
     
     // Remove old party elements first
     document.getElementById('game-disco-lights')?.remove();
     document.getElementById('game-party-cats')?.remove();
     document.getElementById('game-disco-ball')?.remove();
     document.getElementById('game-party-text')?.remove();
+    document.getElementById('disco-overlay')?.remove();
     
     // Add disco lights overlay
     const discoLights = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -1247,8 +1349,11 @@ function addGamePartyEffects() {
 
 // Toggle party in game (press P or tap party button)
 function toggleGameParty() {
+    console.log('[toggleGameParty] Called! easterEggActive=' + easterEggActive);
+    
     if (easterEggActive) {
         stopCatDanceParty();
+        showMessage('Party stopped!');
     } else {
         // Start party in game!
         easterEggActive = true;
@@ -1272,9 +1377,17 @@ function toggleGameParty() {
             document.head.appendChild(style);
         }
         
+        // Add party effects to game world
         addGamePartyEffects();
+        
+        // Start music
         playDanceMusic();
+        
+        // Show party message
         showPartyMessage('🎉 CAT DANCE PARTY! 🎉');
+        showMessage('🎉 Party started! Tap 🎉 again to stop!');
+        
+        console.log('[toggleGameParty] Party started!');
     }
 }
 
