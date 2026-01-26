@@ -220,3 +220,13 @@ if (typeof module !== 'undefined' && module.exports) {
         canStartParty
     };
 }
+
+// Also expose globally for browser testing
+if (typeof window !== 'undefined') {
+    window.createPartyState = createPartyState;
+    window.startParty = startParty;
+    window.stopParty = stopParty;
+    window.toggleParty = toggleParty;
+    window.validatePartyState = validatePartyState;
+    window.canStartParty = canStartParty;
+}
