@@ -1931,6 +1931,16 @@ function updateTutorialPage() {
 function startGameplay() {
     const cat = GameState.catData;
     
+    // IMPORTANT: Hide/show party button based on easter egg unlock status!
+    const partyBtn = document.getElementById('emote-party');
+    if (partyBtn) {
+        if (easterEggUnlocked) {
+            partyBtn.classList.remove('hidden');
+        } else {
+            partyBtn.classList.add('hidden');
+        }
+    }
+    
     // Check if cat is dead - go to appropriate afterlife
     if (cat.inDarkForest || cat.rank === 'Dark Forest') {
         showDarkForestScreen();
