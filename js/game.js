@@ -181,22 +181,56 @@ function createCatsSVG() {
     const catsScene = document.getElementById('cats-scene');
     catsScene.innerHTML = `
         <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
-            <!-- Ground -->
-            <ellipse cx="200" cy="190" rx="180" ry="20" fill="#1a3a2e"/>
+            <defs>
+                <!-- Glow filters -->
+                <filter id="eyeGlow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+                <filter id="starGlow">
+                    <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+                <!-- Gradient for ground -->
+                <linearGradient id="groundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#2a4a3e"/>
+                    <stop offset="100%" style="stop-color:#0a1a0e"/>
+                </linearGradient>
+            </defs>
             
-            <!-- Moon -->
-            <circle cx="350" cy="40" r="25" fill="#ffd700" opacity="0.9"/>
-            <circle cx="340" cy="35" r="20" fill="#0d1b2a"/>
+            <!-- Animated fog/mist at bottom -->
+            <ellipse cx="100" cy="185" rx="80" ry="15" fill="#3a5a4a" opacity="0.3">
+                <animate attributeName="cx" values="100;120;100" dur="8s" repeatCount="indefinite"/>
+            </ellipse>
+            <ellipse cx="300" cy="188" rx="90" ry="12" fill="#3a5a4a" opacity="0.25">
+                <animate attributeName="cx" values="300;280;300" dur="10s" repeatCount="indefinite"/>
+            </ellipse>
             
-            <!-- Cat 1 - Orange tabby (ThunderClan style) -->
-            <g transform="translate(50, 100)">
+            <!-- Ground with grass effect -->
+            <ellipse cx="200" cy="190" rx="190" ry="25" fill="url(#groundGrad)"/>
+            <path d="M20 175 L25 165 L30 175 M50 178 L55 168 L60 178 M80 176 L85 166 L90 176" stroke="#4a7a5a" stroke-width="2" fill="none"/>
+            <path d="M310 176 L315 166 L320 176 M340 178 L345 168 L350 178 M370 175 L375 165 L380 175" stroke="#4a7a5a" stroke-width="2" fill="none"/>
+            
+            <!-- Cat 1 - Orange tabby (ThunderClan - Firestar style) with animation -->
+            <g transform="translate(50, 100)" class="cat-firestar">
+                <animateTransform attributeName="transform" type="translate" values="50,100;50,98;50,100" dur="3s" repeatCount="indefinite" additive="replace"/>
+                <!-- Shadow -->
+                <ellipse cx="40" cy="78" rx="30" ry="8" fill="#000" opacity="0.3"/>
                 <!-- Body -->
                 <ellipse cx="40" cy="50" rx="35" ry="25" fill="#d35400"/>
                 <ellipse cx="40" cy="50" rx="32" ry="22" fill="#e67e22"/>
-                <!-- Stripes -->
-                <path d="M25 35 Q30 50 25 65" stroke="#c0392b" stroke-width="3" fill="none"/>
-                <path d="M40 30 Q45 50 40 70" stroke="#c0392b" stroke-width="3" fill="none"/>
-                <path d="M55 35 Q50 50 55 65" stroke="#c0392b" stroke-width="3" fill="none"/>
+                <!-- Stripes with glow -->
+                <path d="M25 35 Q30 50 25 65" stroke="#ff6b35" stroke-width="3" fill="none" opacity="0.8"/>
+                <path d="M40 30 Q45 50 40 70" stroke="#ff6b35" stroke-width="3" fill="none" opacity="0.8"/>
+                <path d="M55 35 Q50 50 55 65" stroke="#ff6b35" stroke-width="3" fill="none" opacity="0.8"/>
+                <!-- Flame effect on fur -->
+                <ellipse cx="35" cy="45" rx="5" ry="8" fill="#ff9800" opacity="0.4"/>
                 <!-- Head -->
                 <circle cx="75" cy="35" r="20" fill="#e67e22"/>
                 <!-- Ears -->
@@ -204,64 +238,140 @@ function createCatsSVG() {
                 <polygon points="85,15 95,0 90,20" fill="#e67e22"/>
                 <polygon points="63,18 67,5 73,15" fill="#ffb6c1"/>
                 <polygon points="87,15 92,5 88,18" fill="#ffb6c1"/>
-                <!-- Face -->
-                <ellipse cx="70" cy="35" rx="3" ry="4" fill="#2c3e50"/>
-                <ellipse cx="82" cy="35" rx="3" ry="4" fill="#2c3e50"/>
+                <!-- Face with glowing eyes -->
+                <ellipse cx="70" cy="35" rx="3" ry="4" fill="#27ae60" filter="url(#eyeGlow)"/>
+                <ellipse cx="82" cy="35" rx="3" ry="4" fill="#27ae60" filter="url(#eyeGlow)"/>
+                <circle cx="70" cy="35" r="1.5" fill="#0a2a0a"/>
+                <circle cx="82" cy="35" r="1.5" fill="#0a2a0a"/>
                 <ellipse cx="76" cy="42" rx="3" ry="2" fill="#ffb6c1"/>
-                <!-- Tail -->
-                <path d="M5 50 Q-15 30 -10 15" stroke="#e67e22" stroke-width="8" fill="none" stroke-linecap="round"/>
+                <!-- Whiskers -->
+                <line x1="65" y1="40" x2="50" y2="38" stroke="#ccc" stroke-width="0.5"/>
+                <line x1="65" y1="43" x2="50" y2="45" stroke="#ccc" stroke-width="0.5"/>
+                <line x1="87" y1="40" x2="102" y2="38" stroke="#ccc" stroke-width="0.5"/>
+                <line x1="87" y1="43" x2="102" y2="45" stroke="#ccc" stroke-width="0.5"/>
+                <!-- Tail with animation -->
+                <path d="M5 50 Q-15 30 -10 15" stroke="#e67e22" stroke-width="8" fill="none" stroke-linecap="round">
+                    <animate attributeName="d" values="M5 50 Q-15 30 -10 15;M5 50 Q-20 35 -15 20;M5 50 Q-15 30 -10 15" dur="2s" repeatCount="indefinite"/>
+                </path>
+                <!-- Star sparkle (leader) -->
+                <circle cx="75" cy="10" r="3" fill="#ffd700" filter="url(#starGlow)">
+                    <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+                </circle>
             </g>
             
-            <!-- Cat 2 - Gray cat (RiverClan style) -->
-            <g transform="translate(150, 110)">
+            <!-- Cat 2 - Silver cat (RiverClan style) -->
+            <g transform="translate(150, 110)" class="cat-silverstream">
+                <animateTransform attributeName="transform" type="translate" values="150,110;150,108;150,110" dur="3.5s" repeatCount="indefinite" additive="replace"/>
+                <!-- Shadow -->
+                <ellipse cx="40" cy="70" rx="25" ry="6" fill="#000" opacity="0.3"/>
+                <!-- Water ripple effect -->
+                <ellipse cx="40" cy="72" rx="35" ry="8" fill="#4a9acc" opacity="0.2">
+                    <animate attributeName="rx" values="35;40;35" dur="2s" repeatCount="indefinite"/>
+                </ellipse>
                 <!-- Body -->
                 <ellipse cx="40" cy="45" rx="30" ry="22" fill="#5d6d7e"/>
-                <ellipse cx="40" cy="45" rx="27" ry="19" fill="#85929e"/>
+                <ellipse cx="40" cy="45" rx="27" ry="19" fill="#a8b5c4"/>
+                <!-- Shimmering effect -->
+                <ellipse cx="35" cy="42" rx="8" ry="4" fill="#c0d0e0" opacity="0.5"/>
                 <!-- Head -->
-                <circle cx="70" cy="30" r="18" fill="#85929e"/>
+                <circle cx="70" cy="30" r="18" fill="#a8b5c4"/>
                 <!-- Ears -->
-                <polygon points="57,15 60,-3 70,10" fill="#85929e"/>
-                <polygon points="78,10 88,-3 83,15" fill="#85929e"/>
+                <polygon points="57,15 60,-3 70,10" fill="#a8b5c4"/>
+                <polygon points="78,10 88,-3 83,15" fill="#a8b5c4"/>
                 <polygon points="59,13 62,2 68,10" fill="#ffb6c1"/>
                 <polygon points="80,10 86,2 82,13" fill="#ffb6c1"/>
-                <!-- Face -->
-                <ellipse cx="64" cy="30" rx="2.5" ry="3.5" fill="#2c3e50"/>
-                <ellipse cx="76" cy="30" rx="2.5" ry="3.5" fill="#2196f3"/>
+                <!-- Face with blue eyes -->
+                <ellipse cx="64" cy="30" rx="2.5" ry="3.5" fill="#3498db" filter="url(#eyeGlow)"/>
+                <ellipse cx="76" cy="30" rx="2.5" ry="3.5" fill="#3498db" filter="url(#eyeGlow)"/>
+                <circle cx="64" cy="30" r="1" fill="#0a1a2a"/>
+                <circle cx="76" cy="30" r="1" fill="#0a1a2a"/>
                 <ellipse cx="70" cy="36" rx="2.5" ry="1.5" fill="#ffb6c1"/>
-                <!-- Tail -->
-                <path d="M10 45 Q-5 60 5 75" stroke="#85929e" stroke-width="7" fill="none" stroke-linecap="round"/>
+                <!-- Whiskers -->
+                <line x1="59" y1="34" x2="45" y2="32" stroke="#ddd" stroke-width="0.5"/>
+                <line x1="59" y1="37" x2="45" y2="39" stroke="#ddd" stroke-width="0.5"/>
+                <line x1="81" y1="34" x2="95" y2="32" stroke="#ddd" stroke-width="0.5"/>
+                <line x1="81" y1="37" x2="95" y2="39" stroke="#ddd" stroke-width="0.5"/>
+                <!-- Tail with wave animation -->
+                <path d="M10 45 Q-5 60 5 75" stroke="#a8b5c4" stroke-width="7" fill="none" stroke-linecap="round">
+                    <animate attributeName="d" values="M10 45 Q-5 60 5 75;M10 45 Q-10 55 0 70;M10 45 Q-5 60 5 75" dur="2.5s" repeatCount="indefinite"/>
+                </path>
             </g>
             
-            <!-- Cat 3 - Black cat (ShadowClan style) - in fighting pose -->
-            <g transform="translate(250, 95)">
+            <!-- Cat 3 - Black cat (ShadowClan style) - dramatic pose -->
+            <g transform="translate(260, 95)" class="cat-shadow">
+                <animateTransform attributeName="transform" type="translate" values="260,95;260,93;260,95" dur="4s" repeatCount="indefinite" additive="replace"/>
+                <!-- Shadow aura -->
+                <ellipse cx="45" cy="75" rx="40" ry="10" fill="#1a0a2a" opacity="0.5"/>
+                <!-- Dark mist -->
+                <ellipse cx="50" cy="70" rx="50" ry="15" fill="#2a1a3a" opacity="0.3">
+                    <animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/>
+                </ellipse>
                 <!-- Body -->
-                <ellipse cx="40" cy="55" rx="32" ry="24" fill="#1a1a2e" transform="rotate(-15 40 55)"/>
-                <ellipse cx="40" cy="55" rx="29" ry="21" fill="#2c2c4a" transform="rotate(-15 40 55)"/>
+                <ellipse cx="40" cy="55" rx="32" ry="24" fill="#1a1a2e" transform="rotate(-10 40 55)"/>
+                <ellipse cx="40" cy="55" rx="29" ry="21" fill="#2c2c4a" transform="rotate(-10 40 55)"/>
+                <!-- Dark energy effect -->
+                <ellipse cx="35" cy="50" rx="6" ry="10" fill="#4a3a6a" opacity="0.4"/>
                 <!-- Head -->
                 <circle cx="78" cy="30" r="19" fill="#2c2c4a"/>
                 <!-- Ears -->
                 <polygon points="63,15 68,-5 78,12" fill="#2c2c4a"/>
                 <polygon points="88,12 98,-5 93,15" fill="#2c2c4a"/>
-                <polygon points="66,13 70,0 76,11" fill="#ffb6c1"/>
-                <polygon points="90,11 95,0 91,13" fill="#ffb6c1"/>
-                <!-- Glowing eyes -->
-                <ellipse cx="72" cy="30" rx="3" ry="4" fill="#ffd700"/>
-                <ellipse cx="85" cy="30" rx="3" ry="4" fill="#ffd700"/>
+                <polygon points="66,13 70,0 76,11" fill="#3a2a4a"/>
+                <polygon points="90,11 95,0 91,13" fill="#3a2a4a"/>
+                <!-- Glowing amber eyes -->
+                <ellipse cx="72" cy="30" rx="3" ry="4" fill="#ffd700" filter="url(#eyeGlow)">
+                    <animate attributeName="fill" values="#ffd700;#ff6600;#ffd700" dur="2s" repeatCount="indefinite"/>
+                </ellipse>
+                <ellipse cx="85" cy="30" rx="3" ry="4" fill="#ffd700" filter="url(#eyeGlow)">
+                    <animate attributeName="fill" values="#ffd700;#ff6600;#ffd700" dur="2s" repeatCount="indefinite"/>
+                </ellipse>
                 <ellipse cx="72" cy="30" rx="1" ry="3" fill="#1a1a2e"/>
                 <ellipse cx="85" cy="30" rx="1" ry="3" fill="#1a1a2e"/>
                 <ellipse cx="78" cy="38" rx="3" ry="2" fill="#4a4a6a"/>
-                <!-- Raised paw -->
-                <path d="M95 45 L110 30 L115 35 L100 50" fill="#2c2c4a"/>
-                <!-- Tail -->
-                <path d="M8 60 Q-10 45 -5 25" stroke="#2c2c4a" stroke-width="8" fill="none" stroke-linecap="round"/>
+                <!-- Claws extended -->
+                <g fill="#ccc">
+                    <path d="M95 50 L100 45 L98 52" />
+                    <path d="M98 53 L104 49 L101 55" />
+                    <path d="M100 56 L107 53 L103 58" />
+                </g>
+                <!-- Tail bristled -->
+                <path d="M8 60 Q-10 45 -5 25" stroke="#2c2c4a" stroke-width="10" fill="none" stroke-linecap="round">
+                    <animate attributeName="stroke-width" values="10;12;10" dur="1.5s" repeatCount="indefinite"/>
+                </path>
             </g>
             
-            <!-- Stars -->
-            <circle cx="50" cy="20" r="2" fill="white" opacity="0.8"/>
-            <circle cx="100" cy="35" r="1.5" fill="white" opacity="0.6"/>
-            <circle cx="150" cy="15" r="2" fill="white" opacity="0.9"/>
-            <circle cx="280" cy="25" r="1.5" fill="white" opacity="0.7"/>
-            <circle cx="320" cy="70" r="2" fill="white" opacity="0.8"/>
+            <!-- Animated stars with glow -->
+            <circle cx="30" cy="15" r="2.5" fill="#ffd700" filter="url(#starGlow)">
+                <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="80" cy="30" r="2" fill="#fff" filter="url(#starGlow)">
+                <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2.5s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="130" cy="10" r="2.5" fill="#87ceeb" filter="url(#starGlow)">
+                <animate attributeName="opacity" values="1;0.4;1" dur="1.8s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="200" cy="25" r="3" fill="#ffd700" filter="url(#starGlow)">
+                <animate attributeName="opacity" values="0.9;0.3;0.9" dur="3s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="250" cy="15" r="2" fill="#fff" filter="url(#starGlow)">
+                <animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="350" cy="20" r="2.5" fill="#e1bee7" filter="url(#starGlow)">
+                <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="380" cy="45" r="2" fill="#ffd700" filter="url(#starGlow)">
+                <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2.8s" repeatCount="indefinite"/>
+            </circle>
+            
+            <!-- Fireflies -->
+            <circle cx="180" cy="160" r="2" fill="#90EE90" opacity="0.8">
+                <animate attributeName="cy" values="160;150;160" dur="4s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="220" cy="155" r="1.5" fill="#90EE90" opacity="0.6">
+                <animate attributeName="cy" values="155;145;155" dur="3.5s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.6;0.1;0.6" dur="1.8s" repeatCount="indefinite"/>
+            </circle>
         </svg>
     `;
 }
