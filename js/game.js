@@ -6599,9 +6599,9 @@ function encounterDanger(dangerType) {
     const actions = document.getElementById('location-actions');
     
     const dangerInfo = {
-        fox: { name: 'Fox', damage: 10, color: '#cc6633' },
-        dog: { name: 'Dog', damage: 15, color: '#8B4513' },
-        badger: { name: 'Badger', damage: 12, color: '#333333' }
+        fox: { name: 'Fox', damage: 5, color: '#cc6633' },
+        dog: { name: 'Dog', damage: 8, color: '#8B4513' },
+        badger: { name: 'Badger', damage: 6, color: '#333333' }
     };
     
     const info = dangerInfo[dangerType] || dangerInfo.fox;
@@ -6808,9 +6808,9 @@ function startBattle(threatType) {
     const cat = GameState.catData;
     
     const threatInfo = {
-        fox: { name: 'Fox', health: 60, damage: 5, color: '#cc6633', speed: 5 },
-        dog: { name: 'Dog', health: 70, damage: 8, color: '#8B4513', speed: 4 },
-        badger: { name: 'Badger', health: 65, damage: 6, color: '#333333', speed: 3 }
+        fox: { name: 'Fox', health: 30, damage: 3, color: '#cc6633', speed: 5 },
+        dog: { name: 'Dog', health: 40, damage: 4, color: '#8B4513', speed: 4 },
+        badger: { name: 'Badger', health: 35, damage: 3, color: '#333333', speed: 3 }
     };
     
     const info = threatInfo[threatType] || threatInfo.fox;
