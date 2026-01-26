@@ -6593,13 +6593,17 @@ function checkForestEvents() {
     // If with a warrior, they protect you!
     if (GameState.withWarrior) {
         // Warrior keeps you safe - no danger events
-        // Small chance warrior points something out
-        if (Math.random() < 0.02) {
+        // Small chance warrior points something out OR reminds you of danger
+        if (Math.random() < 0.04) {
             const observations = [
                 `${GameState.withWarrior}: "See those tracks? A rabbit passed by here."`,
                 `${GameState.withWarrior}: "Listen... can you hear the birds?"`,
                 `${GameState.withWarrior}: "Smell that? The wind is changing."`,
-                `${GameState.withWarrior}: "This is where we hunt for mice."`
+                `${GameState.withWarrior}: "This is where we hunt for mice."`,
+                `${GameState.withWarrior}: "Stay close! The forest is dangerous for kits!"`,
+                `${GameState.withWarrior}: "I smell something... stay behind me!"`,
+                `${GameState.withWarrior}: "Don't wander off! There could be foxes nearby!"`,
+                `⚠️ ${GameState.withWarrior}: "Remember - if you see danger, run to me!"`
             ];
             showMessage(observations[Math.floor(Math.random() * observations.length)]);
         }
@@ -9959,8 +9963,14 @@ function askWarriorToTakeOut() {
                     GameState.withWarrior = warrior;
                     renderGameWorld();
                     
-                    showMessage(`${warrior} sets you down in the forest. "Stay where I can see you!"`);
-                    showSpeechBubble(warrior, 'Stay close to me!');
+                    // WARNING MESSAGE!
+                    showMessage('⚠️ The forest is dangerous! Stay close to the warrior! ⚠️');
+                    setTimeout(() => {
+                        showSpeechBubble(warrior, 'The forest is dangerous! Stay close to me!');
+                        setTimeout(() => {
+                            showMessage(`${warrior}: "If you see a fox or dog, RUN TO ME immediately!"`);
+                        }, 2000);
+                    }, 2500);
                     
                     // Warrior watches over you - no fox/dog danger!
                     setTimeout(() => {
