@@ -9998,15 +9998,15 @@ function startRaid() {
                 
                 const roll = Math.random();
                 
-                if (roll > 0.4) {
-                    // Clan wins!
+                if (roll > 0.50) {
+                    // Clan wins! (50% chance)
                     showMessage(`${defender} leaps to your defense! "Leave our kit alone!"`);
                     setTimeout(() => {
                         showMessage(`The clan drives ${enemyClan} away! You are safe!`);
                         cat.experience += 5;
                     }, 3000);
-                } else if (roll > 0.15) {
-                    // Close call!
+                } else if (roll > 0.30) {
+                    // Close call! (20% chance)
                     showMessage(`${defender} fights fiercely! The enemy almost got you!`);
                     setTimeout(() => {
                         showMessage(`After a tough battle, ${enemyClan} retreats! That was close!`);
@@ -10015,7 +10015,7 @@ function startRaid() {
                         updateGameUI();
                     }, 3000);
                 } else {
-                    // YOU GET STOLEN!
+                    // YOU GET STOLEN! (30% chance)
                     showMessage(`${defender} tries to help but... the ${enemyClan} warrior grabs you!`);
                     setTimeout(() => {
                         showMessage(`You are carried away to ${enemyClan}!`);
