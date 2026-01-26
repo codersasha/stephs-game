@@ -7626,9 +7626,25 @@ function endNight() {
     // Heal a bit from sleeping
     cat.health = Math.min(100, cat.health + 10);
     cat.age += 1;
+    
+    // Track nights slept for kit progression
+    if (!cat.nightsSlept) cat.nightsSlept = 0;
+    cat.nightsSlept += 1;
+    
     checkRankUp();
     
-    showMessage('Morning has come! A new day begins. (+1 moon)');
+    // Show different message for kits
+    if (cat.rank === 'Kit') {
+        const nightsLeft = 6 - cat.nightsSlept;
+        if (nightsLeft > 0) {
+            showMessage(`Morning has come! (+1 moon) You need ${nightsLeft} more sleeps to become an Apprentice!`);
+        } else {
+            showMessage('Morning has come! A new day begins. (+1 moon)');
+        }
+    } else {
+        showMessage('Morning has come! A new day begins. (+1 moon)');
+    }
+    
     renderGameWorld();
     updateGameUI();
     saveGameData();
@@ -7686,8 +7702,11 @@ function checkRankUp() {
     const cat = GameState.catData;
     const clanName = CLANS[cat.clan]?.name || 'the clan';
     
-    // Kit to Apprentice at 6 moons
-    if (cat.rank === 'Kit' && cat.age >= 6) {
+    // Track nights slept for kit to apprentice transition
+    if (!cat.nightsSlept) cat.nightsSlept = 0;
+    
+    // Kit to Apprentice after sleeping 6 times (6 nights)!
+    if (cat.rank === 'Kit' && cat.nightsSlept >= 6) {
         cat.rank = 'Apprentice';
         cat.name = cat.firstName + 'paw';
         
