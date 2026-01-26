@@ -868,6 +868,13 @@ function triggerEasterEgg() {
         // Tapping the moon UNLOCKS the party for this session!
         easterEggUnlocked = true;
         console.log('[triggerEasterEgg] Easter egg UNLOCKED by tapping moon!');
+        
+        // Show the party button now that easter egg is unlocked!
+        const partyBtn = document.getElementById('emote-party');
+        if (partyBtn) {
+            partyBtn.classList.remove('hidden');
+        }
+        
         startCatDanceParty();
     }
 }
@@ -1430,6 +1437,11 @@ function startGame() {
         // If party is active, it stays active. If not, you need to tap moon next time.
         if (!easterEggActive) {
             easterEggUnlocked = false;
+            // Hide the party button since easter egg isn't unlocked
+            const partyBtn = document.getElementById('emote-party');
+            if (partyBtn) {
+                partyBtn.classList.add('hidden');
+            }
             console.log('[startGame] Easter egg reset - moon not tapped this time');
         } else {
             console.log('[startGame] Easter egg stays unlocked - party is active!');
@@ -12343,6 +12355,11 @@ function restartGame() {
         stopCatDanceParty();
     }
     easterEggUnlocked = false;
+    // Hide the party button since easter egg is reset
+    const partyBtn = document.getElementById('emote-party');
+    if (partyBtn) {
+        partyBtn.classList.add('hidden');
+    }
     console.log('[restartGame] Easter egg reset');
     
     showScreen('clan');
