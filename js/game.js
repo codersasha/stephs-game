@@ -10057,6 +10057,21 @@ function getStolenByClan(clanKey, clanName) {
     const cat = GameState.catData;
     const oldClan = CLANS[cat.clan]?.name || 'your clan';
     
+    // ShadowClan is dangerous! 10% chance they kill you
+    if (clanKey === 'shadow' && Math.random() < 0.10) {
+        showMessage(`The ShadowClan warrior carries you away roughly...`);
+        setTimeout(() => {
+            showMessage(`"We don't need another mouth to feed," a dark cat growls.`);
+            setTimeout(() => {
+                showMessage(`The ShadowClan cats attack you! You don't survive...`);
+                setTimeout(() => {
+                    catDeath('ShadowClan');
+                }, 3000);
+            }, 3000);
+        }, 3000);
+        return;
+    }
+    
     // Change your clan!
     cat.clan = clanKey;
     GameState.selectedClan = clanKey;
