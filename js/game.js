@@ -527,6 +527,283 @@ function playSoundRustle() {
     } catch(e) {}
 }
 
+// Owl hoot sound (for nighttime)
+function playSoundOwl() {
+    if (!soundEnabled) return;
+    playTone(300, 0.3, 'sine', 0.5);
+    setTimeout(() => playTone(250, 0.5, 'sine', 0.6), 300);
+}
+
+// Cricket chirping (for night)
+function playSoundCricket() {
+    if (!soundEnabled) return;
+    for (let i = 0; i < 6; i++) {
+        setTimeout(() => {
+            playTone(3000 + Math.random() * 500, 0.02, 'sine', 0.3);
+            setTimeout(() => playTone(3200 + Math.random() * 500, 0.02, 'sine', 0.3), 30);
+        }, i * 150);
+    }
+}
+
+// Frog croaking (for RiverClan area)
+function playSoundFrog() {
+    if (!soundEnabled) return;
+    playTone(120, 0.15, 'sawtooth', 0.4);
+    setTimeout(() => playTone(100, 0.2, 'sawtooth', 0.5), 100);
+    setTimeout(() => playTone(80, 0.25, 'sawtooth', 0.4), 200);
+}
+
+// Mouse squeak sound
+function playSoundMouse() {
+    if (!soundEnabled) return;
+    playTone(2000, 0.08, 'sine', 0.5);
+    setTimeout(() => playTone(2500, 0.06, 'sine', 0.5), 60);
+    setTimeout(() => playTone(2200, 0.08, 'sine', 0.4), 100);
+}
+
+// Gathering announcement - big ceremonial sound
+function playSoundGathering() {
+    if (!soundEnabled) return;
+    // Deep horn-like call
+    playTone(150, 0.4, 'sawtooth', 0.6);
+    setTimeout(() => playTone(200, 0.4, 'sawtooth', 0.7), 300);
+    setTimeout(() => playTone(250, 0.5, 'sawtooth', 0.8), 600);
+    // Then mystical chime
+    setTimeout(() => {
+        playTone(523, 0.2, 'sine', 0.5);
+        setTimeout(() => playTone(659, 0.2, 'sine', 0.5), 100);
+        setTimeout(() => playTone(784, 0.3, 'sine', 0.5), 200);
+    }, 1000);
+}
+
+// Patrol march sound
+function playSoundPatrol() {
+    if (!soundEnabled) return;
+    for (let i = 0; i < 4; i++) {
+        setTimeout(() => {
+            playTone(150, 0.08, 'triangle', 0.4);
+            setTimeout(() => playTone(120, 0.06, 'triangle', 0.3), 100);
+        }, i * 200);
+    }
+}
+
+// Intruder alert sound
+function playSoundIntruder() {
+    if (!soundEnabled) return;
+    playTone(600, 0.1, 'square', 0.7);
+    setTimeout(() => playTone(800, 0.1, 'square', 0.8), 100);
+    setTimeout(() => playTone(600, 0.1, 'square', 0.7), 200);
+    setTimeout(() => playTone(800, 0.1, 'square', 0.8), 300);
+    setTimeout(() => playSoundYowl(), 400);
+}
+
+// KittyPet door sound (cat flap)
+function playSoundCatFlap() {
+    if (!soundEnabled) return;
+    playTone(300, 0.05, 'triangle', 0.4);
+    setTimeout(() => playTone(200, 0.08, 'triangle', 0.3), 50);
+    setTimeout(() => playTone(250, 0.04, 'triangle', 0.2), 100);
+}
+
+// Collar bell jingle
+function playSoundCollarBell() {
+    if (!soundEnabled) return;
+    playTone(2000, 0.1, 'sine', 0.4);
+    setTimeout(() => playTone(2200, 0.08, 'sine', 0.3), 80);
+    setTimeout(() => playTone(2000, 0.06, 'sine', 0.2), 150);
+}
+
+// Human voice sound (muffled talking)
+function playSoundHumanVoice() {
+    if (!soundEnabled) return;
+    playTone(200 + Math.random() * 100, 0.1, 'sawtooth', 0.2);
+    setTimeout(() => playTone(180 + Math.random() * 100, 0.12, 'sawtooth', 0.2), 80);
+    setTimeout(() => playTone(220 + Math.random() * 100, 0.1, 'sawtooth', 0.15), 160);
+}
+
+// Many cats meowing (gathering crowd)
+function playSoundCatCrowd() {
+    if (!soundEnabled) return;
+    for (let i = 0; i < 6; i++) {
+        setTimeout(() => {
+            const pitch = 400 + Math.random() * 300;
+            playTone(pitch, 0.1, 'sine', 0.3);
+            setTimeout(() => playTone(pitch - 100, 0.12, 'sine', 0.25), 80);
+        }, i * 200 + Math.random() * 100);
+    }
+}
+
+// Pop/bubble sound (for StarClan effects)
+function playSoundPop() {
+    if (!soundEnabled) return;
+    playTone(800, 0.05, 'sine', 0.5);
+    setTimeout(() => playTone(1200, 0.03, 'sine', 0.4), 30);
+}
+
+// Dreamy/mystical chime (for dreams)
+function playSoundDream() {
+    if (!soundEnabled) return;
+    playTone(800, 0.3, 'sine', 0.3);
+    setTimeout(() => playTone(1000, 0.3, 'sine', 0.3), 200);
+    setTimeout(() => playTone(1200, 0.3, 'sine', 0.3), 400);
+    setTimeout(() => playTone(1000, 0.4, 'sine', 0.25), 600);
+    setTimeout(() => playTone(800, 0.5, 'sine', 0.2), 800);
+}
+
+// Swim/paddle sound
+function playSoundSwim() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        const bufferSize = ctx.sampleRate * 0.25;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            const wave = Math.sin(i * 0.01) * 0.3;
+            data[i] = ((Math.random() * 2 - 1) * 0.2 + wave) * Math.exp(-i / (bufferSize * 0.3));
+        }
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 600;
+        const gain = ctx.createGain();
+        gain.gain.value = 0.6;
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        source.start();
+    } catch(e) {}
+}
+
+// Snore sound (for sleeping cats)
+function playSoundSnore() {
+    if (!soundEnabled) return;
+    playTone(80, 0.3, 'sawtooth', 0.3);
+    setTimeout(() => playTone(60, 0.4, 'sawtooth', 0.25), 300);
+}
+
+// Prey running away
+function playSoundPreyRun() {
+    if (!soundEnabled) return;
+    for (let i = 0; i < 6; i++) {
+        setTimeout(() => {
+            playTone(150 + i * 20, 0.03, 'triangle', 0.3);
+        }, i * 40);
+    }
+}
+
+// Dog bark
+function playSoundDogBark() {
+    if (!soundEnabled) return;
+    playTone(200, 0.15, 'sawtooth', 0.7);
+    setTimeout(() => playTone(250, 0.12, 'sawtooth', 0.6), 100);
+    setTimeout(() => playTone(180, 0.1, 'sawtooth', 0.5), 200);
+}
+
+// Fox cry
+function playSoundFoxCry() {
+    if (!soundEnabled) return;
+    playTone(500, 0.2, 'sawtooth', 0.6);
+    setTimeout(() => playTone(700, 0.15, 'sawtooth', 0.7), 150);
+    setTimeout(() => playTone(400, 0.25, 'sawtooth', 0.5), 300);
+}
+
+// Badger growl
+function playSoundBadgerGrowl() {
+    if (!soundEnabled) return;
+    playTone(100, 0.3, 'sawtooth', 0.6);
+    setTimeout(() => playTone(80, 0.4, 'sawtooth', 0.7), 200);
+}
+
+// Clan cheer
+function playSoundClanCheer() {
+    if (!soundEnabled) return;
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+            const pitch = 400 + Math.random() * 200;
+            playTone(pitch, 0.2, 'sine', 0.4);
+            setTimeout(() => playTone(pitch + 100, 0.15, 'sine', 0.4), 100);
+        }, i * 150);
+    }
+}
+
+// Menu/popup open
+function playSoundMenuOpen() {
+    if (!soundEnabled) return;
+    playTone(400, 0.08, 'sine', 0.4);
+    setTimeout(() => playTone(600, 0.08, 'sine', 0.4), 50);
+}
+
+// Menu/popup close
+function playSoundMenuClose() {
+    if (!soundEnabled) return;
+    playTone(600, 0.08, 'sine', 0.4);
+    setTimeout(() => playTone(400, 0.08, 'sine', 0.4), 50);
+}
+
+// Pickup item sound
+function playSoundPickup() {
+    if (!soundEnabled) return;
+    playTone(600, 0.08, 'sine', 0.5);
+    setTimeout(() => playTone(800, 0.08, 'sine', 0.5), 60);
+    setTimeout(() => playTone(1000, 0.1, 'sine', 0.4), 120);
+}
+
+// Den enter sound
+function playSoundEnterDen() {
+    if (!soundEnabled) return;
+    playTone(200, 0.1, 'triangle', 0.4);
+    setTimeout(() => playTone(300, 0.1, 'triangle', 0.3), 80);
+}
+
+// Exit/leave sound
+function playSoundExit() {
+    if (!soundEnabled) return;
+    playTone(300, 0.1, 'triangle', 0.4);
+    setTimeout(() => playTone(200, 0.1, 'triangle', 0.3), 80);
+}
+
+// Water drip
+function playSoundWaterDrip() {
+    if (!soundEnabled) return;
+    playTone(1000, 0.05, 'sine', 0.4);
+    setTimeout(() => playTone(800, 0.08, 'sine', 0.3), 100);
+}
+
+// Crunching leaves/twigs
+function playSoundCrunch() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        const bufferSize = ctx.sampleRate * 0.1;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * 0.5 * Math.exp(-i / (bufferSize * 0.2));
+        }
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 1500;
+        const gain = ctx.createGain();
+        gain.gain.value = 0.5;
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        source.start();
+    } catch(e) {}
+}
+
+// Dark Forest eerie sound
+function playSoundDarkForest() {
+    if (!soundEnabled) return;
+    playTone(150, 0.5, 'sawtooth', 0.3);
+    setTimeout(() => playTone(100, 0.6, 'sawtooth', 0.3), 400);
+    setTimeout(() => playTone(80, 0.7, 'sine', 0.25), 800);
+}
+
 // Toggle sound on/off
 function toggleSound() {
     soundEnabled = !soundEnabled;
@@ -534,6 +811,54 @@ function toggleSound() {
     if (btn) btn.textContent = soundEnabled ? '🔊' : '🔇';
     showMessage(soundEnabled ? 'Sound ON' : 'Sound OFF');
     if (soundEnabled) playSoundClick();
+}
+
+// ============= AMBIENT SOUND SYSTEM =============
+let ambientInterval = null;
+
+function startAmbientSounds() {
+    if (ambientInterval) clearInterval(ambientInterval);
+    
+    ambientInterval = setInterval(() => {
+        if (!soundEnabled || !GameState.catData) return;
+        
+        const roll = Math.random();
+        const isNight = GameState.isNight;
+        const location = GameState.currentLocation || 'camp';
+        const clan = GameState.catData.clan;
+        
+        // Night sounds
+        if (isNight) {
+            if (roll < 0.15) playSoundOwl();
+            else if (roll < 0.3) playSoundCricket();
+        }
+        
+        // Location-specific sounds
+        if (location === 'forest') {
+            if (roll < 0.1 && !isNight) playSoundBird();
+            else if (roll < 0.2) playSoundRustle();
+            else if (roll < 0.25) playSoundCrunch();
+        } else if (location === 'river' || clan === 'river') {
+            if (roll < 0.15) playSoundFrog();
+            else if (roll < 0.25) playSoundWaterDrip();
+        } else if (location === 'camp') {
+            if (roll < 0.08) playSoundSnore();
+        } else if (location === 'house') {
+            if (roll < 0.1) playSoundHumanVoice();
+        }
+        
+        // Weather sounds
+        if (GameState.weather === 'rainy' && roll < 0.3) playSoundRain();
+        else if (GameState.weather === 'windy' && roll < 0.2) playSoundWind();
+        
+    }, 5000); // Every 5 seconds, maybe play an ambient sound
+}
+
+function stopAmbientSounds() {
+    if (ambientInterval) {
+        clearInterval(ambientInterval);
+        ambientInterval = null;
+    }
 }
 
 // ============= SEASONS & WEATHER SYSTEM =============
@@ -2195,6 +2520,9 @@ function startGameplay() {
     // Start game loop
     startGameLoop();
     
+    // Start ambient sounds
+    startAmbientSounds();
+    
     // Welcome message for loners
     if (cat.isLoner) {
         showMessage('You are a loner, living free in the forest. Hunt for yourself and stay alive!');
@@ -2289,6 +2617,7 @@ function renderGameWorld() {
 
 // Enter a den
 function enterDen(denType) {
+    playSoundEnterDen();
     GameState.currentLocation = 'den_' + denType;
     GameState.playerX = 200;
     GameState.playerY = 250;
@@ -5119,6 +5448,8 @@ function renderTwolegHouse() {
 
 // Show popup to talk to human
 function showTalkToHumanPopup() {
+    playSoundMenuOpen();
+    playSoundHumanVoice();
     const cat = GameState.catData;
     const popup = document.getElementById('location-popup');
     const title = document.getElementById('location-title');
@@ -5135,6 +5466,8 @@ function showTalkToHumanPopup() {
         if (cat.hunger >= 100) {
             showMessage('Your human checks your bowl. "You already have food, silly kitty!"');
         } else {
+            playSoundHumanVoice();
+            setTimeout(() => playSoundEat(), 500);
             cat.hunger = Math.min(100, cat.hunger + 40);
             showMessage('Your human fills your bowl with yummy food! "Here you go, sweetie!" (+40 hunger)');
             updateGameUI();
@@ -5147,6 +5480,8 @@ function showTalkToHumanPopup() {
         if (cat.thirst >= 100) {
             showMessage('Your human checks your water. "Your water bowl is full!"');
         } else {
+            playSoundHumanVoice();
+            setTimeout(() => playSoundDrink(), 500);
             cat.thirst = Math.min(100, cat.thirst + 40);
             showMessage('Your human gives you fresh water! "There you go!" (+40 thirst)');
             updateGameUI();
@@ -6416,6 +6751,16 @@ function movePlayer(dx, dy) {
         moved = true;
     }
     
+    // Play step sound occasionally
+    if (moved && GameState.stepsToday % 3 === 0) {
+        playSoundStep();
+        // Collar bell jingle for KittyPets!
+        const cat = GameState.catData;
+        if (cat && cat.isKittypet && cat.hasCollar && GameState.stepsToday % 6 === 0) {
+            playSoundCollarBell();
+        }
+    }
+    
     // Count steps and check for night - 100 steps = night time and age up!
     if (moved && !GameState.isNight) {
         GameState.stepsToday++;
@@ -6511,6 +6856,7 @@ function checkLocationAction() {
 }
 
 function interactWithLocation(locationKey) {
+    playSoundMenuOpen();
     const cat = GameState.catData;
     const popup = document.getElementById('location-popup');
     const title = document.getElementById('location-title');
@@ -6839,10 +7185,12 @@ function addAction(container, text, callback) {
 }
 
 function closePopup() {
+    playSoundMenuClose();
     document.getElementById('location-popup').classList.add('hidden');
 }
 
 function closeInventory() {
+    playSoundMenuClose();
     document.getElementById('inventory-popup').classList.add('hidden');
 }
 
@@ -7354,6 +7702,9 @@ function endHuntingGame(caught) {
     const cat = GameState.catData;
     
     if (caught) {
+        playSoundMouse(); // Mouse squeak!
+        setTimeout(() => playSoundCatch(), 100);
+        
         // REALISTIC: Prey gives more food in greenleaf, less in leaf-bare
         const foodAmount = {
             'greenleaf': 45, // Fat prey in summer!
@@ -7373,6 +7724,7 @@ function endHuntingGame(caught) {
         };
         showMessage(catchMessages[GameState.season] || 'Great catch!');
     } else {
+        playSoundPreyRun(); // Prey escaped!
         const escapeMessages = {
             'leaf-bare': 'The mouse escaped... Prey is precious in leaf-bare.',
             'greenleaf': 'The mouse escaped! But there\'s plenty more prey.',
@@ -7517,6 +7869,7 @@ function checkForIntruders() {
 
 // Show intruder encounter popup
 function showIntruderEncounter(intruderName, enemyClan) {
+    playSoundIntruder();
     const cat = GameState.catData;
     const popup = document.getElementById('location-popup');
     const title = document.getElementById('location-title');
@@ -7843,6 +8196,16 @@ if (!window.battleState) {
 // Start a battle encounter
 function startBattle(threatType) {
     playSoundDanger();
+    
+    // Play threat-specific sounds
+    if (threatType === 'dog') {
+        setTimeout(() => playSoundDogBark(), 300);
+    } else if (threatType === 'fox') {
+        setTimeout(() => playSoundFoxCry(), 300);
+    } else if (threatType === 'badger') {
+        setTimeout(() => playSoundBadgerGrowl(), 300);
+    }
+    
     const cat = GameState.catData;
     
     const threatInfo = {
@@ -8716,6 +9079,9 @@ function startNight(fromMultiplayer = false) {
 }
 
 function showGatheringScreen() {
+    playSoundGathering();
+    setTimeout(() => playSoundCatCrowd(), 800);
+    
     const cat = GameState.catData;
     const gameWorld = document.getElementById('game-world');
     
@@ -9045,6 +9411,7 @@ function holdClanMeeting(ceremonyType, catName) {
                     setTimeout(() => {
                         showSpeechBubble(mentorName, `I'm honored to be your mentor, ${catName}!`);
                         setTimeout(() => {
+                            playSoundClanCheer();
                             showMessage(`${mentorName} touches noses with you. The clan chants: "${catName}! ${catName}!"`);
                             setTimeout(() => {
                                 showMessage(`${mentorName} is now your mentor! They will teach you to hunt and fight.`);
@@ -9060,6 +9427,7 @@ function holdClanMeeting(ceremonyType, catName) {
                     setTimeout(() => {
                         showMessage(`"Then by the powers of StarClan, I give you your warrior name: ${catName}!"`);
                         setTimeout(() => {
+                            playSoundClanCheer();
                             showMessage(`The clan chants: "${catName}! ${catName}!" You are now a warrior!`);
                         }, 3000);
                     }, 3000);
@@ -9070,6 +9438,7 @@ function holdClanMeeting(ceremonyType, catName) {
                 setTimeout(() => {
                     showMessage(`"${catName} will be the new deputy of ${clanName}!"`);
                     setTimeout(() => {
+                        playSoundClanCheer();
                         showMessage(`The clan chants: "${catName}! ${catName}!" You are now deputy!`);
                     }, 3000);
                 }, 3000);
@@ -9079,6 +9448,7 @@ function holdClanMeeting(ceremonyType, catName) {
                 setTimeout(() => {
                     showMessage(`StarClan grants you nine lives. You are now ${catName}, leader of ${clanName}!`);
                     setTimeout(() => {
+                        playSoundClanCheer();
                         showMessage(`The clan chants: "${catName}! ${catName}!" You are the leader!`);
                     }, 3000);
                 }, 3000);
@@ -11588,6 +11958,7 @@ function showDarkForestScreen() {
 
 // Stay in Dark Forest - explore the dark world
 function stayInDarkForest() {
+    playSoundDarkForest();
     GameState.currentLocation = 'dark_forest';
     GameState.playerX = 225;
     GameState.playerY = 200;
@@ -11807,6 +12178,7 @@ function talkToDarkForestCat(name) {
 
 // Stay in StarClan - go to walkable StarClan world (the real world but ghostly)!
 function stayInStarClan() {
+    playSoundStarClan();
     GameState.currentLocation = 'starclan_world';
     GameState.playerX = 225;
     GameState.playerY = 200;
@@ -12385,6 +12757,7 @@ function talkToAncestor(name) {
 
 // Visit dreams - pick which cat to visit and what to say!
 function visitDreams() {
+    playSoundDream();
     const livingCats = [
         { name: 'Firestar', role: 'Leader', clan: 'ThunderClan' },
         { name: 'Sandstorm', role: 'Warrior', clan: 'ThunderClan' },
