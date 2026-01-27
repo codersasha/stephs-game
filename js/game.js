@@ -1353,6 +1353,7 @@ function setupEventListeners() {
         }
     });
     document.getElementById('emote-attack').addEventListener('click', () => doAttack());
+    document.getElementById('emote-players')?.addEventListener('click', () => showPlayersMenu());
     
     // Speech popup
     document.getElementById('say-speech').addEventListener('click', () => sayPlayerSpeech());
@@ -13018,6 +13019,211 @@ function setupMultiplayerListeners() {
     document.getElementById('chat-input')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendChatMessage();
     });
+    
+    // Load friends list when opening join screen
+    document.getElementById('join-game-btn')?.addEventListener('click', () => {
+        renderFriendsList();
+    });
+}
+
+// ==========================================
+// FRIENDS SYSTEM
+// ==========================================
+
+// Load friends from localStorage
+function loadFriends() {
+    try {
+        const friends = localStorage.getItem('warriorCatsFriends');
+        return friends ? JSON.parse(friends) : [];
+    } catch (e) {
+        console.error('Error loading friends:', e);
+        return [];
+    }
+}
+
+// Save friends to localStorage
+function saveFriends(friends) {
+    try {
+        localStorage.setItem('warriorCatsFriends', JSON.stringify(friends));
+    } catch (e) {
+        console.error('Error saving friends:', e);
+    }
+}
+
+// Add a friend
+function addFriend(name, peerId) {
+    const friends = loadFriends();
+    
+    // Check if already a friend
+    if (friends.find(f => f.peerId === peerId)) {
+        showMessage(`${name} is already your friend!`);
+        return false;
+    }
+    
+    friends.push({
+        name: name,
+        peerId: peerId,
+        addedAt: Date.now(),
+        lastSeen: Date.now()
+    });
+    
+    saveFriends(friends);
+    playSoundSuccess();
+    showMessage(`${name} is now your friend!`);
+    return true;
+}
+
+// Remove a friend
+function removeFriend(peerId) {
+    let friends = loadFriends();
+    const friend = friends.find(f => f.peerId === peerId);
+    if (friend) {
+        friends = friends.filter(f => f.peerId !== peerId);
+        saveFriends(friends);
+        showMessage(`${friend.name} removed from friends.`);
+        renderFriendsList();
+    }
+}
+
+// Render friends list in join screen
+function renderFriendsList() {
+    const container = document.getElementById('friends-list');
+    if (!container) return;
+    
+    const friends = loadFriends();
+    
+    if (friends.length === 0) {
+        container.innerHTML = '<p class="no-friends">No friends yet! Play with someone and add them as a friend.</p>';
+        return;
+    }
+    
+    container.innerHTML = friends.map(friend => `
+        <div class="friend-item" data-peer="${friend.peerId}">
+            <div class="friend-info">
+                <div class="friend-avatar">:3</div>
+                <div>
+                    <div class="friend-name">${friend.name}</div>
+                    <div class="friend-status" id="friend-status-${friend.peerId}">Checking...</div>
+                </div>
+            </div>
+            <div class="friend-buttons">
+                <button class="friend-join-btn" onclick="joinFriendGame('${friend.peerId}', '${friend.name}')">Join</button>
+                <button class="friend-remove-btn" onclick="removeFriend('${friend.peerId}')">X</button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Check which friends are online (hosting)
+    checkFriendsOnline(friends);
+}
+
+// Check if friends are online/hosting
+function checkFriendsOnline(friends) {
+    friends.forEach(friend => {
+        const statusEl = document.getElementById(`friend-status-${friend.peerId}`);
+        if (!statusEl) return;
+        
+        // Try to check if peer exists (they're hosting)
+        // We'll use a temporary peer to check
+        const checkPeer = new Peer();
+        
+        checkPeer.on('open', () => {
+            const conn = checkPeer.connect(friend.peerId, { reliable: true });
+            
+            conn.on('open', () => {
+                // Friend is online and hosting!
+                statusEl.textContent = 'Online - Hosting!';
+                statusEl.classList.add('online');
+                const joinBtn = statusEl.closest('.friend-item')?.querySelector('.friend-join-btn');
+                if (joinBtn) joinBtn.disabled = false;
+                conn.close();
+                checkPeer.destroy();
+            });
+            
+            conn.on('error', () => {
+                statusEl.textContent = 'Offline';
+                statusEl.classList.remove('online');
+                checkPeer.destroy();
+            });
+            
+            // Timeout after 3 seconds
+            setTimeout(() => {
+                if (statusEl.textContent === 'Checking...') {
+                    statusEl.textContent = 'Offline';
+                    statusEl.classList.remove('online');
+                    checkPeer.destroy();
+                }
+            }, 3000);
+        });
+        
+        checkPeer.on('error', () => {
+            statusEl.textContent = 'Offline';
+            statusEl.classList.remove('online');
+        });
+    });
+}
+
+// Join a friend's game directly
+function joinFriendGame(peerId, friendName) {
+    document.getElementById('join-code-input').value = peerId;
+    showMessage(`Joining ${friendName}'s game...`);
+    joinGame();
+}
+
+// Show "Add Friend" button for players in multiplayer
+function showAddFriendButton(playerName, peerId) {
+    // Don't show for yourself
+    if (peerId === GameState.peer?.id) return;
+    
+    // Check if already a friend
+    const friends = loadFriends();
+    if (friends.find(f => f.peerId === peerId)) return;
+    
+    // Create popup to add friend
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Add Friend?';
+    desc.textContent = `Do you want to add ${playerName} as a friend? You can join their games without needing a code!`;
+    actions.innerHTML = '';
+    
+    addAction(actions, 'Yes, add friend!', () => {
+        addFriend(playerName, peerId);
+        closePopup();
+    });
+    
+    addAction(actions, 'Not now', () => {
+        closePopup();
+    });
+    
+    playSoundMenuOpen();
+    popup.classList.remove('hidden');
+}
+
+// Prompt to add friends after multiplayer game
+function promptAddFriendsAfterGame() {
+    if (!GameState.isMultiplayer) return;
+    
+    const friends = loadFriends();
+    const playersToAdd = [];
+    
+    // Check other players
+    for (const [peerId, player] of Object.entries(GameState.otherPlayers || {})) {
+        if (!friends.find(f => f.peerId === peerId)) {
+            playersToAdd.push({ name: player.name, peerId: peerId });
+        }
+    }
+    
+    if (playersToAdd.length === 0) return;
+    
+    // Show prompt for each player
+    playersToAdd.forEach((player, index) => {
+        setTimeout(() => {
+            showAddFriendButton(player.name, player.peerId);
+        }, index * 2000);
+    });
 }
 
 // Generate a fun room code
@@ -13166,6 +13372,10 @@ function handlePeerData(peerId, data) {
         case 'allPlayers':
             // Update all other players (client receiving from host)
             GameState.otherPlayers = data.players;
+            // Save host name for friend adding
+            if (data.players && data.players['host']) {
+                GameState.hostName = data.players['host'].name;
+            }
             updatePlayerList();
             break;
             
@@ -13344,6 +13554,7 @@ function updatePlayerList() {
     
     if (!playerList || !playerCount) return;
     
+    const friends = loadFriends();
     let html = '';
     let count = 1; // Start with host
     
@@ -13353,8 +13564,16 @@ function updatePlayerList() {
     // Add other players
     Object.keys(GameState.otherPlayers).forEach(peerId => {
         const player = GameState.otherPlayers[peerId];
+        const isFriend = friends.find(f => f.peerId === peerId);
+        
         if (player && player.name) {
-            html += `<span class="player-tag">${player.name}</span>`;
+            html += `<span class="player-tag">${player.name}`;
+            if (isFriend) {
+                html += ` <span style="color: #ffd700;">(Friend)</span>`;
+            } else {
+                html += ` <button class="add-friend-btn" onclick="addFriend('${player.name}', '${peerId}')" style="font-size: 10px; padding: 2px 8px; margin-left: 5px;">+ Friend</button>`;
+            }
+            html += `</span>`;
             count++;
         } else {
             html += `<span class="player-tag">Joining...</span>`;
@@ -13437,6 +13656,9 @@ function joinGame() {
             status.textContent = 'Connected! Waiting for host to start...';
             status.className = 'join-status success';
             updateJoinStatus('Connection OPEN! Waiting for game start...');
+            
+            // Save host peer ID for friend adding later
+            GameState.hostPeerId = code;
             
             // Request data from host
             conn.send({ type: 'requestData' });
@@ -13718,6 +13940,8 @@ function addChatMessage(sender, message, isSystem = false) {
 // Show/hide multiplayer chat based on game state
 function updateMultiplayerChatVisibility() {
     const chatBox = document.getElementById('multiplayer-chat');
+    const playersBtn = document.getElementById('emote-players');
+    
     if (chatBox) {
         // Show chat in multiplayer mode when playing
         if (GameState.isMultiplayer && (GameState.currentScreen === 'gameplay' || GameState.currentScreen === 'game')) {
@@ -13731,6 +13955,80 @@ function updateMultiplayerChatVisibility() {
             chatBox.classList.add('hidden');
         }
     }
+    
+    // Show/hide Players button in multiplayer
+    if (playersBtn) {
+        if (GameState.isMultiplayer && (GameState.currentScreen === 'gameplay' || GameState.currentScreen === 'game')) {
+            playersBtn.classList.remove('hidden');
+        } else {
+            playersBtn.classList.add('hidden');
+        }
+    }
+}
+
+// Show menu to view and add players as friends
+function showPlayersMenu() {
+    if (!GameState.isMultiplayer) {
+        showMessage('This only works in multiplayer!');
+        return;
+    }
+    
+    const friends = loadFriends();
+    const allPlayers = [];
+    
+    // Add host if we're not the host
+    if (!GameState.isHost && GameState.hostPeerId) {
+        // Try to find host name from other players data
+        const hostName = GameState.hostName || 'Host';
+        allPlayers.push({ peerId: GameState.hostPeerId, name: hostName, isHost: true });
+    }
+    
+    // Add other players
+    Object.entries(GameState.otherPlayers || {}).forEach(([peerId, player]) => {
+        if (player && player.name) {
+            allPlayers.push({ peerId, name: player.name, isHost: false });
+        }
+    });
+    
+    if (allPlayers.length === 0) {
+        showMessage('No other players in the game!');
+        return;
+    }
+    
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Players in Game';
+    desc.textContent = 'Add players as friends to easily join their games later!';
+    actions.innerHTML = '';
+    
+    allPlayers.forEach(player => {
+        const isFriend = friends.find(f => f.peerId === player.peerId);
+        const label = player.isHost ? `${player.name} (Host)` : player.name;
+        
+        if (isFriend) {
+            // Already a friend - just show their name
+            addAction(actions, `${label} - Already a Friend!`, () => {
+                showMessage(`${player.name} is already your friend!`);
+                closePopup();
+            });
+        } else {
+            // Not a friend - offer to add them
+            addAction(actions, `Add ${label} as Friend`, () => {
+                addFriend(player.name, player.peerId);
+                closePopup();
+            });
+        }
+    });
+    
+    addAction(actions, 'Close', () => {
+        closePopup();
+    });
+    
+    playSoundMenuOpen();
+    popup.classList.remove('hidden');
 }
 
 // Show talk menu in multiplayer (choose chat or NPC talk)
@@ -13902,16 +14200,29 @@ function showAttackPlayerMenu() {
     
     actions.innerHTML = '';
     
+    const friends = loadFriends();
+    
     nearbyPlayers.forEach(({ peerId, player }) => {
-        addAction(actions, `Attack ${player.name || 'Player'}`, () => {
+        const playerName = player.name || 'Player';
+        const isFriend = friends.find(f => f.peerId === peerId);
+        
+        addAction(actions, `Attack ${playerName}`, () => {
             closePopup();
-            attackOtherPlayer(peerId, player.name || 'Player');
+            attackOtherPlayer(peerId, playerName);
         });
+        
+        // Add friend option if not already a friend
+        if (!isFriend) {
+            addAction(actions, `Add ${playerName} as Friend`, () => {
+                addFriend(playerName, peerId);
+                closePopup();
+            });
+        }
     });
     
     addAction(actions, 'Cancel', () => {
         closePopup();
     });
     
-    popup.classList.add('active');
+    popup.classList.remove('hidden');
 }
