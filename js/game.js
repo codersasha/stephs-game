@@ -9170,26 +9170,128 @@ function showGatheringNews() {
     const cat = GameState.catData;
     const playerClan = CLANS[cat.clan]?.name || 'ThunderClan';
     
+    // If player is a leader, let them choose what to say!
+    if (cat.rank === 'Leader') {
+        showLeaderNewsChoice();
+        return;
+    }
+    
+    // Otherwise, show normal gathering news
+    showAutomaticGatheringNews(null);
+}
+
+// Let leader pick what news to announce
+function showLeaderNewsChoice() {
+    const cat = GameState.catData;
+    const clanName = CLANS[cat.clan]?.name || 'ThunderClan';
+    
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Your Turn to Speak!';
+    desc.textContent = `As leader of ${clanName}, what news will you share at the Gathering?`;
+    actions.innerHTML = '';
+    
+    // News options for leaders
+    const newsOptions = [
+        { text: 'Our clan is strong and thriving!', full: `${cat.name}: "${clanName} is strong! We have grown in numbers and our warriors are brave!"` },
+        { text: 'We have new apprentices!', full: `${cat.name}: "${clanName} welcomes new apprentices! They train hard and make us proud!"` },
+        { text: 'Prey is running well', full: `${cat.name}: "Prey runs well in ${clanName} territory. Our bellies are full and our clan is healthy!"` },
+        { text: 'We chased out a threat', full: `${cat.name}: "${clanName} has driven out a dangerous threat from our borders! We remain vigilant!"` },
+        { text: 'New kits were born', full: `${cat.name}: "The nursery is full of new kits! ${clanName} grows stronger with each new life!"` },
+        { text: 'We found new territory', full: `${cat.name}: "${clanName} has expanded our hunting grounds! Our territory provides all we need!"` },
+        { text: 'Issue a warning to other clans', full: `${cat.name}: "Let this be a warning - any cat who trespasses in ${clanName} territory will face our claws!"` },
+        { text: 'Make peace with the clans', full: `${cat.name}: "${clanName} seeks peace with all clans. May StarClan light our paths together!"` },
+        { text: 'Boast about your power', full: `${cat.name}: "${clanName} is the mightiest clan in the forest! None can stand against us!"` },
+        { text: 'Honor a fallen warrior', full: `${cat.name}: "${clanName} mourns a brave warrior who has joined StarClan. May they watch over us always."` }
+    ];
+    
+    newsOptions.forEach(option => {
+        addAction(actions, option.text, () => {
+            closePopup();
+            playSoundClanCheer();
+            showMessage(option.full);
+            // After player speaks, continue with other clans
+            setTimeout(() => showAutomaticGatheringNews(cat.clan), 3500);
+        });
+    });
+    
+    // Option to type custom message
+    addAction(actions, 'Say something else...', () => {
+        closePopup();
+        showCustomLeaderSpeech();
+    });
+    
+    playSoundMenuOpen();
+    popup.classList.remove('hidden');
+}
+
+// Let leader type a custom message
+function showCustomLeaderSpeech() {
+    const cat = GameState.catData;
+    const clanName = CLANS[cat.clan]?.name || 'ThunderClan';
+    
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Speak to the Clans';
+    desc.innerHTML = `
+        <p>Type your announcement:</p>
+        <input type="text" id="leader-speech-input" placeholder="Enter your message..." maxlength="100" 
+               style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.5); color: white; font-size: 14px;">
+    `;
+    actions.innerHTML = '';
+    
+    addAction(actions, 'Announce to All Clans!', () => {
+        const input = document.getElementById('leader-speech-input');
+        const message = input?.value?.trim() || 'I have nothing to say.';
+        closePopup();
+        playSoundClanCheer();
+        showMessage(`${cat.name}: "${message}"`);
+        // After player speaks, continue with other clans
+        setTimeout(() => showAutomaticGatheringNews(cat.clan), 3500);
+    });
+    
+    addAction(actions, 'Cancel', () => {
+        closePopup();
+        showLeaderNewsChoice();
+    });
+    
+    playSoundMenuOpen();
+    popup.classList.remove('hidden');
+    
+    // Focus the input
+    setTimeout(() => {
+        document.getElementById('leader-speech-input')?.focus();
+    }, 100);
+}
+
+// Show automatic news from other clans (skipping player's clan if they already spoke)
+function showAutomaticGatheringNews(skipClan) {
     const clanNews = {
-        'ThunderClan': [
+        'thunder': [
             'Firestar: "ThunderClan is strong! We have two new apprentices this moon."',
             'Firestar: "Prey is running well in our territory. ThunderClan thrives!"',
             'Firestar: "We drove out a fox from our borders. ThunderClan remains vigilant."',
             'Firestar: "A new litter of kits was born in the nursery. ThunderClan grows!"'
         ],
-        'RiverClan': [
+        'river': [
             'Leopardstar: "RiverClan\'s rivers flow with fish. We want for nothing."',
             'Leopardstar: "Two of our warriors have earned their names this moon."',
             'Leopardstar: "The Twolegs have left the river. RiverClan celebrates!"',
             'Leopardstar: "Our medicine cat has found new healing herbs by the water."'
         ],
-        'ShadowClan': [
+        'shadow': [
             'Blackstar: "ShadowClan hunts well in the shadows. We need no help."',
             'Blackstar: "A badger was spotted near our border, but we chased it away."',
             'Blackstar: "ShadowClan has new warriors. Our strength grows."',
             'Blackstar: "The pine forest provides all we need. ShadowClan is content."'
         ],
-        'WindClan': [
+        'wind': [
             'Onestar: "WindClan runs free across the moors. The rabbits are plentiful."',
             'Onestar: "Our apprentices train hard. WindClan will have swift warriors."',
             'Onestar: "The wind carries good omens for WindClan this moon."',
@@ -9197,14 +9299,16 @@ function showGatheringNews() {
         ]
     };
     
-    const clans = ['ThunderClan', 'RiverClan', 'ShadowClan', 'WindClan'];
+    const clans = ['thunder', 'river', 'shadow', 'wind'].filter(c => c !== skipClan);
     let delay = 0;
     
     clans.forEach((clan, index) => {
         setTimeout(() => {
             const news = clanNews[clan];
-            const announcement = news[Math.floor(Math.random() * news.length)];
-            showMessage(announcement);
+            if (news) {
+                const announcement = news[Math.floor(Math.random() * news.length)];
+                showMessage(announcement);
+            }
         }, delay);
         delay += 3500;
     });
