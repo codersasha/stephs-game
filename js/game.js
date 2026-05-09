@@ -128,6 +128,25 @@ function getClanCats() {
     return ALL_CLAN_CATS[clan] || ALL_CLAN_CATS.thunder;
 }
 
+// Cats killed or dead in this save — they no longer appear in camp
+function markClanmateDead(name) {
+    if (!name || !GameState.catData) return;
+    if (!GameState.catData.deadClanmates) GameState.catData.deadClanmates = [];
+    if (!GameState.catData.deadClanmates.includes(name)) {
+        GameState.catData.deadClanmates.push(name);
+    }
+}
+
+function isClanmateDead(name) {
+    if (!name) return false;
+    const dead = GameState.catData?.deadClanmates;
+    return Array.isArray(dead) && dead.includes(name);
+}
+
+function getAliveClanCats() {
+    return getClanCats().filter(c => !isClanmateDead(c.name));
+}
+
 // Backwards compatibility - CLAN_CATS references getClanCats()
 let CLAN_CATS = ALL_CLAN_CATS.thunder;
 
@@ -2042,6 +2061,11 @@ function selectSaveSlot(slot) {
         // Debug: log loaded save data
         console.log(`[LOADED SAVE] name=${saveData.name}, rank=${saveData.rank}, age=${saveData.age}, nightsSlept=${saveData.nightsSlept}`);
         
+        // Old saves: dead clanmates list
+        if (!Array.isArray(GameState.catData.deadClanmates)) {
+            GameState.catData.deadClanmates = [];
+        }
+        
         // Fix for old saves that don't have nightsSlept
         if (GameState.catData.nightsSlept === undefined) {
             // For kits, set nightsSlept based on age (since age increases with nights)
@@ -2371,7 +2395,9 @@ function beginAdventure() {
         // Mentor (for apprentices)
         mentor: null,
         // Track nights slept for kit->apprentice progression
-        nightsSlept: 0
+        nightsSlept: 0,
+        // NPC clanmates who died — hidden from camp
+        deadClanmates: []
     };
     
     // Debug: log new cat creation
@@ -2379,7 +2405,7 @@ function beginAdventure() {
     
     // Assign mentor if starting as an apprentice
     if (rankName === 'Apprentice' && !isLoner && !isKittypet) {
-        const clanWarriors = getClanCats().filter(c => c.rank === 'Warrior');
+        const clanWarriors = getAliveClanCats().filter(c => c.rank === 'Warrior');
         if (clanWarriors.length > 0) {
             const mentor = clanWarriors[Math.floor(Math.random() * clanWarriors.length)];
             GameState.catData.mentor = mentor.name;
@@ -3593,7 +3619,7 @@ function renderLeaderOnHighRock() {
         return ''; // Player is rendered separately
     }
     
-    const leader = getClanCats().find(c => c.rank === 'Leader');
+    const leader = getAliveClanCats().find(c => c.rank === 'Leader');
     if (!leader) return '';
     
     const furColor = leader.furColor;
@@ -3840,36 +3866,35 @@ function renderNPCCats() {
     
     // Show warriors returning with prey for kits/elders
     if (cat && (cat.rank === 'Kit' || cat.rank === 'Elder')) {
-        // Graystripe bringing prey
-        npcHTML += renderDetailedNPCCat(160, 245, '#808080', '#f1c40f', 'Graystripe', 0.85);
-        // Add prey in mouth
-        npcHTML += `<ellipse cx="175" cy="240" rx="5" ry="3" fill="#8B7355"/>`;
-        
-        // Sandstorm bringing water in moss
-        npcHTML += renderDetailedNPCCat(290, 245, '#F4A460', '#27ae60', 'Sandstorm', 0.85);
-        // Add moss with water
-        npcHTML += `<ellipse cx="305" cy="240" rx="4" ry="3" fill="#4a7a4a"/>`;
+        if (!isClanmateDead('Graystripe')) {
+            npcHTML += renderDetailedNPCCat(160, 245, '#808080', '#f1c40f', 'Graystripe', 0.85);
+            npcHTML += `<ellipse cx="175" cy="240" rx="5" ry="3" fill="#8B7355"/>`;
+        }
+        if (!isClanmateDead('Sandstorm')) {
+            npcHTML += renderDetailedNPCCat(290, 245, '#F4A460', '#27ae60', 'Sandstorm', 0.85);
+            npcHTML += `<ellipse cx="305" cy="240" rx="4" ry="3" fill="#4a7a4a"/>`;
+        }
     }
     
     // Stationary cats with detailed graphics
-    npcHTML += renderDetailedNPCCat(85, 175, '#8B4513', '#f1c40f', 'Brambleclaw', 0.8);
-    npcHTML += renderDetailedNPCCat(355, 175, '#CD853F', '#27ae60', 'Squirrelpaw', 0.7);
-    npcHTML += renderDetailedNPCCat(258, 105, '#D2B48C', '#f1c40f', 'Leafpool', 0.8);
-    npcHTML += renderDetailedNPCCat(150, 275, '#2c2c2c', '#f1c40f', 'Spiderleg', 0.75);
-    npcHTML += renderDetailedNPCCat(330, 95, '#ecf0f1', '#27ae60', 'Whitewing', 0.8);
+    if (!isClanmateDead('Brambleclaw')) npcHTML += renderDetailedNPCCat(85, 175, '#8B4513', '#f1c40f', 'Brambleclaw', 0.8);
+    if (!isClanmateDead('Squirrelpaw')) npcHTML += renderDetailedNPCCat(355, 175, '#CD853F', '#27ae60', 'Squirrelpaw', 0.7);
+    if (!isClanmateDead('Leafpool')) npcHTML += renderDetailedNPCCat(258, 105, '#D2B48C', '#f1c40f', 'Leafpool', 0.8);
+    if (!isClanmateDead('Spiderleg')) npcHTML += renderDetailedNPCCat(150, 275, '#2c2c2c', '#f1c40f', 'Spiderleg', 0.75);
+    if (!isClanmateDead('Whitewing')) npcHTML += renderDetailedNPCCat(330, 95, '#ecf0f1', '#27ae60', 'Whitewing', 0.8);
     
     // Moving cats
-    npcHTML += renderDetailedNPCCat(npcs.dustpelt.x, npcs.dustpelt.y, '#5D4037', '#f1c40f', 'Dustpelt', 0.8);
-    npcHTML += renderDetailedNPCCat(npcs.cloudtail.x, npcs.cloudtail.y, '#FFFFFF', '#3498db', 'Cloudtail', 0.8);
-    npcHTML += renderDetailedNPCCat(npcs.brightheart.x, npcs.brightheart.y, '#E67E22', '#27ae60', 'Brightheart', 0.8);
-    npcHTML += renderDetailedNPCCat(npcs.ferncloud.x, npcs.ferncloud.y, '#95a5a6', '#27ae60', 'Ferncloud', 0.8);
+    if (!isClanmateDead('Dustpelt')) npcHTML += renderDetailedNPCCat(npcs.dustpelt.x, npcs.dustpelt.y, '#5D4037', '#f1c40f', 'Dustpelt', 0.8);
+    if (!isClanmateDead('Cloudtail')) npcHTML += renderDetailedNPCCat(npcs.cloudtail.x, npcs.cloudtail.y, '#FFFFFF', '#3498db', 'Cloudtail', 0.8);
+    if (!isClanmateDead('Brightheart')) npcHTML += renderDetailedNPCCat(npcs.brightheart.x, npcs.brightheart.y, '#E67E22', '#27ae60', 'Brightheart', 0.8);
+    if (!isClanmateDead('Ferncloud')) npcHTML += renderDetailedNPCCat(npcs.ferncloud.x, npcs.ferncloud.y, '#95a5a6', '#27ae60', 'Ferncloud', 0.8);
     
     // KITS in the nursery area! (tiny and cute)
-    npcHTML += renderDetailedNPCCat(npcs.molekit.x, npcs.molekit.y, '#8B7355', '#f1c40f', 'Molekit', 0.4);
-    npcHTML += renderDetailedNPCCat(npcs.cherrykit.x, npcs.cherrykit.y, '#CD853F', '#27ae60', 'Cherrykit', 0.4);
-    npcHTML += renderDetailedNPCCat(npcs.lilykit.x, npcs.lilykit.y, '#D2B48C', '#3498db', 'Lilykit', 0.4);
-    npcHTML += renderDetailedNPCCat(npcs.seedkit.x, npcs.seedkit.y, '#F5DEB3', '#f1c40f', 'Seedkit', 0.4);
-    npcHTML += renderDetailedNPCCat(npcs.honeykit.x, npcs.honeykit.y, '#FFD700', '#27ae60', 'Honeykit', 0.4);
+    if (!isClanmateDead('Molekit')) npcHTML += renderDetailedNPCCat(npcs.molekit.x, npcs.molekit.y, '#8B7355', '#f1c40f', 'Molekit', 0.4);
+    if (!isClanmateDead('Cherrykit')) npcHTML += renderDetailedNPCCat(npcs.cherrykit.x, npcs.cherrykit.y, '#CD853F', '#27ae60', 'Cherrykit', 0.4);
+    if (!isClanmateDead('Lilykit')) npcHTML += renderDetailedNPCCat(npcs.lilykit.x, npcs.lilykit.y, '#D2B48C', '#3498db', 'Lilykit', 0.4);
+    if (!isClanmateDead('Seedkit')) npcHTML += renderDetailedNPCCat(npcs.seedkit.x, npcs.seedkit.y, '#F5DEB3', '#f1c40f', 'Seedkit', 0.4);
+    if (!isClanmateDead('Honeykit')) npcHTML += renderDetailedNPCCat(npcs.honeykit.x, npcs.honeykit.y, '#FFD700', '#27ae60', 'Honeykit', 0.4);
     
     return npcHTML;
 }
@@ -8437,6 +8462,11 @@ function renderBattleScreen() {
     // Add event listeners
     if (battle.battleOver) {
         document.querySelector('.continue-btn')?.addEventListener('click', () => {
+            // Defeated threats vanish from the forest
+            if (battle.playerHealth > 0 && GameState.forestThreats?.length) {
+                const idx = GameState.forestThreats.findIndex(t => t.type === battle.threatType);
+                if (idx >= 0) GameState.forestThreats.splice(idx, 1);
+            }
             window.battleState = null;
             renderGameWorld();
         });
@@ -9166,55 +9196,107 @@ function showGatheringScreen() {
     setTimeout(() => showGatheringNews(), 3000);
 }
 
+// Track gathering state
+let gatheringState = {
+    playerSpeeches: 0,
+    maxSpeeches: 3, // Leader can say up to 3 things
+    currentClanIndex: 0,
+    clansOrder: ['thunder', 'river', 'shadow', 'wind'],
+    isPlayerTurn: false
+};
+
 function showGatheringNews() {
     const cat = GameState.catData;
-    const playerClan = CLANS[cat.clan]?.name || 'ThunderClan';
     
-    // If player is a leader, let them choose what to say!
-    if (cat.rank === 'Leader') {
-        showLeaderNewsChoice();
+    // Reset gathering state
+    gatheringState = {
+        playerSpeeches: 0,
+        maxSpeeches: 3,
+        currentClanIndex: 0,
+        clansOrder: ['thunder', 'river', 'shadow', 'wind'],
+        isPlayerTurn: false
+    };
+    
+    // Shuffle clan order but player's clan goes in their position
+    shuffleArray(gatheringState.clansOrder);
+    
+    // Start the news cycle
+    showNextClanNews();
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function showNextClanNews() {
+    const cat = GameState.catData;
+    
+    if (gatheringState.currentClanIndex >= gatheringState.clansOrder.length) {
+        // All clans have spoken - end gathering
+        endGathering();
         return;
     }
     
-    // Otherwise, show normal gathering news
-    showAutomaticGatheringNews(null);
+    const currentClan = gatheringState.clansOrder[gatheringState.currentClanIndex];
+    
+    // Is it the player's clan's turn?
+    if (currentClan === cat.clan && cat.rank === 'Leader') {
+        // Player is leader of this clan - let them speak!
+        gatheringState.isPlayerTurn = true;
+        showLeaderSpeakingMenu();
+    } else {
+        // NPC leader speaks
+        showNPCLeaderNews(currentClan);
+    }
 }
 
-// Let leader pick what news to announce
-function showLeaderNewsChoice() {
+// Show menu for leader to speak (can say multiple things!)
+function showLeaderSpeakingMenu() {
     const cat = GameState.catData;
     const clanName = CLANS[cat.clan]?.name || 'ThunderClan';
+    const speechesLeft = gatheringState.maxSpeeches - gatheringState.playerSpeeches;
     
     const popup = document.getElementById('location-popup');
     const title = document.getElementById('location-title');
     const desc = document.getElementById('location-desc');
     const actions = document.getElementById('location-actions');
     
-    title.textContent = 'Your Turn to Speak!';
-    desc.textContent = `As leader of ${clanName}, what news will you share at the Gathering?`;
+    title.textContent = `${cat.name} - Your Turn!`;
+    desc.textContent = `All clans are listening! You can say ${speechesLeft} more thing${speechesLeft !== 1 ? 's' : ''}. What will you announce?`;
     actions.innerHTML = '';
     
     // News options for leaders
     const newsOptions = [
-        { text: 'Our clan is strong and thriving!', full: `${cat.name}: "${clanName} is strong! We have grown in numbers and our warriors are brave!"` },
-        { text: 'We have new apprentices!', full: `${cat.name}: "${clanName} welcomes new apprentices! They train hard and make us proud!"` },
-        { text: 'Prey is running well', full: `${cat.name}: "Prey runs well in ${clanName} territory. Our bellies are full and our clan is healthy!"` },
-        { text: 'We chased out a threat', full: `${cat.name}: "${clanName} has driven out a dangerous threat from our borders! We remain vigilant!"` },
-        { text: 'New kits were born', full: `${cat.name}: "The nursery is full of new kits! ${clanName} grows stronger with each new life!"` },
-        { text: 'We found new territory', full: `${cat.name}: "${clanName} has expanded our hunting grounds! Our territory provides all we need!"` },
-        { text: 'Issue a warning to other clans', full: `${cat.name}: "Let this be a warning - any cat who trespasses in ${clanName} territory will face our claws!"` },
-        { text: 'Make peace with the clans', full: `${cat.name}: "${clanName} seeks peace with all clans. May StarClan light our paths together!"` },
-        { text: 'Boast about your power', full: `${cat.name}: "${clanName} is the mightiest clan in the forest! None can stand against us!"` },
-        { text: 'Honor a fallen warrior', full: `${cat.name}: "${clanName} mourns a brave warrior who has joined StarClan. May they watch over us always."` }
+        { text: 'Our clan is strong!', full: `${cat.name}: "${clanName} is strong! We have grown in numbers and our warriors are brave!"` },
+        { text: 'New apprentices!', full: `${cat.name}: "${clanName} welcomes new apprentices! They train hard and make us proud!"` },
+        { text: 'Prey is plentiful', full: `${cat.name}: "Prey runs well in ${clanName} territory. Our bellies are full!"` },
+        { text: 'We chased out a threat', full: `${cat.name}: "${clanName} drove out a dangerous threat! We remain vigilant!"` },
+        { text: 'New kits born', full: `${cat.name}: "New kits were born! ${clanName} grows stronger!"` },
+        { text: 'Warning to trespassers!', full: `${cat.name}: "Any cat who trespasses in ${clanName} territory will face our claws!"` },
+        { text: 'We seek peace', full: `${cat.name}: "${clanName} seeks peace with all clans. May StarClan guide us!"` },
+        { text: 'We are the mightiest!', full: `${cat.name}: "${clanName} is the mightiest clan! None can stand against us!"` },
+        { text: 'Honor the fallen', full: `${cat.name}: "We honor a brave warrior who joined StarClan. They watch over us."` },
+        { text: 'Challenge another clan!', full: `${cat.name}: "Let all clans know - ${clanName} fears no one! We challenge any who doubt us!"` }
     ];
     
     newsOptions.forEach(option => {
         addAction(actions, option.text, () => {
             closePopup();
             playSoundClanCheer();
-            showMessage(option.full);
-            // After player speaks, continue with other clans
-            setTimeout(() => showAutomaticGatheringNews(cat.clan), 3500);
+            showGatheringSpeech(option.full);
+            gatheringState.playerSpeeches++;
+            
+            // Can they say more?
+            if (gatheringState.playerSpeeches < gatheringState.maxSpeeches) {
+                setTimeout(() => showLeaderContinueMenu(), 2500);
+            } else {
+                // Done speaking, move to next clan
+                gatheringState.currentClanIndex++;
+                setTimeout(() => showNextClanNews(), 3000);
+            }
         });
     });
     
@@ -9222,6 +9304,44 @@ function showLeaderNewsChoice() {
     addAction(actions, 'Say something else...', () => {
         closePopup();
         showCustomLeaderSpeech();
+    });
+    
+    // Option to finish speaking
+    if (gatheringState.playerSpeeches > 0) {
+        addAction(actions, 'I\'m done speaking', () => {
+            closePopup();
+            gatheringState.currentClanIndex++;
+            setTimeout(() => showNextClanNews(), 1000);
+        });
+    }
+    
+    playSoundMenuOpen();
+    popup.classList.remove('hidden');
+}
+
+// Ask if leader wants to say more
+function showLeaderContinueMenu() {
+    const cat = GameState.catData;
+    const speechesLeft = gatheringState.maxSpeeches - gatheringState.playerSpeeches;
+    
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    
+    title.textContent = 'Continue Speaking?';
+    desc.textContent = `The clans are still listening. You can say ${speechesLeft} more thing${speechesLeft !== 1 ? 's' : ''}.`;
+    actions.innerHTML = '';
+    
+    addAction(actions, 'Say more!', () => {
+        closePopup();
+        showLeaderSpeakingMenu();
+    });
+    
+    addAction(actions, 'I\'m done', () => {
+        closePopup();
+        gatheringState.currentClanIndex++;
+        setTimeout(() => showNextClanNews(), 1000);
     });
     
     playSoundMenuOpen();
@@ -9246,87 +9366,118 @@ function showCustomLeaderSpeech() {
     `;
     actions.innerHTML = '';
     
-    addAction(actions, 'Announce to All Clans!', () => {
+    addAction(actions, 'Announce!', () => {
         const input = document.getElementById('leader-speech-input');
-        const message = input?.value?.trim() || 'I have nothing to say.';
+        const message = input?.value?.trim() || 'I have nothing more to say.';
         closePopup();
         playSoundClanCheer();
-        showMessage(`${cat.name}: "${message}"`);
-        // After player speaks, continue with other clans
-        setTimeout(() => showAutomaticGatheringNews(cat.clan), 3500);
+        showGatheringSpeech(`${cat.name}: "${message}"`);
+        gatheringState.playerSpeeches++;
+        
+        // Can they say more?
+        if (gatheringState.playerSpeeches < gatheringState.maxSpeeches) {
+            setTimeout(() => showLeaderContinueMenu(), 2500);
+        } else {
+            gatheringState.currentClanIndex++;
+            setTimeout(() => showNextClanNews(), 3000);
+        }
     });
     
     addAction(actions, 'Cancel', () => {
         closePopup();
-        showLeaderNewsChoice();
+        showLeaderSpeakingMenu();
     });
     
     playSoundMenuOpen();
     popup.classList.remove('hidden');
     
-    // Focus the input
-    setTimeout(() => {
-        document.getElementById('leader-speech-input')?.focus();
-    }, 100);
+    setTimeout(() => document.getElementById('leader-speech-input')?.focus(), 100);
 }
 
-// Show automatic news from other clans (skipping player's clan if they already spoke)
-function showAutomaticGatheringNews(skipClan) {
+// Show NPC leader news
+function showNPCLeaderNews(clan) {
     const clanNews = {
         'thunder': [
             'Firestar: "ThunderClan is strong! We have two new apprentices this moon."',
-            'Firestar: "Prey is running well in our territory. ThunderClan thrives!"',
-            'Firestar: "We drove out a fox from our borders. ThunderClan remains vigilant."',
-            'Firestar: "A new litter of kits was born in the nursery. ThunderClan grows!"'
+            'Firestar: "Prey runs well in our territory. ThunderClan thrives!"',
+            'Firestar: "We drove out a fox from our borders!"',
+            'Firestar: "New kits were born in the nursery. ThunderClan grows!"'
         ],
         'river': [
             'Leopardstar: "RiverClan\'s rivers flow with fish. We want for nothing."',
-            'Leopardstar: "Two of our warriors have earned their names this moon."',
-            'Leopardstar: "The Twolegs have left the river. RiverClan celebrates!"',
-            'Leopardstar: "Our medicine cat has found new healing herbs by the water."'
+            'Leopardstar: "Two warriors earned their names this moon."',
+            'Leopardstar: "The Twolegs left the river. RiverClan celebrates!"',
+            'Leopardstar: "Our medicine cat found new healing herbs."'
         ],
         'shadow': [
-            'Blackstar: "ShadowClan hunts well in the shadows. We need no help."',
-            'Blackstar: "A badger was spotted near our border, but we chased it away."',
+            'Blackstar: "ShadowClan hunts well in the shadows."',
+            'Blackstar: "A badger was spotted but we chased it away."',
             'Blackstar: "ShadowClan has new warriors. Our strength grows."',
-            'Blackstar: "The pine forest provides all we need. ShadowClan is content."'
+            'Blackstar: "The pine forest provides all we need."'
         ],
         'wind': [
-            'Onestar: "WindClan runs free across the moors. The rabbits are plentiful."',
-            'Onestar: "Our apprentices train hard. WindClan will have swift warriors."',
-            'Onestar: "The wind carries good omens for WindClan this moon."',
-            'Onestar: "We have made peace with a neighboring Clan. For now."'
+            'Onestar: "WindClan runs free! The rabbits are plentiful."',
+            'Onestar: "Our apprentices train hard for battle."',
+            'Onestar: "The wind carries good omens this moon."',
+            'Onestar: "We will defend our moors from any threat!"'
         ]
     };
     
-    const clans = ['thunder', 'river', 'shadow', 'wind'].filter(c => c !== skipClan);
-    let delay = 0;
+    const news = clanNews[clan];
+    if (news) {
+        const announcement = news[Math.floor(Math.random() * news.length)];
+        showGatheringSpeech(announcement);
+    }
     
-    clans.forEach((clan, index) => {
-        setTimeout(() => {
-            const news = clanNews[clan];
-            if (news) {
-                const announcement = news[Math.floor(Math.random() * news.length)];
-                showMessage(announcement);
-            }
-        }, delay);
-        delay += 3500;
-    });
+    // Move to next clan after delay
+    gatheringState.currentClanIndex++;
+    setTimeout(() => showNextClanNews(), 3500);
+}
+
+// Show speech with visual effect at gathering
+function showGatheringSpeech(text) {
+    showMessage(text);
     
-    // After all news, end the gathering
+    // Add speech bubble to the gathering scene
+    const gameWorld = document.getElementById('game-world');
+    const speechBubble = document.createElement('div');
+    speechBubble.className = 'gathering-speech';
+    speechBubble.style.cssText = `
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        border: 2px solid #ffd700;
+        border-radius: 10px;
+        padding: 15px 20px;
+        color: white;
+        font-size: 14px;
+        max-width: 80%;
+        text-align: center;
+        z-index: 100;
+        animation: fadeIn 0.3s ease-out;
+    `;
+    speechBubble.textContent = text;
+    gameWorld.appendChild(speechBubble);
+    
+    // Remove after delay
+    setTimeout(() => speechBubble.remove(), 3000);
+}
+
+// End the gathering
+function endGathering() {
+    showMessage('The moon is covered by clouds. The Gathering is over!');
     setTimeout(() => {
-        showMessage('The moon is covered by clouds. The Gathering is over!');
+        showMessage('All cats return to their camps...');
         setTimeout(() => {
-            showMessage('All cats return to their camps...');
-            setTimeout(() => {
-                // Teleport back to camp
-                GameState.currentLocation = 'camp';
-                GameState.playerX = 225;
-                GameState.playerY = 250;
-                endNight();
-            }, 2000);
+            // Teleport back to camp
+            GameState.currentLocation = 'camp';
+            GameState.playerX = 225;
+            GameState.playerY = 250;
+            endNight();
         }, 2000);
-    }, delay + 2000);
+    }, 2000);
 }
 
 // Guard to prevent multiple endNight calls
@@ -9882,6 +10033,11 @@ function showKillClanmateMenu() {
 // Kill a clanmate when no one is watching
 function killClanmate(victimName) {
     const cat = GameState.catData;
+    
+    // Victim disappears from camp (persisted in save)
+    markClanmateDead(victimName);
+    saveGameData();
+    renderGameWorld();
     
     // Add victim to StarClan cats list so they appear there!
     if (!GameState.killedCats) GameState.killedCats = [];
@@ -11618,7 +11774,7 @@ function triggerRandomNPCChat() {
     }
     
     // Get adult cats from current clan (warriors, apprentices, medicine cat)
-    const clanNpcs = getClanCats()
+    const clanNpcs = getAliveClanCats()
         .filter(c => c.rank !== 'Kit' && c.rank !== 'Leader')
         .map(c => c.name);
     const npc = clanNpcs[Math.floor(Math.random() * clanNpcs.length)] || 'a cat';
@@ -11644,7 +11800,7 @@ function triggerRandomNPCChat() {
 
 // Kit-specific chatter
 function triggerKitChatter() {
-    const clanKits = getClanCats().filter(c => c.rank === 'Kit').map(c => c.name);
+    const clanKits = getAliveClanCats().filter(c => c.rank === 'Kit').map(c => c.name);
     const kit = clanKits[Math.floor(Math.random() * clanKits.length)] || 'a kit';
     
     const kitChat = [
@@ -13569,11 +13725,36 @@ function handlePeerData(peerId, data) {
             }
             break;
             
-        case 'playerDied':
-            // A player died - show message
-            addChatMessage('', `${data.playerName} has been killed!`, true);
-            showMessage(`${data.playerName} has been killed!`);
+        case 'playerDied': {
+            // Remove dead player from the world so they disappear for everyone
+            if (data.peerId) delete GameState.otherPlayers[data.peerId];
+            if (data.isHost) delete GameState.otherPlayers['host'];
+            
+            addChatMessage('', `${data.playerName} faded away...`, true);
+            showMessage(`${data.playerName} is gone...`);
+            
+            // Host: dying client only told us — relay to all other players
+            if (GameState.isHost && data.relayFromClient && data.sourcePeerId) {
+                const relay = {
+                    type: 'playerDied',
+                    playerName: data.playerName,
+                    peerId: data.peerId,
+                    isHost: !!data.isHost
+                };
+                GameState.connections.forEach(conn => {
+                    if (conn.open && conn.peer !== data.sourcePeerId) {
+                        conn.send(relay);
+                    }
+                });
+                broadcastAllPlayers();
+            }
+            
+            if (GameState.currentScreen === 'game' || GameState.currentScreen === 'gameplay') {
+                renderGameWorld();
+            }
+            updatePlayerList();
             break;
+        }
     }
 }
 
@@ -14239,15 +14420,23 @@ function receiveAttackFromPlayer(attackerName, damage) {
     
     // Check if dead
     if (cat.health <= 0) {
-        // Notify others of death
+        // Notify others of death so they disappear from the map
         const deathData = {
             type: 'playerDied',
             playerName: cat.name,
-            peerId: GameState.peer?.id
+            peerId: GameState.peer?.id,
+            isHost: !!GameState.isHost,
+            relayFromClient: !GameState.isHost,
+            sourcePeerId: GameState.peer?.id
         };
         
         if (GameState.isHost) {
-            broadcastToAll(deathData);
+            broadcastToAll({
+                type: 'playerDied',
+                playerName: deathData.playerName,
+                peerId: deathData.peerId,
+                isHost: true
+            });
         } else if (GameState.hostConnection?.open) {
             GameState.hostConnection.send(deathData);
         }
