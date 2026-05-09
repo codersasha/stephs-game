@@ -10194,12 +10194,38 @@ function blameCatForMurder(victimName, scapegoat, discoverer) {
                     showMessage('You have been caught!');
                     
                     setTimeout(() => {
-                        banishForMurder(victimName, leaderName);
+                        punishCaughtMurderer(victimName, leaderName);
                     }, 2500);
                 }, 2500);
             }
         }, 3000);
     }, 2500);
+}
+
+// When the clan knows you killed someone: 24% they execute you, else banishment
+function punishCaughtMurderer(victimName, leaderName) {
+    const cat = GameState.catData;
+    if (!cat) return;
+    
+    if (Math.random() < 0.24) {
+        showMessage(`${leaderName}: "Murder of a clanmate can only be paid with your life!"`);
+        playSoundDanger();
+        
+        setTimeout(() => {
+            showMessage('Warriors close in. There is nowhere to run.');
+            setTimeout(() => {
+                showMessage('You feel teeth and claws... then darkness.');
+                playSoundAttack();
+                setTimeout(() => {
+                    cat.health = 0;
+                    catDeath('executed by the clan for murder');
+                    saveGameData();
+                }, 2000);
+            }, 2500);
+        }, 2500);
+    } else {
+        banishForMurder(victimName, leaderName);
+    }
 }
 
 // Stay silent after murder - suspicious but might work
@@ -10219,7 +10245,7 @@ function staySilentAfterMurder(victimName) {
             setTimeout(() => {
                 showMessage('They found you out!');
                 const leaderName = cat.rank === 'Leader' ? 'Graystripe' : 'Firestar';
-                banishForMurder(victimName, leaderName);
+                punishCaughtMurderer(victimName, leaderName);
             }, 2500);
         } else {
             showMessage('The clan assumes it was a fox or rogue... You got away with it.');
@@ -10247,7 +10273,7 @@ function confessToMurder(victimName) {
             showSpeechBubble(leaderName, 'You... MONSTER!');
             
             setTimeout(() => {
-                banishForMurder(victimName, leaderName);
+                punishCaughtMurderer(victimName, leaderName);
             }, 2500);
         }, 2500);
     }, 2500);
