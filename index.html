@@ -6,8 +6,8 @@
     <title>Warrior Cats the Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260209-3d">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=20260217-gender-three">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
     <!-- PeerJS for multiplayer -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -47,13 +47,40 @@
             </div>
             </div>
             <p class="home-version">Fan tribute · not affiliated with Erin Hunter or the publishers</p>
+
+            <!-- First launch: choose a player username (globally unique if Firebase is configured) -->
+            <div id="username-first-run-gate" class="username-first-run-gate hidden" aria-modal="true" role="dialog" aria-labelledby="username-fr-title">
+                <div class="username-first-run-backdrop" aria-hidden="true"></div>
+                <div class="username-first-run-card">
+                    <p class="username-fr-eyebrow">First time here?</p>
+                    <h2 id="username-fr-title" class="username-fr-title">Write your username</h2>
+                    <p class="username-fr-hint">Pick a name for <strong>you</strong> as a player (not your cat yet). It has to be unique — the same name can’t be used by someone else in the world when the game host turns on the shared name list.</p>
+                    <div id="username-fr-step-btn-wrap">
+                        <button type="button" class="username-fr-primary" id="username-fr-reveal-btn">Write your username</button>
+                    </div>
+                    <div id="username-fr-form" class="username-fr-form hidden">
+                        <label class="username-fr-label" for="username-fr-input">Username</label>
+                        <input type="text" id="username-fr-input" class="username-fr-input" maxlength="24" autocomplete="username" placeholder="e.g. silverstream_fan" />
+                        <p id="username-fr-error" class="username-fr-error" role="alert" aria-live="polite"></p>
+                        <button type="button" class="username-fr-primary" id="username-fr-submit">Save &amp; continue</button>
+                    </div>
+                    <p id="username-fr-offline-note" class="username-fr-note hidden"></p>
+                </div>
+            </div>
         </div>
 
         <!-- Play Mode Selection Screen -->
         <div id="mode-screen" class="screen">
-            <h2>How do you want to play?</h2>
-            <div class="mode-buttons">
-                <button class="mode-btn single-player" id="single-player-btn">
+            <div class="mode-screen-bg" aria-hidden="true"></div>
+            <div class="mode-screen-inner">
+                <header class="mode-header">
+                    <p class="mode-eyebrow">Choose your path</p>
+                    <h2 class="mode-title">How do you want to play?</h2>
+                    <p class="mode-subtitle">Solo adventure, host your den, join with a code, or jump in with friends.</p>
+                </header>
+                <div class="mode-buttons">
+                <button type="button" class="mode-btn mode-card single-player" id="single-player-btn">
+                    <span class="mode-card-badge">Solo</span>
                     <span class="mode-icon">
                         <svg viewBox="0 0 60 60" width="50" height="50">
                             <!-- Single cat silhouette -->
@@ -80,9 +107,10 @@
                         </svg>
                     </span>
                     <span class="mode-name">Play Alone</span>
-                    <span class="mode-desc">Adventure by yourself</span>
+                    <span class="mode-desc">Full story at your own pace — no connection needed.</span>
                 </button>
-                <button class="mode-btn host-game" id="host-game-btn">
+                <button type="button" class="mode-btn mode-card host-game" id="host-game-btn">
+                    <span class="mode-card-badge mode-badge-host">Host</span>
                     <span class="mode-icon">
                         <svg viewBox="0 0 80 60" width="65" height="50">
                             <!-- Leader cat (center, with crown) -->
@@ -131,9 +159,10 @@
                         </svg>
                     </span>
                     <span class="mode-name">Start a Clan</span>
-                    <span class="mode-desc">Host a game for friends</span>
+                    <span class="mode-desc">Create a room code and invite your friends.</span>
                 </button>
-                <button class="mode-btn join-game" id="join-game-btn">
+                <button type="button" class="mode-btn mode-card join-game" id="join-game-btn">
+                    <span class="mode-card-badge mode-badge-join">Code</span>
                     <span class="mode-icon">
                         <svg viewBox="0 0 80 60" width="65" height="50">
                             <!-- Group of cats on right -->
@@ -183,8 +212,16 @@
                         </svg>
                     </span>
                     <span class="mode-name">Join a Clan</span>
-                    <span class="mode-desc">Join a friend's game</span>
+                    <span class="mode-desc">Enter a friend’s room code to join their session.</span>
                 </button>
+                <button type="button" class="mode-btn mode-card friends-mode" id="friends-btn">
+                    <span class="mode-card-badge mode-badge-friends">Social</span>
+                    <span class="mode-icon mode-icon-emoji" aria-hidden="true">👥</span>
+                    <span class="mode-name">Friends</span>
+                    <span class="mode-desc">Your list, quick join when they’re in a game.</span>
+                </button>
+                </div>
+                <button type="button" class="mode-back-btn" id="mode-back-home">← Back to title</button>
             </div>
         </div>
 
@@ -208,30 +245,45 @@
 
         <!-- Join Game Screen -->
         <div id="join-screen" class="screen">
-            <h2>Join a Clan</h2>
-            <p class="join-instructions">Enter the code from your friend:</p>
-            <div class="room-code-input">
-                <input type="text" id="join-code-input" placeholder="Enter code..." maxlength="20">
-                <button id="connect-btn" class="connect-btn">Join!</button>
-            </div>
-            <p id="join-status" class="join-status"></p>
-            
+            <div class="join-screen-inner">
+            <h2 class="join-screen-title">Join a Clan</h2>
+            <p class="join-screen-lead">Join with a <strong>room code</strong> or tap a friend who’s online.</p>
+
+            <section class="join-code-panel" aria-labelledby="join-code-heading">
+                <h3 id="join-code-heading" class="join-code-heading">Enter room code</h3>
+                <p class="join-instructions">Type the code your host shared (e.g. THUNDER1234).</p>
+                <div class="room-code-input">
+                    <input type="text" id="join-code-input" placeholder="CODE HERE" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="Room code">
+                    <button type="button" id="connect-btn" class="connect-btn">Join!</button>
+                </div>
+                <p id="join-status" class="join-status" role="status" aria-live="polite"></p>
+            </section>
+
             <!-- Friends List -->
-            <div class="friends-section">
-                <h3>Your Friends</h3>
+            <section class="friends-section" aria-label="Your friends">
+                <h3>Friends</h3>
+                <p class="friends-hint">Playing? Tap <strong>Join</strong> next to their name. Otherwise use the code above.</p>
                 <div id="friends-list" class="friends-list">
                     <p class="no-friends">No friends yet! Play with someone and add them as a friend.</p>
                 </div>
+            </section>
+
+            <button type="button" id="cancel-join-btn" class="back-btn join-cancel-btn">← Back</button>
             </div>
-            
-            <button id="cancel-join-btn" class="back-btn">Cancel</button>
         </div>
 
         <!-- Clan Selection Screen -->
         <div id="clan-screen" class="screen">
-            <h2>Choose Your Clan</h2>
-            <div class="clan-buttons">
-                <button class="clan-btn thunderclan" data-clan="thunder">
+            <div class="clan-screen-bg" aria-hidden="true"></div>
+            <div class="clan-screen-inner">
+                <header class="clan-header">
+                    <p class="clan-eyebrow">The lake territories</p>
+                    <h2 class="clan-title">Choose your clan</h2>
+                    <p class="clan-subtitle">Walk with a Clan—or forge your own path beyond their borders.</p>
+                </header>
+                <div class="clan-buttons">
+                <button type="button" class="clan-btn clan-card thunderclan" data-clan="thunder">
+                    <span class="clan-card-badge clan-badge-thunder">Forest</span>
                     <span class="clan-icon">
                         <svg viewBox="0 0 60 50" width="55" height="45">
                             <!-- Forest background -->
@@ -254,10 +306,13 @@
                             <ellipse cx="25" cy="31" rx="1.5" ry="1" fill="#FFB6C1"/>
                         </svg>
                     </span>
+                    <div class="clan-card-text">
                     <span class="clan-name">ThunderClan</span>
-                    <span class="clan-desc">Brave forest cats</span>
+                    <span class="clan-desc">Brave oak-forest warriors — loyal, fierce, and proud.</span>
+                    </div>
                 </button>
-                <button class="clan-btn riverclan" data-clan="river">
+                <button type="button" class="clan-btn clan-card riverclan" data-clan="river">
+                    <span class="clan-card-badge clan-badge-river">River</span>
                     <span class="clan-icon">
                         <svg viewBox="0 0 60 50" width="55" height="45">
                             <!-- Water background -->
@@ -282,10 +337,13 @@
                             <ellipse cx="22" cy="29" rx="1.5" ry="1" fill="#FFB6C1"/>
                         </svg>
                     </span>
+                    <div class="clan-card-text">
                     <span class="clan-name">RiverClan</span>
-                    <span class="clan-desc">Skilled swimmers</span>
+                    <span class="clan-desc">Clever riverside hunters — strong swimmers, sharp minds.</span>
+                    </div>
                 </button>
-                <button class="clan-btn windclan" data-clan="wind">
+                <button type="button" class="clan-btn clan-card windclan" data-clan="wind">
+                    <span class="clan-card-badge clan-badge-wind">Moor</span>
                     <span class="clan-icon">
                         <svg viewBox="0 0 60 50" width="55" height="45">
                             <!-- Moorland background -->
@@ -311,10 +369,13 @@
                             <line x1="38" y1="42" x2="42" y2="48" stroke="#c4a574" stroke-width="3" stroke-linecap="round"/>
                         </svg>
                     </span>
+                    <div class="clan-card-text">
                     <span class="clan-name">WindClan</span>
-                    <span class="clan-desc">Swift runners</span>
+                    <span class="clan-desc">Swift open-moor runners — free, fast, and stubborn.</span>
+                    </div>
                 </button>
-                <button class="clan-btn shadowclan" data-clan="shadow">
+                <button type="button" class="clan-btn clan-card shadowclan" data-clan="shadow">
+                    <span class="clan-card-badge clan-badge-shadow">Pines</span>
                     <span class="clan-icon">
                         <svg viewBox="0 0 60 50" width="55" height="45">
                             <!-- Dark forest background -->
@@ -342,10 +403,13 @@
                             <ellipse cx="33" cy="29" rx="4" ry="4" fill="#FFFF00" opacity="0.2"/>
                         </svg>
                     </span>
+                    <div class="clan-card-text">
                     <span class="clan-name">ShadowClan</span>
-                    <span class="clan-desc">Stealthy hunters</span>
+                    <span class="clan-desc">Shadow-pine stalkers — proud, secretive, and relentless.</span>
+                    </div>
                 </button>
-                <button class="clan-btn loner" data-clan="loner">
+                <button type="button" class="clan-btn clan-card loner" data-clan="loner">
+                    <span class="clan-card-badge clan-badge-loner">Wild</span>
                     <span class="clan-icon">
                         <svg viewBox="0 0 60 50" width="55" height="45">
                             <!-- Wild background -->
@@ -372,10 +436,13 @@
                             <line x1="34" y1="23" x2="38" y2="27" stroke="#cc8866" stroke-width="1.5"/>
                         </svg>
                     </span>
+                    <div class="clan-card-text">
                     <span class="clan-name">Loner</span>
-                    <span class="clan-desc">Live alone, be free</span>
+                    <span class="clan-desc">No Clan — carve your own destiny beyond the borders.</span>
+                    </div>
                 </button>
-                <button class="clan-btn kittypet" data-clan="kittypet">
+                <button type="button" class="clan-btn clan-card kittypet" data-clan="kittypet">
+                    <span class="clan-card-badge clan-badge-kittypet">Soft-life</span>
                     <span class="clan-icon">
                         <svg viewBox="0 0 60 50" width="55" height="45">
                             <!-- House background -->
@@ -406,62 +473,97 @@
                             <circle cx="32" cy="37" r="1" fill="#DAA520"/>
                         </svg>
                     </span>
+                    <div class="clan-card-text">
                     <span class="clan-name">KittyPet</span>
-                    <span class="clan-desc">Live with Twolegs</span>
+                    <span class="clan-desc">Twoleg nests, cozy beds — curiosity over the fence.</span>
+                    </div>
                 </button>
+                </div>
+                <button type="button" class="clan-back-btn" id="clan-back-mode">← How to play</button>
             </div>
         </div>
 
         <!-- Save Slots Screen -->
         <div id="saves-screen" class="screen">
-            <h2>Choose a Save Slot</h2>
-            <div class="save-slots">
-                <div class="save-slot-row">
-                    <button class="save-slot" data-slot="1">
-                        <span class="slot-number">1</span>
-                        <span class="slot-info">Empty</span>
-                    </button>
-                    <button class="delete-save-btn hidden" data-slot="1" title="Delete">🗑️</button>
+            <div class="saves-screen-bg" aria-hidden="true"></div>
+            <div class="saves-screen-inner">
+                <header class="saves-header">
+                    <p class="saves-eyebrow">Your den</p>
+                    <h2 class="saves-title">Choose a save slot</h2>
+                    <p class="saves-subtitle">Three moss nests — start fresh or return to a life already walking the territories.</p>
+                </header>
+                <div class="save-slots">
+                    <div class="save-slot-row">
+                        <button type="button" class="save-slot saves-slot-card" data-slot="1" aria-label="Save slot 1">
+                            <span class="slot-number" aria-hidden="true">1</span>
+                            <div class="slot-body">
+                                <span class="slot-label">Slot 1</span>
+                                <span class="slot-info">Empty</span>
+                            </div>
+                        </button>
+                        <button type="button" class="delete-save-btn hidden" data-slot="1" title="Delete save">🗑️</button>
+                    </div>
+                    <div class="save-slot-row">
+                        <button type="button" class="save-slot saves-slot-card" data-slot="2" aria-label="Save slot 2">
+                            <span class="slot-number" aria-hidden="true">2</span>
+                            <div class="slot-body">
+                                <span class="slot-label">Slot 2</span>
+                                <span class="slot-info">Empty</span>
+                            </div>
+                        </button>
+                        <button type="button" class="delete-save-btn hidden" data-slot="2" title="Delete save">🗑️</button>
+                    </div>
+                    <div class="save-slot-row">
+                        <button type="button" class="save-slot saves-slot-card" data-slot="3" aria-label="Save slot 3">
+                            <span class="slot-number" aria-hidden="true">3</span>
+                            <div class="slot-body">
+                                <span class="slot-label">Slot 3</span>
+                                <span class="slot-info">Empty</span>
+                            </div>
+                        </button>
+                        <button type="button" class="delete-save-btn hidden" data-slot="3" title="Delete save">🗑️</button>
+                    </div>
                 </div>
-                <div class="save-slot-row">
-                    <button class="save-slot" data-slot="2">
-                        <span class="slot-number">2</span>
-                        <span class="slot-info">Empty</span>
-                    </button>
-                    <button class="delete-save-btn hidden" data-slot="2" title="Delete">🗑️</button>
-                </div>
-                <div class="save-slot-row">
-                    <button class="save-slot" data-slot="3">
-                        <span class="slot-number">3</span>
-                        <span class="slot-info">Empty</span>
-                    </button>
-                    <button class="delete-save-btn hidden" data-slot="3" title="Delete">🗑️</button>
-                </div>
+                <button type="button" class="back-btn saves-back-btn" id="back-to-clan">← Choose another clan</button>
             </div>
-            <button class="back-btn" id="back-to-clan">← Back</button>
         </div>
 
         <!-- Name Creation Screen -->
         <div id="name-screen" class="screen">
-            <h2>Create Your Cat</h2>
-            
-            <!-- Cat Preview -->
-            <div id="cat-preview" class="cat-preview">
-                <!-- SVG cat preview will be rendered here -->
-            </div>
-            
-            <!-- Name Input -->
-            <div class="name-section">
-                <p class="name-instruction">What's your cat's name?</p>
-                <div class="name-creator">
-                    <input type="text" id="cat-name-input" placeholder="Enter name..." maxlength="12">
-                    <span class="name-suffix" id="name-suffix">kit</span>
+            <div class="name-screen-bg" aria-hidden="true"></div>
+            <div class="name-screen-inner">
+                <header class="name-header">
+                    <p class="name-eyebrow">New life in the territories</p>
+                    <h2 class="name-title">Create your cat</h2>
+                    <p class="name-subtitle">Shape your look, choose a name, and step into the story.</p>
+                </header>
+
+                <div class="name-preview-card">
+                    <p class="name-card-label">Preview</p>
+                    <div id="cat-preview" class="cat-preview">
+                        <!-- SVG cat preview will be rendered here -->
+                    </div>
                 </div>
-                <p class="name-preview">Your name will be: <span id="full-name-preview">___kit</span></p>
-            </div>
-            
-            <!-- Customization Options -->
-            <div class="customization-section">
+
+                <div class="name-form-card name-section">
+                    <p class="name-instruction">What's your cat's name?</p>
+                    <div class="name-creator">
+                        <input type="text" id="cat-name-input" placeholder="Enter name..." maxlength="12" autocomplete="off">
+                        <span class="name-suffix" id="name-suffix">kit</span>
+                    </div>
+                    <p class="name-preview">Your name will be: <span id="full-name-preview">___kit</span></p>
+                </div>
+
+                <div class="customization-section name-customize-card">
+                <div class="custom-option">
+                    <span class="option-label">You are a…</span>
+                    <p class="gender-hint">Pick how you’re referred to: <em>they/them</em>, <em>she/her</em> (she-cat), or <em>he/him</em> (tom)—Warriors’ words for adult cats, plus non-binary.</p>
+                    <div class="gender-picker rank-picker" id="cat-gender-picker" role="group" aria-label="Cat identity">
+                        <button type="button" class="rank-btn gender-btn selected" data-cat-gender="nonbinary">Non-binary</button>
+                        <button type="button" class="rank-btn gender-btn" data-cat-gender="she_cat">She-cat</button>
+                        <button type="button" class="rank-btn gender-btn" data-cat-gender="tom">Tom</button>
+                    </div>
+                </div>
                 <!-- Fur Color -->
                 <div class="custom-option">
                     <span class="option-label">Fur Color</span>
@@ -514,10 +616,13 @@
                         <button class="rank-btn" data-rank="leader" data-suffix="star" data-age="50">Leader</button>
                     </div>
                 </div>
+                </div>
+
+                <div class="name-screen-actions">
+                    <button type="button" class="start-game-btn" id="start-game-btn" disabled>Start adventure</button>
+                    <button type="button" class="back-btn name-back-btn" id="back-to-saves">← Back to saves</button>
+                </div>
             </div>
-            
-            <button class="start-game-btn" id="start-game-btn" disabled>Start Adventure!</button>
-            <button class="back-btn" id="back-to-saves">← Back</button>
         </div>
 
         <!-- Tutorial Screen -->
@@ -676,7 +781,13 @@
             <!-- Day/Night indicator -->
             <div id="time-indicator" class="time-indicator">Day</div>
 
-            <div id="game-message" class="game-message"></div>
+            <div id="game-message" class="game-message" role="status" aria-live="polite">
+                <div id="game-message-text" class="game-message-text"></div>
+                <div class="game-message-controls">
+                    <button type="button" id="game-message-close" class="game-message-btn" title="Close message">Close</button>
+                    <button type="button" id="game-message-mute" class="game-message-btn game-message-btn-muted" title="Hide these messages">Hide tips</button>
+                </div>
+            </div>
             
             <!-- Location popup -->
             <div id="location-popup" class="location-popup hidden">
@@ -707,6 +818,8 @@
         </div>
     </div>
 
-    <script src="js/game.js?v=20260210-hunt"></script>
+    <script src="js/username-config.js?v=1"></script>
+    <script src="js/username-registry.js?v=1"></script>
+    <script src="js/game.js?v=20260217-gender-three"></script>
 </body>
 </html>

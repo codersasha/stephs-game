@@ -18,7 +18,9 @@ const GameState = {
         startingRank: 'kit',
         nameSuffix: 'kit',
         startingAge: 0,
-        randomSuffix: ''
+        randomSuffix: '',
+        /** Player identity: 'nonbinary' (they/them), 'she_cat' (she/her), 'tom' (he/him) */
+        catGender: 'nonbinary'
     },
     // Player position in camp
     playerX: 200,
@@ -50,11 +52,81 @@ const GameState = {
     connections: [], // For host: all connected peers
     hostConnection: null, // For client: connection to host
     roomCode: null,
+    hostUsername: null,
     otherPlayers: {}, // Other players' data keyed by peerId
     // Multiplayer: non-kit carries a kit (peer id of the kit), or kit is carried by carrier's peer id
     carryingKitPeerId: null,
     carriedByPeerId: null
 };
+
+const MESSAGE_PREFS_KEY = 'warriorcats_message_popup_muted';
+let gameMessageTimeoutId = null;
+
+/** Saved on first launch — separate from warrior cat name (see username-registry.js). */
+function getPlayerAccountUsername() {
+    if (typeof WarriorCatsUsername !== 'undefined' && WarriorCatsUsername.getPlayerUsername) {
+        return WarriorCatsUsername.getPlayerUsername() || '';
+    }
+    return '';
+}
+
+function getOtherPlayerDisplayName(player) {
+    if (!player) return 'Player';
+    const u = player.username && String(player.username).trim();
+    if (u) return u;
+    return player.name || 'Player';
+}
+
+function getLocalMultiplayerDisplayName() {
+    const accountName = getPlayerAccountUsername();
+    if (accountName && String(accountName).trim()) return accountName.trim();
+    const catName = GameState.catData?.name;
+    if (catName && String(catName).trim()) return String(catName).trim();
+    return 'Unknown';
+}
+
+/** Saved on your cat — non-binary, she-cat, or tom (Warriors terms + they/them). */
+const CAT_GENDER_NONBINARY = 'nonbinary';
+const CAT_GENDER_SHE_CAT = 'she_cat';
+const CAT_GENDER_TOM = 'tom';
+
+function normalizeCatGender(raw) {
+    const g = raw && String(raw).trim();
+    if (g === CAT_GENDER_TOM) return CAT_GENDER_TOM;
+    if (g === CAT_GENDER_SHE_CAT) return CAT_GENDER_SHE_CAT;
+    if (g === CAT_GENDER_NONBINARY) return CAT_GENDER_NONBINARY;
+    // Legacy single option that mixed labels
+    if (g === 'nb_she_cat') return CAT_GENDER_NONBINARY;
+    return CAT_GENDER_NONBINARY;
+}
+
+function getPlayerCatGender(cat) {
+    return normalizeCatGender(cat && cat.catGender);
+}
+
+function playerPronounSubject(cat) {
+    switch (getPlayerCatGender(cat)) {
+        case CAT_GENDER_TOM: return 'he';
+        case CAT_GENDER_SHE_CAT: return 'she';
+        default: return 'they';
+    }
+}
+
+function playerPronounObject(cat) {
+    switch (getPlayerCatGender(cat)) {
+        case CAT_GENDER_TOM: return 'him';
+        case CAT_GENDER_SHE_CAT: return 'her';
+        default: return 'them';
+    }
+}
+
+function playerPronounPossDet(cat) {
+    switch (getPlayerCatGender(cat)) {
+        case CAT_GENDER_TOM: return 'his';
+        case CAT_GENDER_SHE_CAT: return 'her';
+        default: return 'their';
+    }
+}
 
 // NPC Cats for each clan
 const ALL_CLAN_CATS = {
@@ -885,6 +957,7 @@ function stopAmbientSounds() {
 
 // ============= SEASONS & WEATHER SYSTEM =============
 const SEASONS = ['newleaf', 'greenleaf', 'leaf-fall', 'leaf-bare'];
+const DAYS_PER_MOON = 12;
 const SEASON_NAMES = {
     'newleaf': 'Newleaf (Spring)',
     'greenleaf': 'Greenleaf (Summer)',
@@ -1011,12 +1084,70 @@ document.addEventListener('DOMContentLoaded', () => {
     initHomeScreen();
     setupEventListeners();
     setupMultiplayerListeners();
+    initGameMessageControls();
     createCatsSVG();
     
     // Initialize audio on first user interaction
     document.addEventListener('click', () => initAudio(), { once: true });
     document.addEventListener('touchstart', () => initAudio(), { once: true });
 });
+
+function isGameMessageMuted() {
+    try {
+        return localStorage.getItem(MESSAGE_PREFS_KEY) === '1';
+    } catch (e) {
+        return false;
+    }
+}
+
+function setGameMessageMuted(muted) {
+    try {
+        localStorage.setItem(MESSAGE_PREFS_KEY, muted ? '1' : '0');
+    } catch (e) {
+        // Ignore storage errors; fallback is current-session behavior.
+    }
+}
+
+function dismissGameMessage() {
+    const msgElement = document.getElementById('game-message');
+    if (!msgElement) return;
+    msgElement.classList.remove('show');
+    if (gameMessageTimeoutId) {
+        clearTimeout(gameMessageTimeoutId);
+        gameMessageTimeoutId = null;
+    }
+}
+
+function refreshGameMessageMuteButton() {
+    const muteBtn = document.getElementById('game-message-mute');
+    if (!muteBtn) return;
+    const muted = isGameMessageMuted();
+    muteBtn.textContent = muted ? 'Show tips' : 'Hide tips';
+    muteBtn.title = muted ? 'Show these messages again' : 'Hide these messages';
+}
+
+function initGameMessageControls() {
+    const closeBtn = document.getElementById('game-message-close');
+    const muteBtn = document.getElementById('game-message-mute');
+    const messageBox = document.getElementById('game-message');
+    if (!messageBox) return;
+    refreshGameMessageMuteButton();
+
+    closeBtn?.addEventListener('click', () => {
+        dismissGameMessage();
+    });
+
+    muteBtn?.addEventListener('click', () => {
+        const next = !isGameMessageMuted();
+        setGameMessageMuted(next);
+        refreshGameMessageMuteButton();
+        if (next) {
+            dismissGameMessage();
+        } else {
+            showMessage('Tips/messages are on again.');
+        }
+    });
+}
 
 // Create warrior cats SVG scene
 function createCatsSVG() {
@@ -1272,6 +1403,10 @@ function setupEventListeners() {
         btn.addEventListener('click', () => selectClan(btn.dataset.clan));
     });
 
+    document.getElementById('clan-back-mode')?.addEventListener('click', () => {
+        showScreen('mode');
+    });
+
     // Save slots
     document.querySelectorAll('.save-slot').forEach(slot => {
         slot.addEventListener('click', () => selectSaveSlot(slot.dataset.slot));
@@ -1328,10 +1463,19 @@ function setupEventListeners() {
         });
     });
 
-    // Rank selection
-    document.querySelectorAll('.rank-btn').forEach(btn => {
+    // Cat identity (non-binary / she-cat / tom) — only .gender-btn rows, not rank row
+    document.querySelectorAll('.gender-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            GameState.customization.catGender = normalizeCatGender(btn.dataset.catGender);
+        });
+    });
+
+    // Rank selection
+    document.querySelectorAll('.rank-btn:not(.gender-btn)').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.rank-btn:not(.gender-btn)').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             GameState.customization.startingRank = btn.dataset.rank;
             GameState.customization.nameSuffix = btn.dataset.suffix;
@@ -1424,11 +1568,21 @@ function setupEventListeners() {
             sayPlayerSpeech();
         });
     });
+
+    // Dismiss in-world speech bubbles by tapping them (full text stays until you close it or TTL)
+    const gameWorldTap = document.getElementById('game-world');
+    if (gameWorldTap) {
+        gameWorldTap.addEventListener('click', handleSpeechBubblePointerEvent);
+        gameWorldTap.addEventListener('touchend', handleSpeechBubblePointerEvent, { passive: false });
+    }
 }
 
 // Initialize home screen
 function initHomeScreen() {
     showScreen('home');
+    if (typeof WarriorCatsUsername !== 'undefined') {
+        WarriorCatsUsername.initUsernameGate();
+    }
 }
 
 // Show a specific screen
@@ -2022,6 +2176,12 @@ function startPartyInGame() {
 // Start the game (from home screen)
 function startGame() {
     if (GameState.currentScreen !== 'home') return;
+    if (typeof WarriorCatsUsername !== 'undefined' && !WarriorCatsUsername.hasPlayerUsername()) {
+        playSoundClick();
+        WarriorCatsUsername.promptUsername();
+        showMessage('Pick a player username first — then tap Save & continue.');
+        return;
+    }
     playSoundClick();
     playSoundSuccess();
     
@@ -2106,15 +2266,17 @@ function selectSaveSlot(slot) {
         if (typeof GameState.catData.preyCarried !== 'number') {
             GameState.catData.preyCarried = 0;
         }
+        // Cat identity — migrate old two-option saves; normalize invalid values
+        GameState.catData.catGender = normalizeCatGender(GameState.catData.catGender);
         
-        // Fix for old saves that don't have nightsSlept
+        // Fix for old saves that don't have nightsSlept (used as "days passed")
         if (GameState.catData.nightsSlept === undefined) {
-            // For kits, set nightsSlept based on age (since age increases with nights)
+            // Approximate old saves: age used to advance too quickly, so map to moon days now.
             if (GameState.catData.rank === 'Kit') {
-                GameState.catData.nightsSlept = GameState.catData.age || 0;
+                GameState.catData.nightsSlept = (GameState.catData.age || 0) * DAYS_PER_MOON;
             } else {
                 // Non-kits don't need this tracking
-                GameState.catData.nightsSlept = 6;
+                GameState.catData.nightsSlept = Math.max(6, (GameState.catData.age || 0) * DAYS_PER_MOON);
             }
             console.log(`[FIXED OLD SAVE] nightsSlept now = ${GameState.catData.nightsSlept}`);
         }
@@ -2259,13 +2421,18 @@ function adjustColor(hex, amount) {
 
 // Initialize cat preview when going to name screen
 function initNameScreen() {
-    // Reset customization to defaults
+    // Reset customization to defaults (include rank + gender so UI and state stay in sync)
     GameState.customization = {
         furColor: '#e67e22',
         furColorName: 'orange',
         pattern: 'solid',
         eyeColor: '#2ecc71',
-        eyeColorName: 'green'
+        eyeColorName: 'green',
+        startingRank: 'kit',
+        nameSuffix: 'kit',
+        startingAge: 0,
+        randomSuffix: '',
+        catGender: CAT_GENDER_NONBINARY
     };
     
     // Reset selection UI
@@ -2277,6 +2444,13 @@ function initNameScreen() {
     });
     document.querySelectorAll('#eye-colors .color-btn').forEach(btn => {
         btn.classList.toggle('selected', btn.dataset.color === '#2ecc71');
+    });
+    document.querySelectorAll('.gender-btn').forEach(btn => {
+        const want = normalizeCatGender(GameState.customization.catGender);
+        btn.classList.toggle('selected', (btn.dataset.catGender || '') === want);
+    });
+    document.querySelectorAll('.rank-btn:not(.gender-btn)').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.rank === 'kit');
     });
     
     // Check if loner or kittypet - they can pick ANY name!
@@ -2301,6 +2475,7 @@ function initNameScreen() {
     } else {
         // Clan cats get suffixes
         nameSuffix.style.display = '';
+        nameSuffix.textContent = 'kit';
         nameInput.placeholder = 'Enter name...';
         if (nameInstruction) {
             nameInstruction.textContent = "What's your cat's name?";
@@ -2431,6 +2606,7 @@ function beginAdventure() {
         pattern: GameState.customization.pattern,
         eyeColor: GameState.customization.eyeColor,
         eyeColorName: GameState.customization.eyeColorName,
+        catGender: normalizeCatGender(GameState.customization.catGender),
         // Your kits!
         kits: [],
         // Mentor (for apprentices)
@@ -2828,7 +3004,7 @@ function showPickUpKitMenu() {
     
     nearby.sort((a, b) => a.dist - b.dist).forEach(({ peerId, player }) => {
         const realPeerId = peerId === 'host' ? (GameState.roomCode || 'host') : peerId;
-        addAction(actions, `Pick up ${player.name || 'kit'}`, () => {
+        addAction(actions, `Pick up ${getOtherPlayerDisplayName(player) || 'kit'}`, () => {
             closePopup();
             if (GameState.carryingKitPeerId && GameState.carryingKitPeerId !== realPeerId) {
                 sendCarryKitMessage(GameState.carryingKitPeerId, false);
@@ -5739,14 +5915,16 @@ function renderTwolegHouse() {
         showTalkToHumanPopup();
     });
     
-    document.querySelector('.cat-flap')?.addEventListener('click', () => {
-        // Go to the backyard
-        GameState.currentLocation = 'backyard';
-        GameState.playerX = 200;
-        GameState.playerY = 150;
-        renderGameWorld();
-        showMessage('You push through the cat flap into the backyard!');
-    });
+    const catFlapOut = document.querySelector('.cat-flap');
+    if (catFlapOut) {
+        addTapHandler(catFlapOut, () => {
+            GameState.currentLocation = 'backyard';
+            GameState.playerX = 200;
+            GameState.playerY = 150;
+            renderGameWorld();
+            showMessage('You push through the cat flap into the backyard!');
+        });
+    }
 }
 
 // Show popup to talk to human
@@ -5813,7 +5991,7 @@ function showTalkToHumanPopup() {
         closePopup();
     });
     
-    popup.classList.add('active');
+    popup.classList.remove('hidden');
 }
 
 // Render backyard (for KittyPets)
@@ -6011,56 +6189,48 @@ function renderBackyard() {
     
     gameWorld.innerHTML = yardHTML;
     
-    // Add event listeners
-    document.querySelector('.house-back')?.addEventListener('click', () => {
-        GameState.currentLocation = 'twoleg_house';
-        GameState.playerX = 200;
-        GameState.playerY = 200;
-        renderGameWorld();
-        showMessage('You slip back inside through the cat flap.');
-    });
+    // Add event listeners (click + touch — mobile often misses click on SVG)
+    const houseBack = document.querySelector('.house-back');
+    if (houseBack) {
+        houseBack.style.cursor = 'pointer';
+        addTapHandler(houseBack, () => {
+            GameState.currentLocation = 'twoleg_house';
+            GameState.playerX = 200;
+            GameState.playerY = 200;
+            renderGameWorld();
+            showMessage('You slip back inside through the cat flap.');
+        });
+    }
     
-    // Fence hole - use multiple event types for better mobile support
     const fenceHoleEl = document.querySelector('.fence-hole');
     if (fenceHoleEl) {
         fenceHoleEl.style.cursor = 'pointer';
-        
-        const handleFenceClick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            showFenceHolePopup();
-        };
-        
-        fenceHoleEl.addEventListener('click', handleFenceClick);
-        fenceHoleEl.addEventListener('touchend', handleFenceClick);
+        addTapHandler(fenceHoleEl, () => showFenceHolePopup());
     }
     
-    // Also use delegation as backup
-    gameWorld.addEventListener('touchend', (e) => {
-        const fenceHole = e.target.closest('.fence-hole');
-        if (fenceHole) {
-            e.preventDefault();
-            showFenceHolePopup();
-        }
-    });
+    const yardWater = document.querySelector('.yard-water');
+    if (yardWater) {
+        addTapHandler(yardWater, () => {
+            const cat = GameState.catData;
+            if (cat.thirst >= 100) {
+                showMessage('You\'re not thirsty!');
+                return;
+            }
+            cat.thirst = Math.min(100, cat.thirst + 25);
+            showMessage('You drink from the water bowl. Refreshing! (+25 thirst)');
+            updateGameUI();
+            saveGameData();
+        });
+    }
     
-    document.querySelector('.yard-water')?.addEventListener('click', () => {
-        const cat = GameState.catData;
-        if (cat.thirst >= 100) {
-            showMessage('You\'re not thirsty!');
-            return;
-        }
-        cat.thirst = Math.min(100, cat.thirst + 25);
-        showMessage('You drink from the water bowl. Refreshing! (+25 thirst)');
-        updateGameUI();
-        saveGameData();
-    });
-    
-    document.querySelector('.yard-toy')?.addEventListener('click', () => {
-        showMessage('You bat the ball around the yard! Wheee!');
-        GameState.catData.experience = (GameState.catData.experience || 0) + 2;
-        saveGameData();
-    });
+    const yardToy = document.querySelector('.yard-toy');
+    if (yardToy) {
+        addTapHandler(yardToy, () => {
+            showMessage('You bat the ball around the yard! Wheee!');
+            GameState.catData.experience = (GameState.catData.experience || 0) + 2;
+            saveGameData();
+        });
+    }
 }
 
 // Show popup when going through fence hole
@@ -6104,7 +6274,7 @@ function showFenceHolePopup() {
         showMessage('You decide to stay in the safe backyard.');
     });
     
-    popup.classList.add('active');
+    popup.classList.remove('hidden');
 }
 
 // Show popup to leave kittypet life
@@ -6161,7 +6331,7 @@ function showLeaveKittypetPopup() {
         showMessage('You decide to stay with your loving Twoleg. Home sweet home!');
     });
     
-    popup.classList.add('active');
+    popup.classList.remove('hidden');
 }
 
 // Become a KittyPet (for loners or clan cats)
@@ -6203,7 +6373,7 @@ function becomeKittypet() {
         showMessage('You decide the wild life is for you. Freedom!');
     });
     
-    popup.classList.add('active');
+    popup.classList.remove('hidden');
 }
 
 // Show popup when clicking on twoleg house in forest
@@ -6289,7 +6459,7 @@ function showTwolegHousePopup() {
         });
     }
     
-    popup.classList.add('active');
+    popup.classList.remove('hidden');
 }
 
 // Become a loner!
@@ -9495,13 +9665,14 @@ function startNight(fromMultiplayer = false) {
         broadcastNightSync('start');
     }
     
-    // Gathering happens every 10 moons! Kits and Elders stay home.
-    const isGatheringNight = cat.age > 0 && cat.age % 10 === 0;
+    // Gathering happens at the end of every moon (12 days). Kits and elders stay home.
+    const daysCompleted = cat.nightsSlept || 0;
+    const isGatheringNight = daysCompleted > 0 && ((daysCompleted + 1) % DAYS_PER_MOON === 0);
     const canAttend = cat.rank !== 'Kit' && cat.rank !== 'Elder';
     GameState.isGatheringNight = isGatheringNight;
     
     if (isGatheringNight && canAttend) {
-        showMessage('Tonight is a Gathering! All cats except kits and elders go to Fourtrees!');
+        showMessage(`Tonight is the moon's Gathering (day ${DAYS_PER_MOON})! All cats except kits and elders go to Fourtrees!`);
         setTimeout(() => {
             showGatheringScreen();
         }, 3000);
@@ -9930,11 +10101,15 @@ function endNight(fromMultiplayer = false) {
     // Heal a bit from sleeping
     cat.health = Math.min(100, cat.health + 10);
     
-    // IMPORTANT: Only increment age by 1!
-    cat.age = (cat.age || 0) + 1;
-    
-    // Track nights slept for kit progression
+    // Track days passed (one full day per sleep cycle)
     cat.nightsSlept = (cat.nightsSlept || 0) + 1;
+    const dayInMoon = ((cat.nightsSlept - 1) % DAYS_PER_MOON) + 1;
+    const completedMoon = cat.nightsSlept % DAYS_PER_MOON === 0;
+    
+    // Age only increases once per moon (12 days)
+    if (completedMoon) {
+        cat.age = (cat.age || 0) + 1;
+    }
     
     // Debug: log after changing age
     console.log(`[endNight] AFTER: age=${cat.age}, nightsSlept=${cat.nightsSlept}, rank=${cat.rank}`);
@@ -9944,13 +10119,20 @@ function endNight(fromMultiplayer = false) {
     // Show different message for kits
     if (cat.rank === 'Kit') {
         const nightsLeft = 6 - cat.nightsSlept;
+        const moonProgress = `Day ${dayInMoon}/${DAYS_PER_MOON} of this moon`;
         if (nightsLeft > 0) {
-            showMessage(`Morning has come! (+1 moon) You need ${nightsLeft} more sleeps to become an Apprentice!`);
+            showMessage(`Morning has come! ${moonProgress}. You need ${nightsLeft} more sleeps to become an Apprentice!`);
+        } else if (completedMoon) {
+            showMessage(`Morning has come! A full moon has passed (+1 moon).`);
         } else {
-            showMessage('Morning has come! A new day begins. (+1 moon)');
+            showMessage(`Morning has come! ${moonProgress}.`);
         }
     } else {
-        showMessage('Morning has come! A new day begins. (+1 moon)');
+        if (completedMoon) {
+            showMessage(`Morning has come! A full moon has passed (+1 moon).`);
+        } else {
+            showMessage(`Morning has come! Day ${dayInMoon}/${DAYS_PER_MOON} of this moon.`);
+        }
     }
     
     renderGameWorld();
@@ -10931,6 +11113,74 @@ function doMeow() {
 
 // Speech Bubble System
 let activeSpeechBubbles = [];
+const SPEECH_BUBBLE_TTL_MS = 90000; // Long fallback; tap bubble to dismiss anytime
+
+function escapeSvgText(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function escapeSvgAttr(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/** Word-wrap for in-world speech bubbles — full message, no "..." cut-off */
+function wrapSpeechLines(text, maxChars) {
+    const words = String(text || '').split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    for (const w of words) {
+        if (w.length > maxChars) {
+            if (cur) {
+                lines.push(cur);
+                cur = '';
+            }
+            for (let i = 0; i < w.length; i += maxChars) {
+                lines.push(w.slice(i, i + maxChars));
+            }
+            continue;
+        }
+        const next = cur ? `${cur} ${w}` : w;
+        if (next.length <= maxChars) {
+            cur = next;
+        } else {
+            if (cur) lines.push(cur);
+            cur = w;
+        }
+    }
+    if (cur) lines.push(cur);
+    return lines.length ? lines : [''];
+}
+
+function dismissSpeechBubble(speaker) {
+    const key = String(speaker);
+    let changed = false;
+    activeSpeechBubbles = activeSpeechBubbles.filter(b => {
+        if (String(b.speaker) === key) {
+            if (b.timeoutId) clearTimeout(b.timeoutId);
+            changed = true;
+            return false;
+        }
+        return true;
+    });
+    if (changed) renderGameWorld();
+}
+
+function handleSpeechBubblePointerEvent(e) {
+    const t = e.target;
+    if (!t || typeof t.closest !== 'function') return;
+    const grp = t.closest('[data-speech-speaker]');
+    if (!grp) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const speaker = grp.getAttribute('data-speech-speaker');
+    if (speaker != null && speaker !== '') dismissSpeechBubble(speaker);
+}
 
 function openSpeechPopup() {
     const cat = GameState.catData;
@@ -11984,25 +12234,25 @@ function askWarriorToTakeOut() {
 }
 
 function showSpeechBubble(speaker, text) {
-    // Remove old bubble for this speaker
-    activeSpeechBubbles = activeSpeechBubbles.filter(b => b.speaker !== speaker);
-    
-    // Add new bubble
+    // Remove old bubble for this speaker (clear its timeout)
+    activeSpeechBubbles = activeSpeechBubbles.filter(b => {
+        if (String(b.speaker) === String(speaker)) {
+            if (b.timeoutId) clearTimeout(b.timeoutId);
+            return false;
+        }
+        return true;
+    });
+
     const bubble = {
-        speaker: speaker,
-        text: text,
-        startTime: Date.now()
+        speaker,
+        text,
+        startTime: Date.now(),
+        timeoutId: null
     };
     activeSpeechBubbles.push(bubble);
-    
-    // Re-render to show bubbles
     renderGameWorld();
-    
-    // Remove bubble after 4 seconds
-    setTimeout(() => {
-        activeSpeechBubbles = activeSpeechBubbles.filter(b => b !== bubble);
-        renderGameWorld();
-    }, 4000);
+
+    bubble.timeoutId = setTimeout(() => dismissSpeechBubble(speaker), SPEECH_BUBBLE_TTL_MS);
 }
 
 function triggerNPCResponse(playerText) {
@@ -12158,18 +12408,40 @@ function renderSpeechBubbles() {
             y = npcPos.y - 30;
         }
         
-        // Truncate long text
-        const displayText = bubble.text.length > 25 ? bubble.text.substring(0, 22) + '...' : bubble.text;
-        
+        const wrapLen = String(bubble.text || '').length > 120 ? 30 : 24;
+        const lines = wrapSpeechLines(bubble.text, wrapLen);
+        const fontSize = lines.length > 18 ? 6.5 : lines.length > 12 ? 7.5 : lines.length > 7 ? 8 : 9;
+        const lineHeight = fontSize + 3;
+        const padX = 10;
+        const padY = 8;
+        const hintSize = 6.5;
+        const hintGap = 4;
+        const approxCharW = fontSize * 0.58;
+        const maxLineLen = Math.max(...lines.map(l => l.length), 1);
+        const bubbleW = Math.min(240, Math.max(80, maxLineLen * approxCharW + padX * 2));
+        const textBlockH = lines.length * lineHeight;
+        const bubbleH = textBlockH + padY * 2 + hintSize + hintGap;
+        const tailH = 11;
+        const rectY = -(bubbleH + tailH);
+        const rectBottom = rectY + bubbleH;
+
+        const tspans = lines.map((line, i) => {
+            const dy = i === 0 ? 0 : lineHeight;
+            return `<tspan x="0" dy="${dy}">${escapeSvgText(line)}</tspan>`;
+        }).join('');
+        const hintTspan = `<tspan x="0" dy="${lineHeight + hintGap}" font-size="${hintSize}" fill="#555" font-weight="600">Tap to close</tspan>`;
+
+        const speakerAttr = escapeSvgAttr(bubble.speaker);
+
         bubblesHTML += `
-            <g class="speech-bubble" transform="translate(${x}, ${y})" style="pointer-events: none;">
-                <!-- Bubble background -->
-                <rect x="-50" y="-25" width="100" height="30" rx="10" fill="white" stroke="#333" stroke-width="1"/>
-                <!-- Pointer -->
-                <polygon points="-5,5 5,5 0,12" fill="white" stroke="#333" stroke-width="1"/>
-                <line x1="-4" y1="5" x2="4" y2="5" stroke="white" stroke-width="2"/>
-                <!-- Text -->
-                <text x="0" y="-6" text-anchor="middle" fill="#333" font-size="9" font-weight="bold">${displayText}</text>
+            <g class="speech-bubble speech-bubble-interactive" transform="translate(${x}, ${y})"
+               data-speech-speaker="${speakerAttr}"
+               style="pointer-events: all; cursor: pointer;" role="button" aria-label="Speech bubble, tap to close">
+                <title>Tap to close this speech</title>
+                <rect x="${-bubbleW / 2}" y="${rectY}" width="${bubbleW}" height="${bubbleH}" rx="12" fill="white" stroke="#333" stroke-width="1.2"/>
+                <polygon points="${-7},${rectBottom} ${7},${rectBottom} 0,${rectBottom + tailH}" fill="white" stroke="#333" stroke-width="1.2"/>
+                <line x1="-6" y1="${rectBottom}" x2="6" y2="${rectBottom}" stroke="white" stroke-width="2"/>
+                <text x="0" y="${rectY + padY + fontSize}" text-anchor="middle" fill="#222" font-size="${fontSize}" font-weight="700" font-family="Outfit, 'Segoe UI', sans-serif">${tspans}${hintTspan}</text>
             </g>
         `;
     }
@@ -12573,14 +12845,28 @@ function getStolenByClan(clanKey, clanName) {
     }, 3000);
 }
 
-// Show a message
-function showMessage(text) {
+// Show a message (pass options.force = true to bypass "Hide tips")
+function showMessage(text, options = {}) {
+    if (isGameMessageMuted() && !options.force) {
+        return;
+    }
     const msgElement = document.getElementById('game-message');
-    msgElement.textContent = text;
+    if (!msgElement) return;
+    const textElement = document.getElementById('game-message-text');
+    if (textElement) {
+        textElement.textContent = text;
+    } else {
+        msgElement.textContent = text;
+    }
     msgElement.classList.add('show');
+    refreshGameMessageMuteButton();
+    if (gameMessageTimeoutId) {
+        clearTimeout(gameMessageTimeoutId);
+    }
     
-    setTimeout(() => {
+    gameMessageTimeoutId = setTimeout(() => {
         msgElement.classList.remove('show');
+        gameMessageTimeoutId = null;
     }, 5000); // 5 seconds - longer so you can read it!
 }
 
@@ -13854,6 +14140,15 @@ function setupMultiplayerListeners() {
     document.getElementById('join-game-btn')?.addEventListener('click', () => {
         showScreen('join');
     });
+
+    document.getElementById('friends-btn')?.addEventListener('click', () => {
+        showScreen('join');
+        renderFriendsList();
+    });
+
+    document.getElementById('mode-back-home')?.addEventListener('click', () => {
+        showScreen('home');
+    });
     
     // Host screen
     document.getElementById('copy-code-btn')?.addEventListener('click', copyRoomCode);
@@ -13962,7 +14257,7 @@ function renderFriendsList() {
                 </div>
             </div>
             <div class="friend-buttons">
-                <button class="friend-join-btn" onclick="joinFriendGame('${friend.peerId}', '${friend.name}')">Join</button>
+                <button class="friend-join-btn" onclick="joinFriendGame('${friend.peerId}', '${friend.name}')" disabled>Join</button>
                 <button class="friend-remove-btn" onclick="removeFriend('${friend.peerId}')">X</button>
             </div>
         </div>
@@ -13972,57 +14267,111 @@ function renderFriendsList() {
     checkFriendsOnline(friends);
 }
 
-// Check if friends are online/hosting
+function getCurrentJoinCode() {
+    if (!GameState.isMultiplayer) return null;
+    if (GameState.isHost) return GameState.roomCode || GameState.peer?.id || null;
+    return GameState.hostPeerId || GameState.roomCode || null;
+}
+
+function updateFriendStatusUI(friendPeerId, statusText, online, canJoin) {
+    const statusEl = document.getElementById(`friend-status-${friendPeerId}`);
+    if (!statusEl) return;
+    statusEl.textContent = statusText;
+    statusEl.classList.toggle('online', !!online);
+    const joinBtn = statusEl.closest('.friend-item')?.querySelector('.friend-join-btn');
+    if (joinBtn) {
+        joinBtn.disabled = !canJoin;
+    }
+}
+
+function probeFriendPresence(friendPeerId, onResult) {
+    const probePeer = new Peer();
+    let finished = false;
+    let timeoutId = null;
+
+    const finish = (result) => {
+        if (finished) return;
+        finished = true;
+        if (timeoutId) clearTimeout(timeoutId);
+        try {
+            probePeer.destroy();
+        } catch (e) {
+            // Ignore cleanup issues from fast disconnects.
+        }
+        if (typeof onResult === 'function') onResult(result);
+    };
+
+    probePeer.on('open', () => {
+        const conn = probePeer.connect(friendPeerId, {
+            reliable: true,
+            metadata: { purpose: 'friend-query' }
+        });
+
+        conn.on('open', () => {
+            conn.send({ type: 'friendPresenceQuery' });
+        });
+
+        conn.on('data', (data) => {
+            if (data?.type === 'friendPresence') {
+                finish({
+                    online: true,
+                    playing: !!data.playing,
+                    isHost: !!data.isHost,
+                    joinCode: data.joinCode || null
+                });
+            }
+        });
+
+        conn.on('error', () => {
+            finish({ online: false, playing: false, isHost: false, joinCode: null });
+        });
+    });
+
+    probePeer.on('error', () => {
+        finish({ online: false, playing: false, isHost: false, joinCode: null });
+    });
+
+    timeoutId = setTimeout(() => {
+        finish({ online: false, playing: false, isHost: false, joinCode: null });
+    }, 3500);
+}
+
+// Check if friends are online / currently in a playable multiplayer session
 function checkFriendsOnline(friends) {
     friends.forEach(friend => {
-        const statusEl = document.getElementById(`friend-status-${friend.peerId}`);
-        if (!statusEl) return;
-        
-        // Try to check if peer exists (they're hosting)
-        // We'll use a temporary peer to check
-        const checkPeer = new Peer();
-        
-        checkPeer.on('open', () => {
-            const conn = checkPeer.connect(friend.peerId, { reliable: true });
-            
-            conn.on('open', () => {
-                // Friend is online and hosting!
-                statusEl.textContent = 'Online - Hosting!';
-                statusEl.classList.add('online');
-                const joinBtn = statusEl.closest('.friend-item')?.querySelector('.friend-join-btn');
-                if (joinBtn) joinBtn.disabled = false;
-                conn.close();
-                checkPeer.destroy();
-            });
-            
-            conn.on('error', () => {
-                statusEl.textContent = 'Offline';
-                statusEl.classList.remove('online');
-                checkPeer.destroy();
-            });
-            
-            // Timeout after 3 seconds
-            setTimeout(() => {
-                if (statusEl.textContent === 'Checking...') {
-                    statusEl.textContent = 'Offline';
-                    statusEl.classList.remove('online');
-                    checkPeer.destroy();
-                }
-            }, 3000);
-        });
-        
-        checkPeer.on('error', () => {
-            statusEl.textContent = 'Offline';
-            statusEl.classList.remove('online');
+        probeFriendPresence(friend.peerId, (result) => {
+            if (!result.online) {
+                updateFriendStatusUI(friend.peerId, 'Offline', false, false);
+                return;
+            }
+
+            if (result.playing && result.joinCode) {
+                const stateText = result.isHost ? 'Playing (Host)' : 'Playing (Client)';
+                updateFriendStatusUI(friend.peerId, stateText, true, true);
+                return;
+            }
+
+            updateFriendStatusUI(friend.peerId, 'Online (Not in game)', true, false);
         });
     });
 }
 
-// Join a friend's game directly
+// Join a friend's game. Works for host friends and non-host friends currently in a session.
 function joinFriendGame(peerId, friendName) {
-    document.getElementById('join-code-input').value = peerId;
-    showMessage(`Joining ${friendName}'s game...`);
-    joinGame();
+    showMessage(`Checking ${friendName}'s game...`);
+    probeFriendPresence(peerId, (result) => {
+        if (!result.online) {
+            showMessage(`${friendName} is offline right now.`);
+            return;
+        }
+        if (!result.playing || !result.joinCode) {
+            showMessage(`${friendName} is online but not in a joinable game right now.`);
+            return;
+        }
+        document.getElementById('join-code-input').value = result.joinCode;
+        showMessage(`Joining ${friendName}'s game...`);
+        joinGame();
+    });
 }
 
 // Show "Add Friend" button for players in multiplayer
@@ -14067,7 +14416,7 @@ function promptAddFriendsAfterGame() {
     // Check other players
     for (const [peerId, player] of Object.entries(GameState.otherPlayers || {})) {
         if (!friends.find(f => f.peerId === peerId)) {
-            playersToAdd.push({ name: player.name, peerId: peerId });
+            playersToAdd.push({ name: getOtherPlayerDisplayName(player), peerId: peerId });
         }
     }
     
@@ -14087,6 +14436,36 @@ function generateRoomCode() {
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     const number = Math.floor(Math.random() * 9000) + 1000;
     return `${prefix}${number}`;
+}
+
+function handleFriendQueryConnection(conn) {
+    const sendPresence = () => {
+        const joinCode = getCurrentJoinCode();
+        conn.send({
+            type: 'friendPresence',
+            playing: !!joinCode,
+            isHost: !!GameState.isHost,
+            joinCode: joinCode
+        });
+    };
+
+    conn.on('open', () => {
+        sendPresence();
+    });
+
+    conn.on('data', (data) => {
+        if (data?.type === 'friendPresenceQuery') {
+            sendPresence();
+        }
+    });
+
+    setTimeout(() => {
+        try {
+            conn.close();
+        } catch (e) {
+            // Best-effort cleanup.
+        }
+    }, 900);
 }
 
 // Start hosting a game
@@ -14114,6 +14493,10 @@ function startHosting() {
     });
     
     GameState.peer.on('connection', (conn) => {
+        if (conn?.metadata?.purpose === 'friend-query') {
+            handleFriendQueryConnection(conn);
+            return;
+        }
         console.log('New connection from:', conn.peer);
         handleNewConnection(conn);
     });
@@ -14231,6 +14614,7 @@ function handlePeerData(peerId, data) {
             // Save host name for friend adding
             if (data.players && data.players['host']) {
                 GameState.hostName = data.players['host'].name;
+                GameState.hostUsername = data.players['host'].username || null;
             }
             updatePlayerList();
             break;
@@ -14413,10 +14797,13 @@ function sendPlayerData() {
     const playerData = {
         type: 'playerData',
         player: {
-            name: GameState.catData?.name || 'Unknown',
+            name: getLocalMultiplayerDisplayName(),
+            catName: GameState.catData?.name || null,
+            username: getPlayerAccountUsername() || null,
             furColor: GameState.catData?.furColor || '#e67e22',
             eyeColor: GameState.catData?.eyeColor || '#2ecc71',
             pattern: GameState.catData?.pattern || 'solid',
+            catGender: getPlayerCatGender(GameState.catData),
             clan: GameState.selectedClan || 'thunder',
             rank: GameState.catData?.rank || 'Kit',
             x: GameState.playerX,
@@ -14471,10 +14858,13 @@ function broadcastAllPlayers() {
     
     // Add host's own data
     allPlayers['host'] = {
-        name: GameState.catData?.name || 'Host',
+        name: getLocalMultiplayerDisplayName(),
+        catName: GameState.catData?.name || null,
+        username: getPlayerAccountUsername() || null,
         furColor: GameState.catData?.furColor || '#e67e22',
         eyeColor: GameState.catData?.eyeColor || '#2ecc71',
         pattern: GameState.catData?.pattern || 'solid',
+        catGender: getPlayerCatGender(GameState.catData),
         clan: GameState.selectedClan || 'thunder',
         rank: GameState.catData?.rank || 'Warrior',
         x: GameState.playerX,
@@ -14507,12 +14897,13 @@ function updatePlayerList() {
         const player = GameState.otherPlayers[peerId];
         const isFriend = friends.find(f => f.peerId === peerId);
         
-        if (player && player.name) {
-            html += `<span class="player-tag">${player.name}`;
+        if (player && (player.name || player.username)) {
+            const disp = getOtherPlayerDisplayName(player).replace(/'/g, "\\'");
+            html += `<span class="player-tag">${getOtherPlayerDisplayName(player)}`;
             if (isFriend) {
                 html += ` <span style="color: #ffd700;">(Friend)</span>`;
             } else {
-                html += ` <button class="add-friend-btn" onclick="addFriend('${player.name}', '${peerId}')" style="font-size: 10px; padding: 2px 8px; margin-left: 5px;">+ Friend</button>`;
+                html += ` <button class="add-friend-btn" onclick="addFriend('${disp}', '${peerId}')" style="font-size: 10px; padding: 2px 8px; margin-left: 5px;">+ Friend</button>`;
             }
             html += `</span>`;
             count++;
@@ -14560,7 +14951,7 @@ function cancelHosting() {
 function joinGame() {
     const codeInput = document.getElementById('join-code-input');
     const status = document.getElementById('join-status');
-    const code = codeInput.value.trim().toUpperCase();
+    const code = codeInput.value.trim();
     
     if (!code) {
         status.textContent = 'Please enter a code!';
@@ -14616,6 +15007,15 @@ function joinGame() {
             status.textContent = 'Disconnected from host.';
             status.className = 'join-status error';
         });
+    });
+
+    // Allow other players to query this client to learn what game to join through friends list.
+    GameState.peer.on('connection', (conn) => {
+        if (conn?.metadata?.purpose === 'friend-query') {
+            handleFriendQueryConnection(conn);
+            return;
+        }
+        conn.on('open', () => conn.close());
     });
     
     GameState.peer.on('error', (err) => {
@@ -14690,7 +15090,9 @@ function sendPositionUpdate() {
         type: 'playerUpdate',
         peerId: GameState.peer?.id || 'host',
         update: {
-            name: GameState.catData?.name || 'Unknown',
+            name: getLocalMultiplayerDisplayName(),
+            catName: GameState.catData?.name || null,
+            username: getPlayerAccountUsername() || null,
             furColor: GameState.catData?.furColor || '#e67e22',
             eyeColor: GameState.catData?.eyeColor || '#2ecc71',
             pattern: GameState.catData?.pattern || 'solid',
@@ -14716,8 +15118,8 @@ function sendPositionUpdate() {
 // Show speech from another player
 function showOtherPlayerSpeech(peerId, message) {
     const player = GameState.otherPlayers[peerId];
-    if (player && player.name) {
-        showSpeechBubble(player.name, message);
+    if (player && (player.name || player.username)) {
+        showSpeechBubble(getOtherPlayerDisplayName(player), message);
     }
 }
 
@@ -14757,10 +15159,10 @@ function renderOtherPlayers() {
                 : '';
             
             html += `
-                <g class="other-player-cat" transform="translate(${x}, ${y})">
+                <g class="other-player-cat" transform="translate(${x}, ${y})" style="pointer-events: none;">
                     ${renderOtherPlayerCatSVG(player)}
                     ${clanBadge}
-                    <text x="0" y="-35" class="other-player-name">${player.name || 'Player'}</text>
+                    <text x="0" y="-35" class="other-player-name">${getOtherPlayerDisplayName(player)}</text>
                 </g>
             `;
         }
@@ -14923,14 +15325,16 @@ function showPlayersMenu() {
     // Add host if we're not the host
     if (!GameState.isHost && GameState.hostPeerId) {
         // Try to find host name from other players data
-        const hostName = GameState.hostName || 'Host';
+        const hostName = (GameState.hostUsername && String(GameState.hostUsername).trim())
+            || GameState.hostName
+            || 'Host';
         allPlayers.push({ peerId: GameState.hostPeerId, name: hostName, isHost: true });
     }
     
     // Add other players
     Object.entries(GameState.otherPlayers || {}).forEach(([peerId, player]) => {
-        if (player && player.name) {
-            allPlayers.push({ peerId, name: player.name, isHost: false });
+        if (player && (player.name || player.username)) {
+            allPlayers.push({ peerId, name: getOtherPlayerDisplayName(player), isHost: false });
         }
     });
     
@@ -15003,7 +15407,7 @@ function showTalkMenu() {
     
     addAction(actions, 'Cancel', closePopup);
     
-    popup.classList.add('active');
+    popup.classList.remove('hidden');
 }
 
 // Show player speech bubble (for chat messages)
@@ -15036,7 +15440,7 @@ function attackOtherPlayer(targetPeerId, targetName) {
     // Send attack message
     const attackData = {
         type: 'attack',
-        attackerName: cat.name,
+        attackerName: getLocalMultiplayerDisplayName(),
         attackerPeerId: GameState.peer?.id,
         targetPeerId: resolveAttackTargetPeerId(targetPeerId) || targetPeerId,
         damage: damage
@@ -15084,7 +15488,7 @@ function receiveAttackFromPlayer(attackerName, damage) {
         // Notify others of death so they disappear from the map
         const deathData = {
             type: 'playerDied',
-            playerName: cat.name,
+            playerName: getLocalMultiplayerDisplayName(),
             peerId: GameState.peer?.id,
             isHost: !!GameState.isHost,
             relayFromClient: !GameState.isHost,
@@ -15157,7 +15561,7 @@ function showAttackPlayerMenu() {
     const friends = loadFriends();
     
     nearbyPlayers.forEach(({ peerId, player }) => {
-        const playerName = player.name || 'Player';
+        const playerName = getOtherPlayerDisplayName(player);
         const isFriend = friends.find(f => f.peerId === peerId);
         
         addAction(actions, `Attack ${playerName}`, () => {
