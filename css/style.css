@@ -56,10 +56,93 @@ body {
     display: flex;
 }
 
-/* Home Screen */
+/* Home Screen — 3D stage (perspective + layered Z) */
 #home-screen {
-    background: linear-gradient(180deg, #0a0015 0%, #1a0a30 30%, #0d1b2a 60%, #1b3a20 100%);
+    --home-font: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+    --home-title: 'Cinzel', Georgia, 'Times New Roman', serif;
+    --home-rx: 0deg;
+    --home-ry: 0deg;
+    font-family: var(--home-font);
+    background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(90, 50, 120, 0.45) 0%, transparent 55%),
+        linear-gradient(180deg, #060010 0%, #12081c 22%, #0d1528 52%, #0a1f18 78%, #071208 100%);
     overflow: hidden;
+    justify-content: flex-start;
+    padding-top: clamp(1rem, 4vh, 2.5rem);
+    padding-bottom: 1rem;
+    perspective: min(1200px, 130vw);
+    perspective-origin: 50% 38%;
+    transform-style: preserve-3d;
+}
+
+.home-atmosphere {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    transform-style: preserve-3d;
+    transform:
+        translateZ(-110px) scale(1.1)
+        rotateX(calc(var(--home-rx) * -0.55))
+        rotateY(calc(var(--home-ry) * -0.55));
+    transition: transform 0.14s ease-out;
+    will-change: transform;
+}
+
+.home-aurora {
+    position: absolute;
+    left: -20%;
+    top: 0;
+    width: 140%;
+    height: 45%;
+    background: linear-gradient(
+        100deg,
+        transparent 0%,
+        rgba(103, 58, 183, 0.12) 25%,
+        rgba(33, 150, 243, 0.1) 45%,
+        rgba(76, 175, 80, 0.08) 65%,
+        transparent 100%
+    );
+    filter: blur(20px);
+    animation: auroraShift 14s ease-in-out infinite;
+    opacity: 0.9;
+}
+
+@keyframes auroraShift {
+    0%, 100% { transform: translateX(0) scaleY(1); opacity: 0.85; }
+    50% { transform: translateX(4%) scaleY(1.05); opacity: 1; }
+}
+
+.home-mist {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 38%;
+    background: linear-gradient(0deg, rgba(10, 22, 18, 0.92) 0%, transparent 100%);
+    opacity: 0.85;
+}
+
+.home-silhouette {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: min(28vh, 200px);
+    background:
+        linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 100%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 80' preserveAspectRatio='none'%3E%3Cpath fill='%23020508' d='M0,80 L0,55 Q80,35 160,50 T320,45 Q400,25 480,48 T640,40 Q720,20 800,45 T960,38 Q1040,15 1120,42 L1200,50 L1200,80 Z'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+.home-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.55) 100%);
+    transform: translateZ(8px);
+    transform-style: preserve-3d;
 }
 
 .stars-bg {
@@ -78,9 +161,12 @@ body {
         radial-gradient(3px 3px at 250px 100px, #ffd700, transparent),
         radial-gradient(2px 2px at 300px 30px, white, transparent),
         radial-gradient(2px 2px at 350px 80px, #87ceeb, transparent),
-        radial-gradient(1px 1px at 400px 60px, #ffd700, transparent);
+        radial-gradient(1px 1px at 400px 60px, #ffd700, transparent),
+        radial-gradient(2px 2px at 12% 18%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1.5px 1.5px at 88% 12%, #e1bee7, transparent);
     background-size: 450px 150px;
     animation: twinkle 3s ease-in-out infinite, moveStars 60s linear infinite;
+    opacity: 0.95;
 }
 
 @keyframes twinkle {
@@ -126,10 +212,12 @@ body {
     box-shadow: 
         0 0 40px 20px rgba(255, 250, 205, 0.4), 
         0 0 80px 40px rgba(255, 215, 0, 0.2),
-        inset -10px -10px 20px rgba(200, 150, 0, 0.3);
+        inset -10px -10px 20px rgba(200, 150, 0, 0.3),
+        inset 6px 8px 14px rgba(255, 255, 255, 0.35);
     animation: moonPulse 4s ease-in-out infinite;
-    z-index: 10;
+    z-index: 15;
     cursor: pointer;
+    transform-style: preserve-3d;
     transition: transform 0.3s, box-shadow 0.3s;
     /* Mobile/touch support */
     -webkit-tap-highlight-color: transparent;
@@ -139,11 +227,12 @@ body {
 }
 
 #secret-moon:hover {
-    transform: scale(1.15);
+    transform: translateZ(96px) rotateY(-20deg) rotateX(6deg) scale(1.12);
     box-shadow: 
         0 0 60px 30px rgba(255, 250, 205, 0.6), 
         0 0 100px 50px rgba(255, 215, 0, 0.4),
-        inset -10px -10px 20px rgba(200, 150, 0, 0.3);
+        inset -10px -10px 20px rgba(200, 150, 0, 0.3),
+        inset 6px 8px 14px rgba(255, 255, 255, 0.45);
 }
 
 #secret-moon::before {
@@ -169,15 +258,124 @@ body {
 }
 
 @keyframes moonPulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 40px 20px rgba(255, 250, 205, 0.3), 0 0 80px 40px rgba(255, 215, 0, 0.2); }
-    50% { transform: scale(1.1); box-shadow: 0 0 50px 25px rgba(255, 250, 205, 0.4), 0 0 100px 50px rgba(255, 215, 0, 0.3); }
+    0%, 100% {
+        transform: translateZ(72px) rotateY(-22deg) rotateX(4deg) scale(1);
+        box-shadow:
+            0 0 40px 20px rgba(255, 250, 205, 0.3),
+            0 0 80px 40px rgba(255, 215, 0, 0.2),
+            inset -10px -10px 20px rgba(200, 150, 0, 0.3),
+            inset 6px 8px 14px rgba(255, 255, 255, 0.35);
+    }
+    50% {
+        transform: translateZ(88px) rotateY(-18deg) rotateX(8deg) scale(1.08);
+        box-shadow:
+            0 0 50px 25px rgba(255, 250, 205, 0.45),
+            0 0 100px 50px rgba(255, 215, 0, 0.32),
+            inset -10px -10px 20px rgba(200, 150, 0, 0.35),
+            inset 6px 8px 14px rgba(255, 255, 255, 0.4);
+    }
+}
+
+/* Main UI slab — tilts with pointer for parallax */
+.home-tilt-layer {
+    position: relative;
+    z-index: 5;
+    max-width: 640px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 12px;
+    transform-style: preserve-3d;
+    transform:
+        translateZ(48px)
+        rotateX(var(--home-rx))
+        rotateY(var(--home-ry));
+    transition: transform 0.14s ease-out;
+    will-change: transform;
 }
 
 .home-content {
     position: relative;
-    z-index: 1;
+    z-index: 5;
     text-align: center;
-    animation: fadeInUp 1s ease-out;
+    animation: homeContentReveal 1s ease-out;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    transform-style: preserve-3d;
+}
+
+@keyframes homeContentReveal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.home-tagline {
+    font-size: clamp(0.75rem, 2.5vw, 0.95rem);
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(225, 190, 231, 0.75);
+    margin-bottom: 0.75rem;
+    text-shadow: 0 0 20px rgba(225, 190, 231, 0.25);
+    transform: translateZ(32px);
+    transform-style: preserve-3d;
+}
+
+.home-clan-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 0 auto 1rem;
+    padding: 10px 18px;
+    max-width: 420px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.35),
+        0 1px 0 rgba(255, 255, 255, 0.12) inset,
+        0 -2px 8px rgba(0, 0, 0, 0.4) inset;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transform: translateZ(22px) rotateX(5deg);
+    transform-style: preserve-3d;
+}
+
+.clan-strip-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    margin-right: 4px;
+}
+
+.clan-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 0 12px currentColor;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.clan-dot.thunder { background: var(--thunder-color); color: var(--thunder-color); }
+.clan-dot.river { background: var(--river-color); color: var(--river-color); }
+.clan-dot.wind { background: var(--wind-color); color: var(--wind-color); }
+.clan-dot.shadow { background: var(--shadow-color); color: var(--shadow-color); }
+
+.home-version {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.35);
+    text-align: center;
+    max-width: 90vw;
+    line-height: 1.35;
+    pointer-events: none;
 }
 
 @keyframes fadeInUp {
@@ -185,53 +383,97 @@ body {
     100% { opacity: 1; transform: translateY(0); }
 }
 
+/* Extruded 3D title block */
+.game-title-3d {
+    transform-style: preserve-3d;
+    perspective: 500px;
+    margin-bottom: 0.35rem;
+    animation: titleFloat3d 3.2s ease-in-out infinite;
+}
+
+@keyframes titleFloat3d {
+    0%, 100% {
+        transform: rotateX(4deg) translateZ(0);
+    }
+    50% {
+        transform: rotateX(9deg) translateZ(22px) translateY(-5px);
+    }
+}
+
 .game-title {
+    font-family: var(--home-title);
     font-size: clamp(2.5rem, 10vw, 5rem);
-    text-shadow: 
-        0 0 10px rgba(255, 165, 0, 1),
-        0 0 20px rgba(255, 165, 0, 0.8),
-        0 0 40px rgba(255, 165, 0, 0.6),
-        0 0 80px rgba(255, 165, 0, 0.4),
-        0 4px 0 #cc8800;
-    color: #ffd700;
-    margin-bottom: 0.5rem;
+    /* Stacked shadows = “solid” extruded letters */
+    text-shadow:
+        0 1px 0 #f0c040,
+        0 2px 0 #e0a820,
+        0 3px 0 #c89410,
+        0 4px 0 #a87800,
+        0 5px 0 #7a5600,
+        0 6px 0 #4a3400,
+        0 7px 0 #2a1c00,
+        0 8px 16px rgba(0, 0, 0, 0.65),
+        0 14px 28px rgba(0, 0, 0, 0.45),
+        0 0 18px rgba(255, 165, 0, 0.95),
+        0 0 42px rgba(255, 165, 0, 0.55),
+        0 0 72px rgba(255, 140, 0, 0.35);
+    color: #ffe066;
+    margin-bottom: 0;
     font-weight: bold;
-    animation: titleGlow 2s ease-in-out infinite, titleFloat 3s ease-in-out infinite;
+    animation: titleGlow 2s ease-in-out infinite;
     letter-spacing: 3px;
+    transform: translateZ(56px) rotateX(-2deg);
+    transform-style: preserve-3d;
 }
 
 @keyframes titleGlow {
-    0%, 100% { 
-        text-shadow: 
-            0 0 10px rgba(255, 165, 0, 1),
-            0 0 20px rgba(255, 165, 0, 0.8),
-            0 0 40px rgba(255, 165, 0, 0.6),
-            0 0 80px rgba(255, 165, 0, 0.4),
-            0 4px 0 #cc8800;
+    0%, 100% {
+        text-shadow:
+            0 1px 0 #f0c040,
+            0 2px 0 #e0a820,
+            0 3px 0 #c89410,
+            0 4px 0 #a87800,
+            0 5px 0 #7a5600,
+            0 6px 0 #4a3400,
+            0 7px 0 #2a1c00,
+            0 8px 16px rgba(0, 0, 0, 0.65),
+            0 14px 28px rgba(0, 0, 0, 0.45),
+            0 0 22px rgba(255, 165, 0, 1),
+            0 0 48px rgba(255, 165, 0, 0.65),
+            0 0 80px rgba(255, 140, 0, 0.4);
     }
-    50% { 
-        text-shadow: 
-            0 0 20px rgba(255, 165, 0, 1),
-            0 0 40px rgba(255, 165, 0, 1),
-            0 0 60px rgba(255, 165, 0, 0.8),
-            0 0 100px rgba(255, 165, 0, 0.6),
-            0 4px 0 #cc8800;
+    50% {
+        text-shadow:
+            0 1px 0 #fff0a0,
+            0 2px 0 #f0c040,
+            0 3px 0 #e0a820,
+            0 4px 0 #c89410,
+            0 5px 0 #a87800,
+            0 6px 0 #7a5600,
+            0 7px 0 #4a3400,
+            0 8px 18px rgba(0, 0, 0, 0.55),
+            0 16px 32px rgba(0, 0, 0, 0.4),
+            0 0 32px rgba(255, 200, 80, 1),
+            0 0 64px rgba(255, 165, 0, 0.85),
+            0 0 100px rgba(255, 140, 0, 0.55);
     }
-}
-
-@keyframes titleFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
 }
 
 .game-subtitle {
+    font-family: var(--home-title);
     font-size: clamp(1.2rem, 4vw, 2rem);
     color: #e1bee7;
-    margin-bottom: 2rem;
-    text-shadow: 0 0 10px rgba(225, 190, 231, 0.5);
+    margin-bottom: 1.25rem;
+    text-shadow:
+        0 2px 0 rgba(74, 20, 90, 0.85),
+        0 4px 8px rgba(0, 0, 0, 0.45),
+        0 0 12px rgba(225, 190, 231, 0.55);
     font-style: italic;
-    letter-spacing: 5px;
+    letter-spacing: 0.35em;
     animation: subtitleFade 2s ease-in-out infinite alternate;
+    font-weight: 600;
+    transform: translateZ(28px) rotateX(3deg);
+    transform-style: preserve-3d;
 }
 
 @keyframes subtitleFade {
@@ -241,22 +483,103 @@ body {
 
 .cats-scene {
     width: 100%;
-    max-width: 600px;
-    height: 200px;
-    margin: 2rem 0;
+    max-width: 620px;
+    height: clamp(180px, 28vh, 240px);
+    margin: 1rem 0 1.25rem;
     position: relative;
-    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 22px 36px rgba(0, 0, 0, 0.65));
+    border-radius: 16px;
+    padding: 8px;
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.35) 50%, rgba(0, 0, 0, 0.5) 100%);
+    border: 1px solid rgba(255, 215, 0, 0.22);
+    box-sizing: border-box;
+    box-shadow:
+        0 12px 0 rgba(0, 0, 0, 0.35),
+        0 18px 40px rgba(0, 0, 0, 0.5),
+        0 1px 0 rgba(255, 255, 255, 0.15) inset,
+        0 -3px 12px rgba(0, 0, 0, 0.45) inset;
+    transform-style: preserve-3d;
+    transform: translateZ(12px) rotateX(8deg);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#home-screen .cats-scene:hover {
+    transform: translateZ(22px) rotateX(5deg);
+}
+
+.cats-scene svg {
+    border-radius: 10px;
+}
+
+.home-begin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--home-font);
+    font-size: clamp(1rem, 3.5vw, 1.2rem);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: #1a0f00;
+    margin: 0.5rem auto 0.75rem;
+    padding: 16px 36px;
+    min-width: min(280px, 90vw);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    background: linear-gradient(168deg, #fff8e0 0%, #ffe082 12%, #ffb300 42%, #e65100 100%);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.65) inset,
+        0 -3px 6px rgba(0, 0, 0, 0.22) inset,
+        0 6px 0 #8d4a00,
+        0 7px 0 #6a3600,
+        0 14px 28px rgba(0, 0, 0, 0.45),
+        0 20px 50px rgba(255, 140, 0, 0.35);
+    transform-style: preserve-3d;
+    transform: translateZ(26px) rotateX(11deg);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.home-begin-btn:hover {
+    filter: brightness(1.07);
+    transform: translateZ(38px) rotateX(6deg) translateY(-3px);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.75) inset,
+        0 -2px 5px rgba(0, 0, 0, 0.18) inset,
+        0 7px 0 #8d4a00,
+        0 8px 0 #5c2e00,
+        0 18px 36px rgba(0, 0, 0, 0.4),
+        0 26px 60px rgba(255, 160, 0, 0.45);
+}
+
+.home-begin-btn:active {
+    transform: translateZ(16px) rotateX(14deg) translateY(2px);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.4) inset,
+        0 3px 0 #8d4a00,
+        0 10px 24px rgba(0, 0, 0, 0.4),
+        0 14px 36px rgba(255, 140, 0, 0.28);
 }
 
 .press-start {
-    font-size: clamp(1rem, 3vw, 1.5rem);
-    color: #ffd700;
-    margin-top: 2rem;
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
-    padding: 15px 40px;
-    border: 2px solid rgba(255, 215, 0, 0.5);
-    border-radius: 30px;
-    background: rgba(255, 215, 0, 0.1);
+    font-family: var(--home-font);
+    font-size: clamp(0.85rem, 2.8vw, 1.15rem);
+    font-weight: 400;
+    color: rgba(255, 215, 0, 0.85);
+    margin-top: 0.25rem;
+    text-shadow:
+        0 2px 0 rgba(120, 70, 0, 0.5),
+        0 0 12px rgba(255, 215, 0, 0.85);
+    padding: 12px 28px;
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255, 230, 150, 0.12) 0%, rgba(255, 215, 0, 0.04) 100%);
+    box-shadow:
+        0 3px 0 rgba(0, 0, 0, 0.25),
+        0 1px 0 rgba(255, 255, 255, 0.12) inset;
+    transform: translateZ(14px) rotateX(4deg);
+    transform-style: preserve-3d;
     animation: pressStartPulse 1.5s ease-in-out infinite;
 }
 
@@ -275,6 +598,39 @@ body {
 
 .blink {
     animation: pressStartPulse 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #home-screen {
+        perspective: none;
+    }
+    .home-atmosphere {
+        transform: none;
+        transition: none;
+    }
+    .home-tilt-layer {
+        transform: none;
+        transition: none;
+    }
+    .game-title-3d {
+        animation: none;
+    }
+    .game-title,
+    .home-tagline,
+    .game-subtitle,
+    .home-clan-strip,
+    .cats-scene,
+    .home-begin-btn,
+    .press-start {
+        transform: none;
+    }
+    #home-screen .cats-scene:hover {
+        transform: none;
+    }
+    #secret-moon {
+        animation: none;
+        transform: scale(1);
+    }
 }
 
 /* Clan Selection */

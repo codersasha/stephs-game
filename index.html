@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Warrior Cats the Game</title>
-    <link rel="stylesheet" href="css/style.css?v=20260126h">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=20260209-3d">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
     <!-- PeerJS for multiplayer -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -13,17 +16,37 @@
     <div id="game-container">
         <!-- Home Screen -->
         <div id="home-screen" class="screen active">
-            <div class="stars-bg"></div>
+            <div class="home-atmosphere" aria-hidden="true">
+                <div class="stars-bg"></div>
+                <div class="home-aurora"></div>
+                <div class="home-mist"></div>
+                <div class="home-silhouette"></div>
+            </div>
+            <div class="home-vignette" aria-hidden="true"></div>
             <!-- Secret clickable moon - Easter Egg! -->
             <div id="secret-moon" onclick="triggerEasterEgg()" ontouchend="triggerEasterEgg(); event.preventDefault();" title="🌙"></div>
+            <div class="home-tilt-layer">
             <div class="home-content">
-                <h1 class="game-title">Warrior Cats</h1>
-                <h2 class="game-subtitle">the Game</h2>
+                <p class="home-tagline">The forest remembers every paw step</p>
+                <div class="game-title-3d">
+                    <h1 class="game-title">Warrior Cats</h1>
+                </div>
+                <h2 class="game-subtitle">The Game</h2>
+                <div class="home-clan-strip" aria-hidden="true">
+                    <span class="clan-strip-label">Four Clans</span>
+                    <span class="clan-dot thunder" title="ThunderClan"></span>
+                    <span class="clan-dot river" title="RiverClan"></span>
+                    <span class="clan-dot wind" title="WindClan"></span>
+                    <span class="clan-dot shadow" title="ShadowClan"></span>
+                </div>
                 <div id="cats-scene" class="cats-scene">
                     <!-- SVG cats will be inserted here -->
                 </div>
-                <p class="press-start blink">Press any button to start</p>
+                <button type="button" class="home-begin-btn" id="home-begin-btn">Begin your journey</button>
+                <p class="press-start blink">Or tap anywhere on the screen</p>
             </div>
+            </div>
+            <p class="home-version">Fan tribute · not affiliated with Erin Hunter or the publishers</p>
         </div>
 
         <!-- Play Mode Selection Screen -->
@@ -684,6 +707,6 @@
         </div>
     </div>
 
-    <script src="js/game.js?v=20260126s"></script>
+    <script src="js/game.js?v=20260210-hunt"></script>
 </body>
 </html>

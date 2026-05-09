@@ -50,7 +50,10 @@ const GameState = {
     connections: [], // For host: all connected peers
     hostConnection: null, // For client: connection to host
     roomCode: null,
-    otherPlayers: {} // Other players' data keyed by peerId
+    otherPlayers: {}, // Other players' data keyed by peerId
+    // Multiplayer: non-kit carries a kit (peer id of the kit), or kit is carried by carrier's peer id
+    carryingKitPeerId: null,
+    carriedByPeerId: null
 };
 
 // NPC Cats for each clan
@@ -976,9 +979,9 @@ function getPreyMultiplier() {
 // Get weather effect on activities
 function getWeatherEffect() {
     switch (GameState.weather) {
-        case 'stormy': return { huntingPenalty: 0.5, healthDrain: 2, message: 'The storm makes everything harder!' };
-        case 'rainy': return { huntingPenalty: 0.7, healthDrain: 1, message: 'The rain makes hunting difficult.' };
-        case 'snowy': return { huntingPenalty: 0.6, healthDrain: 1, message: 'Snow covers the prey trails.' };
+        case 'stormy': return { huntingPenalty: 0.5, healthDrain: 1, message: 'The storm makes everything harder!' };
+        case 'rainy': return { huntingPenalty: 0.7, healthDrain: 0.5, message: 'The rain makes hunting difficult.' };
+        case 'snowy': return { huntingPenalty: 0.6, healthDrain: 0.5, message: 'Snow covers the prey trails.' };
         case 'cloudy': return { huntingPenalty: 0.9, healthDrain: 0, message: '' };
         case 'sunny': return { huntingPenalty: 1.0, healthDrain: 0, message: '' };
         default: return { huntingPenalty: 1.0, healthDrain: 0, message: '' };
@@ -1220,11 +1223,44 @@ function createCatsSVG() {
     `;
 }
 
+function resetHomeScreenTilt() {
+    const home = document.getElementById('home-screen');
+    if (home) {
+        home.style.setProperty('--home-rx', '0deg');
+        home.style.setProperty('--home-ry', '0deg');
+    }
+}
+
 // Setup all event listeners
 function setupEventListeners() {
-    // Home screen - any key or touch to start
-    document.getElementById('home-screen').addEventListener('click', startGame);
-    document.getElementById('home-screen').addEventListener('touchstart', startGame);
+    const homeScreenEl = document.getElementById('home-screen');
+    const homeParallaxOk = typeof matchMedia !== 'undefined' && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Home screen 3D parallax (pointer follows tilt)
+    if (homeScreenEl && homeParallaxOk) {
+        homeScreenEl.addEventListener('pointermove', (e) => {
+            if (typeof GameState === 'undefined' || GameState.currentScreen !== 'home') return;
+            const rect = homeScreenEl.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const nx = (e.clientX - cx) / Math.max(rect.width / 2, 1);
+            const ny = (e.clientY - cy) / Math.max(rect.height / 2, 1);
+            const maxX = 9;
+            const maxY = 7;
+            homeScreenEl.style.setProperty('--home-rx', `${(-ny * maxY).toFixed(2)}deg`);
+            homeScreenEl.style.setProperty('--home-ry', `${(nx * maxX).toFixed(2)}deg`);
+        });
+        homeScreenEl.addEventListener('pointerleave', resetHomeScreenTilt);
+        homeScreenEl.addEventListener('pointercancel', resetHomeScreenTilt);
+    }
+
+    // Home screen - tap anywhere to start (Begin button stops propagation so it only runs once)
+    homeScreenEl.addEventListener('click', startGame);
+    homeScreenEl.addEventListener('touchstart', startGame);
+    document.getElementById('home-begin-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startGame();
+    });
     document.addEventListener('keydown', (e) => {
         if (GameState.currentScreen === 'home') {
             startGame();
@@ -1402,6 +1438,10 @@ function showScreen(screenName) {
     });
     document.getElementById(`${screenName}-screen`).classList.add('active');
     GameState.currentScreen = screenName;
+
+    if (screenName !== 'home') {
+        resetHomeScreenTilt();
+    }
     
     // Update multiplayer chat visibility
     updateMultiplayerChatVisibility();
@@ -1981,26 +2021,23 @@ function startPartyInGame() {
 
 // Start the game (from home screen)
 function startGame() {
-    if (GameState.currentScreen === 'home') {
-        playSoundClick();
-        playSoundSuccess();
-        
-        // Reset easter egg - must tap moon on home screen each time to unlock party!
-        // If party is active, it stays active. If not, you need to tap moon next time.
-        if (!easterEggActive) {
-            easterEggUnlocked = false;
-            // Hide the party button since easter egg isn't unlocked
-            const partyBtn = document.getElementById('emote-party');
-            if (partyBtn) {
-                partyBtn.classList.add('hidden');
-            }
-            console.log('[startGame] Easter egg reset - moon not tapped this time');
-        } else {
-            console.log('[startGame] Easter egg stays unlocked - party is active!');
+    if (GameState.currentScreen !== 'home') return;
+    playSoundClick();
+    playSoundSuccess();
+    
+    // Reset easter egg - must tap moon on home screen each time to unlock party!
+    if (!easterEggActive) {
+        easterEggUnlocked = false;
+        const partyBtn = document.getElementById('emote-party');
+        if (partyBtn) {
+            partyBtn.classList.add('hidden');
         }
-        
-        showScreen('mode'); // Go to mode selection (single/multiplayer)
+        console.log('[startGame] Easter egg reset - moon not tapped this time');
+    } else {
+        console.log('[startGame] Easter egg stays unlocked - party is active!');
     }
+    
+    showScreen('mode');
 }
 
 // Select a clan
@@ -2064,6 +2101,10 @@ function selectSaveSlot(slot) {
         // Old saves: dead clanmates list
         if (!Array.isArray(GameState.catData.deadClanmates)) {
             GameState.catData.deadClanmates = [];
+        }
+        // Old saves: carried prey count used for fresh-kill pile depositing
+        if (typeof GameState.catData.preyCarried !== 'number') {
+            GameState.catData.preyCarried = 0;
         }
         
         // Fix for old saves that don't have nightsSlept
@@ -2397,7 +2438,9 @@ function beginAdventure() {
         // Track nights slept for kit->apprentice progression
         nightsSlept: 0,
         // NPC clanmates who died — hidden from camp
-        deadClanmates: []
+        deadClanmates: [],
+        // Prey currently being carried by the player
+        preyCarried: 0
     };
     
     // Debug: log new cat creation
@@ -2609,9 +2652,208 @@ function updateGameUI() {
     }
 }
 
+// ============= MULTIPLAYER: CARRY KIT =============
+/** Resolve logical peer id to the key used in GameState.otherPlayers on this client (host row is 'host'). */
+function getOtherPlayersStorageKey(peerId) {
+    if (peerId == null || peerId === '') return null;
+    // Clients store the host under 'host'; logical id is the room / Peer id
+    if (!GameState.isHost && GameState.roomCode != null
+        && String(peerId) === String(GameState.roomCode)
+        && GameState.otherPlayers['host']) {
+        return 'host';
+    }
+    if (GameState.otherPlayers[peerId]) return peerId;
+    return peerId;
+}
+
+/** Attack menus use peer ids; host may appear as "host" but PeerJS id is the room code. */
+function resolveAttackTargetPeerId(targetPeerId) {
+    if (targetPeerId == null || targetPeerId === '') return null;
+    if (String(targetPeerId) === 'host' && GameState.roomCode != null) {
+        return String(GameState.roomCode);
+    }
+    return String(targetPeerId);
+}
+
+function isLocalPlayerAttackTarget(targetPeerId) {
+    const myId = GameState.peer?.id;
+    if (!myId) return false;
+    const resolved = resolveAttackTargetPeerId(targetPeerId);
+    if (!resolved) return false;
+    return resolved === String(myId);
+}
+
+function getCarrierRecordForCarry(carrierPeerId) {
+    if (!carrierPeerId) return null;
+    if (GameState.otherPlayers[carrierPeerId]) return GameState.otherPlayers[carrierPeerId];
+    if (GameState.otherPlayers['host'] && GameState.roomCode && carrierPeerId === GameState.roomCode) {
+        return GameState.otherPlayers['host'];
+    }
+    return null;
+}
+
+function syncLocalCarriedKitPosition() {
+    if (!GameState.isMultiplayer || !GameState.carriedByPeerId) return;
+    const myId = GameState.peer?.id;
+    let carrier = getCarrierRecordForCarry(GameState.carriedByPeerId);
+    if (!carrier && GameState.carriedByPeerId === myId && GameState.isHost) {
+        carrier = {
+            x: GameState.playerX,
+            y: GameState.playerY,
+            location: GameState.currentLocation
+        };
+    }
+    if (!carrier || carrier.x == null) return;
+    GameState.playerX = carrier.x + 14;
+    GameState.playerY = carrier.y + 6;
+    if (carrier.location && carrier.location !== GameState.currentLocation) {
+        GameState.currentLocation = carrier.location;
+    }
+}
+
+function syncCarriedKitInOtherPlayers() {
+    if (!GameState.isMultiplayer || !GameState.carryingKitPeerId) return;
+    const kitKey = getOtherPlayersStorageKey(GameState.carryingKitPeerId);
+    if (!kitKey || !GameState.otherPlayers[kitKey]) return;
+    GameState.otherPlayers[kitKey].x = GameState.playerX + 14;
+    GameState.otherPlayers[kitKey].y = GameState.playerY + 6;
+    GameState.otherPlayers[kitKey].location = GameState.currentLocation;
+}
+
+function snapAllCarriedKitsInState() {
+    if (!GameState.isMultiplayer) return;
+    Object.values(GameState.otherPlayers).forEach(p => {
+        if (!p || !p.carryingKitPeerId) return;
+        const kitKey = getOtherPlayersStorageKey(p.carryingKitPeerId);
+        const kitP = kitKey ? GameState.otherPlayers[kitKey] : null;
+        if (kitP && p.x != null) {
+            kitP.x = p.x + 14;
+            kitP.y = p.y + 6;
+            kitP.location = p.location;
+        }
+    });
+}
+
+function applyCarryKitSync(data) {
+    const { carrierPeerId, kitPeerId, active } = data;
+    const myId = GameState.peer?.id;
+    if (active) {
+        if (myId && myId === kitPeerId) GameState.carriedByPeerId = carrierPeerId;
+        if (myId && myId === carrierPeerId) GameState.carryingKitPeerId = kitPeerId;
+    } else {
+        if (myId && myId === kitPeerId) GameState.carriedByPeerId = null;
+        if (myId && myId === carrierPeerId) GameState.carryingKitPeerId = null;
+    }
+    const kitKey = kitPeerId != null ? getOtherPlayersStorageKey(kitPeerId) : null;
+    if (kitKey && GameState.otherPlayers[kitKey]) {
+        if (active) GameState.otherPlayers[kitKey].carriedByPeerId = carrierPeerId;
+        else delete GameState.otherPlayers[kitKey].carriedByPeerId;
+    }
+    const carKey = carrierPeerId != null ? getOtherPlayersStorageKey(carrierPeerId) : null;
+    const car = carKey ? GameState.otherPlayers[carKey] : null;
+    if (car && carrierPeerId) {
+        if (active) car.carryingKitPeerId = kitPeerId;
+        else delete car.carryingKitPeerId;
+    }
+    snapAllCarriedKitsInState();
+}
+
+/** When a peer disconnects or is removed, clear local carry state that references them. */
+function clearMultiplayerCarryForPeer(peerId) {
+    if (!peerId) return;
+    if (GameState.carryingKitPeerId === peerId) GameState.carryingKitPeerId = null;
+    if (GameState.carriedByPeerId === peerId) GameState.carriedByPeerId = null;
+    Object.keys(GameState.otherPlayers).forEach(key => {
+        const p = GameState.otherPlayers[key];
+        if (!p) return;
+        if (p.carryingKitPeerId === peerId) delete p.carryingKitPeerId;
+        if (p.carriedByPeerId === peerId) delete p.carriedByPeerId;
+    });
+}
+
+function sendCarryKitMessage(kitPeerId, active) {
+    if (!GameState.isMultiplayer || !kitPeerId) return;
+    const carrierPeerId = GameState.peer?.id;
+    if (!carrierPeerId) return;
+    const sync = { type: 'carryKitSync', carrierPeerId, kitPeerId, active: !!active };
+    if (GameState.isHost) {
+        applyCarryKitSync(sync);
+        broadcastToAll(sync);
+    } else if (GameState.hostConnection?.open) {
+        GameState.hostConnection.send({ type: 'carryKitRequest', carrierPeerId, kitPeerId, active: !!active });
+    }
+    playSoundClick();
+    showMessage(active ? 'You pick up the kit!' : 'You set the kit down.');
+    renderGameWorld();
+}
+
+function showPickUpKitMenu() {
+    if (!GameState.isMultiplayer) return;
+    const cat = GameState.catData;
+    if (!cat || cat.rank === 'Kit') {
+        showMessage('Only older cats can pick up kits!');
+        return;
+    }
+    const nearby = [];
+    const myLoc = GameState.currentLocation;
+    const myClan = GameState.selectedClan || 'thunder';
+    
+    Object.entries(GameState.otherPlayers).forEach(([peerId, player]) => {
+        if (peerId === 'host' && GameState.isHost) return;
+        if (!player || player.rank !== 'Kit') return;
+        if (player.carriedByPeerId) return;
+        if (player.location !== myLoc) return;
+        if ((myLoc === 'camp' || (myLoc && myLoc.startsWith('den_'))) && (player.clan || 'thunder') !== myClan) return;
+        const dist = Math.sqrt(
+            Math.pow((player.x || 200) - GameState.playerX, 2) +
+            Math.pow((player.y || 200) - GameState.playerY, 2)
+        );
+        if (dist < 160) {
+            nearby.push({ peerId, player, dist });
+        }
+    });
+    
+    if (nearby.length === 0) {
+        showMessage('No kit nearby to pick up. Move closer to a kit player!');
+        return;
+    }
+    
+    const popup = document.getElementById('location-popup');
+    const title = document.getElementById('location-title');
+    const desc = document.getElementById('location-desc');
+    const actions = document.getElementById('location-actions');
+    title.textContent = 'Pick up a kit';
+    desc.textContent = 'Carry a young kit with you. They cannot move until you set them down.';
+    actions.innerHTML = '';
+    
+    nearby.sort((a, b) => a.dist - b.dist).forEach(({ peerId, player }) => {
+        const realPeerId = peerId === 'host' ? (GameState.roomCode || 'host') : peerId;
+        addAction(actions, `Pick up ${player.name || 'kit'}`, () => {
+            closePopup();
+            if (GameState.carryingKitPeerId && GameState.carryingKitPeerId !== realPeerId) {
+                sendCarryKitMessage(GameState.carryingKitPeerId, false);
+            }
+            sendCarryKitMessage(realPeerId, true);
+        });
+    });
+    
+    if (GameState.carryingKitPeerId) {
+        addAction(actions, 'Put down kit', () => {
+            closePopup();
+            sendCarryKitMessage(GameState.carryingKitPeerId, false);
+        });
+    }
+    addAction(actions, 'Cancel', closePopup);
+    playSoundMenuOpen();
+    popup.classList.remove('hidden');
+}
+
 // Render the game world (camp or forest)
 function renderGameWorld() {
     const gameWorld = document.getElementById('game-world');
+    
+    syncLocalCarriedKitPosition();
+    applyLocationWorldViewMode();
     
     // Update chat visibility
     updateMultiplayerChatVisibility();
@@ -2630,8 +2872,10 @@ function renderGameWorld() {
         renderStarClanWorld();
     } else if (GameState.currentLocation === 'starclan_forest') {
         renderStarClanForest();
-    } else if (GameState.currentLocation === 'dark_forest') {
-        renderDarkForest();
+    } else if (GameState.currentLocation === 'dark_forest_world' || GameState.currentLocation === 'dark_forest') {
+        renderDarkForestWorld();
+    } else if (GameState.currentLocation === 'dark_forest_wilds') {
+        renderDarkForestWilds();
     } else {
         renderForest();
     }
@@ -2639,6 +2883,36 @@ function renderGameWorld() {
     // Add party effects if party is active!
     if (easterEggActive) {
         setTimeout(() => addGamePartyEffects(), 50);
+    }
+}
+
+/** Apply per-location world rendering mode (normal 2D vs first-person Dark Forest camera). */
+function applyLocationWorldViewMode() {
+    const gameWorld = document.getElementById('game-world');
+    const gameScreen = document.getElementById('game-screen');
+    if (!gameWorld) return;
+    const stage = gameWorld.parentElement;
+    const isFirstPersonDF = GameState.currentLocation === 'dark_forest_world'
+        || GameState.currentLocation === 'dark_forest_wilds'
+        || GameState.currentLocation === 'dark_forest';
+    if (gameScreen) {
+        gameScreen.classList.toggle('dark-forest-first-person', isFirstPersonDF);
+    }
+    if (stage) {
+        stage.style.transformStyle = 'preserve-3d';
+        stage.style.perspective = isFirstPersonDF ? '780px' : '';
+    }
+    gameWorld.style.transition = 'transform 220ms ease, filter 220ms ease';
+    gameWorld.style.transformStyle = 'preserve-3d';
+    gameWorld.style.transformOrigin = '50% 100%';
+    if (isFirstPersonDF) {
+        const cx = GameState.currentLocation === 'dark_forest_wilds' ? 450 : 225;
+        const steer = (GameState.playerX - cx) * 0.065;
+        gameWorld.style.transform = `translateY(-3%) perspective(820px) rotateX(56deg) rotateY(${steer}deg) scale(1.1)`;
+        gameWorld.style.filter = 'contrast(1.1) saturate(1.05) brightness(0.92) drop-shadow(0 22px 34px rgba(0, 0, 0, 0.65))';
+    } else {
+        gameWorld.style.transform = '';
+        gameWorld.style.filter = '';
     }
 }
 
@@ -4472,7 +4746,7 @@ function renderForest() {
                     <ellipse cx="${prey.x+8}" cy="${prey.y}" rx="3" ry="1" fill="#9a8a7a"/>
                 </g>
                 <!-- Clickable label -->
-                <g class="prey-spot clickable" data-action="hunt" data-index="${i}" style="cursor: pointer;">
+                <g class="prey-spot clickable" data-action="hunt" data-index="${i}" data-prey-type="${prey.type}" style="cursor: pointer;">
                     <rect x="${prey.x - 35}" y="${prey.y + 26}" width="70" height="18" fill="rgba(0,0,0,0.5)" rx="5"/>
                     <text x="${prey.x}" y="${prey.y + 39}" text-anchor="middle" fill="#f0e6d2" font-size="11" style="text-shadow: 1px 1px 2px black;">Hunt ${prey.type}</text>
                 </g>
@@ -4645,7 +4919,10 @@ function renderForest() {
     });
     
     document.querySelectorAll('.prey-spot').forEach(spot => {
-        spot.addEventListener('click', () => startHuntingGame());
+        addTapHandler(spot, () => {
+            const t = spot.dataset.preyType || 'mouse';
+            startHuntingGame(t);
+        });
     });
     
     document.querySelector('.danger-spot')?.addEventListener('click', () => encounterDanger('fox'));
@@ -5152,7 +5429,7 @@ function renderBarnInterior() {
     });
     
     document.querySelectorAll('.mouse-hole').forEach(hole => {
-        hole.addEventListener('click', () => {
+        addTapHandler(hole, () => {
             barnHunt();
         });
     });
@@ -6173,8 +6450,9 @@ function lonerHunt() {
         if (Math.random() < 0.5) {
             playSoundCatch();
             const cat = GameState.catData;
+            cat.preyCarried = Math.max(0, Number(cat.preyCarried || 0)) + 1;
             cat.hunger = Math.min(100, cat.hunger + 30);
-            showMessage('You caught a mouse! It\'s not much, but it\'s yours.');
+            showMessage(`You caught a mouse! It's not much, but it's yours. (Prey carried: ${cat.preyCarried})`);
             updateGameUI();
             saveGameData();
         } else {
@@ -6212,6 +6490,7 @@ function sneakIntoOtherClan(clanName) {
             setTimeout(() => {
                 // Small chance to find something useful
                 if (Math.random() < 0.3) {
+                    cat.preyCarried = Math.max(0, Number(cat.preyCarried || 0)) + 1;
                     showMessage('You find some prey and steal it!');
                     cat.hunger = Math.min(100, cat.hunger + 20);
                 }
@@ -6755,6 +7034,11 @@ function handleKeyDown(e) {
 }
 
 function movePlayer(dx, dy) {
+    // Multiplayer: kits being carried cannot move on their own
+    if (GameState.isMultiplayer && GameState.carriedByPeerId) {
+        return;
+    }
+    
     const newX = GameState.playerX + dx;
     const newY = GameState.playerY + dy;
     
@@ -6765,6 +7049,12 @@ function movePlayer(dx, dy) {
     if (GameState.currentLocation === 'forest') {
         maxX = 1150;
         maxY = 950;
+    }
+    if (GameState.currentLocation === 'dark_forest_wilds') {
+        minX = 40;
+        maxX = 860;
+        minY = 60;
+        maxY = 640;
     }
     
     let moved = false;
@@ -6794,17 +7084,17 @@ function movePlayer(dx, dy) {
         // REALISTIC: Hunger and thirst decrease as you walk!
         const cat = GameState.catData;
         if (cat && !cat.inStarClan && !cat.inDarkForest) {
-            // Decrease hunger every 5 steps
-            if (GameState.stepsToday % 5 === 0) {
+            // Decrease hunger every 20 steps (much slower drain)
+            if (GameState.stepsToday % 20 === 0) {
                 cat.hunger = Math.max(0, cat.hunger - 1);
             }
-            // Decrease thirst every 3 steps (you get thirsty faster!)
-            if (GameState.stepsToday % 3 === 0) {
+            // Decrease thirst every 15 steps
+            if (GameState.stepsToday % 15 === 0) {
                 cat.thirst = Math.max(0, cat.thirst - 1);
             }
             // Weather effects - bad weather drains health slowly
             const weatherEffect = getWeatherEffect();
-            if (weatherEffect.healthDrain > 0 && GameState.stepsToday % 20 === 0) {
+            if (weatherEffect.healthDrain > 0 && GameState.stepsToday % 80 === 0) {
                 cat.health = Math.max(1, cat.health - weatherEffect.healthDrain);
             }
             // Random weather change
@@ -6825,6 +7115,7 @@ function movePlayer(dx, dy) {
     
     // Send position update in multiplayer
     if (GameState.isMultiplayer) {
+        syncCarriedKitInOtherPlayers();
         sendPositionUpdate();
     }
 }
@@ -7060,11 +7351,18 @@ function interactWithLocation(locationKey) {
                         closePopup();
                     });
                 }
-                addAction(actions, 'Add prey to pile', () => {
-                    showMessage('You added your catch to the fresh-kill pile!');
-                    cat.experience += 5;
-                    closePopup();
-                });
+                const carriedPrey = Math.max(0, Number(cat.preyCarried || 0));
+                if (carriedPrey > 0) {
+                    addAction(actions, `Add prey to pile (${carriedPrey} carried)`, () => {
+                        addPreyToPile();
+                        closePopup();
+                    });
+                } else {
+                    addAction(actions, 'Add prey to pile (need prey)', () => {
+                        showMessage("You need to catch prey first before adding to the pile.");
+                        closePopup();
+                    });
+                }
             } else {
                 addAction(actions, 'Eat', () => {
                     eatFromPile();
@@ -7553,11 +7851,45 @@ function eatFromPile() {
     checkMealsForNight();
 }
 
+function addPreyToPile() {
+    const cat = GameState.catData;
+    if (!cat) return;
+    const carried = Math.max(0, Number(cat.preyCarried || 0));
+    if (carried <= 0) {
+        showMessage("You don't have any fresh-kill to add right now.");
+        return;
+    }
+    cat.preyCarried = carried - 1;
+    cat.experience += 5;
+    showMessage(`You added prey to the fresh-kill pile! (${cat.preyCarried} carried left)`);
+    updateGameUI();
+    saveGameData();
+}
+
 function collectHerb(herbType, index) {
     const herb = HERBS[herbType];
     GameState.herbs.push(herbType);
     document.getElementById('herb-count').textContent = GameState.herbs.length;
     showMessage(`You found ${herb.name}!`);
+}
+
+/** Click + touch for SVG hunt targets (mobile won’t always fire click; suppress duplicate after touchend). */
+function addTapHandler(el, handler) {
+    if (!el || typeof handler !== 'function') return;
+    let suppressNextClick = false;
+    el.addEventListener('touchstart', () => { suppressNextClick = false; }, { passive: true });
+    el.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        suppressNextClick = true;
+        handler(e);
+    }, { passive: false });
+    el.addEventListener('click', (e) => {
+        if (suppressNextClick) {
+            suppressNextClick = false;
+            return;
+        }
+        handler(e);
+    });
 }
 
 function huntPrey() {
@@ -7570,9 +7902,10 @@ function huntPrey() {
     }
     
     if (Math.random() > 0.3) {
+        cat.preyCarried = Math.max(0, Number(cat.preyCarried || 0)) + 1;
         cat.hunger = Math.min(100, cat.hunger + 30);
         cat.experience += 10;
-        showMessage('You caught a mouse! Yummy!');
+        showMessage(`You caught a mouse! Yummy! (Prey carried: ${cat.preyCarried})`);
     } else {
         showMessage('The mouse got away...');
     }
@@ -7581,13 +7914,109 @@ function huntPrey() {
     saveGameData();
 }
 
-// Hunting mini-game!
+// Hunting mini-game! (forest spots: Hunt mouse / vole / etc. → chase & click to catch)
 let huntingGameActive = false;
 let mousePosition = { x: 200, y: 200 };
+let huntingPreyType = 'mouse';
 let mouseInterval = null;
 let huntingTimeout = null;
 
-function startHuntingGame() {
+const HUNT_PREY_TYPES = ['mouse', 'vole', 'squirrel', 'rabbit', 'thrush'];
+
+function normalizeHuntPreyType(raw) {
+    const t = String(raw || 'mouse').toLowerCase();
+    return HUNT_PREY_TYPES.includes(t) ? t : 'mouse';
+}
+
+function huntingPreyDisplayName(type) {
+    const names = {
+        mouse: 'mouse',
+        vole: 'vole',
+        squirrel: 'squirrel',
+        rabbit: 'rabbit',
+        thrush: 'thrush'
+    };
+    return names[type] || 'prey';
+}
+
+/** Higher = slower movement (easier). Lower = faster (harder). */
+function getHuntMoveIntervalMultiplier(type) {
+    switch (type) {
+        case 'vole': return 1.25;
+        case 'mouse': return 1;
+        case 'thrush': return 0.9;
+        case 'squirrel': return 0.78;
+        case 'rabbit': return 0.68;
+        default: return 1;
+    }
+}
+
+function getHuntPreyFoodBonus(type) {
+    switch (type) {
+        case 'vole': return -5;
+        case 'mouse': return 0;
+        case 'thrush': return 8;
+        case 'squirrel': return 12;
+        case 'rabbit': return 18;
+        default: return 0;
+    }
+}
+
+/** SVG <g> contents for the running prey at (cx, cy) */
+function renderHuntingPreyShapes(cx, cy, type) {
+    const x = cx;
+    const y = cy;
+    switch (type) {
+        case 'vole':
+            return `
+                <ellipse cx="${x}" cy="${y}" rx="14" ry="9" fill="#5c4a38"/>
+                <circle cx="${x - 8}" cy="${y - 3}" r="3.5" fill="#4a3a2a"/>
+                <circle cx="${x - 10}" cy="${y - 4}" r="1.5" fill="#1a1a1a"/>
+                <ellipse cx="${x + 10}" cy="${y}" rx="5" ry="2.5" fill="#6a5a48"/>
+                <circle cx="${x - 4}" cy="${y - 6}" r="3.5" fill="#5c4a38"/>
+                <circle cx="${x - 1}" cy="${y - 6}" r="3.5" fill="#5c4a38"/>
+            `;
+        case 'squirrel':
+            return `
+                <ellipse cx="${x}" cy="${y}" rx="16" ry="11" fill="#a0522d"/>
+                <circle cx="${x - 9}" cy="${y - 3}" r="5" fill="#8b4513"/>
+                <circle cx="${x - 12}" cy="${y - 4}" r="2" fill="#1a1a1a"/>
+                <ellipse cx="${x + 18}" cy="${y - 8}" rx="14" ry="10" fill="#8b4513" opacity="0.95"/>
+                <ellipse cx="${x + 12}" cy="${y + 2}" rx="9" ry="4" fill="#cd853f"/>
+                <circle cx="${x - 5}" cy="${y - 9}" r="4" fill="#a0522d"/>
+                <circle cx="${x - 1}" cy="${y - 9}" r="4" fill="#a0522d"/>
+            `;
+        case 'rabbit':
+            return `
+                <ellipse cx="${x}" cy="${y + 4}" rx="20" ry="13" fill="#c4a574"/>
+                <circle cx="${x - 12}" cy="${y + 2}" r="5" fill="#b8956a"/>
+                <circle cx="${x - 15}" cy="${y + 1}" r="2" fill="#1a1a1a"/>
+                <ellipse cx="${x + 14}" cy="${y + 6}" rx="7" ry="4" fill="#d4b896"/>
+                <ellipse cx="${x - 6}" cy="${y - 12}" rx="4" ry="14" fill="#c4a574"/>
+                <ellipse cx="${x + 2}" cy="${y - 11}" rx="4" ry="13" fill="#c4a574"/>
+            `;
+        case 'thrush':
+            return `
+                <ellipse cx="${x}" cy="${y}" rx="16" ry="10" fill="#6b5344"/>
+                <ellipse cx="${x - 10}" cy="${y - 2}" rx="8" ry="6" fill="#8b6914"/>
+                <polygon points="${x - 22},${y} ${x - 28},${y - 2} ${x - 28},${y + 3}" fill="#d4a574"/>
+                <ellipse cx="${x + 8}" cy="${y - 4}" rx="10" ry="6" fill="#5a4a3a" opacity="0.9"/>
+                <circle cx="${x + 14}" cy="${y - 2}" r="2" fill="#1a1a1a"/>
+            `;
+        case 'mouse':
+        default:
+            return `
+                <ellipse cx="${x}" cy="${y}" rx="18" ry="12" fill="#8B7355"/>
+                <circle cx="${x - 10}" cy="${y - 4}" r="4" fill="#7a6a5a"/>
+                <circle cx="${x - 13}" cy="${y - 5}" r="2" fill="#1a1a1a"/>
+                <ellipse cx="${x + 15}" cy="${y}" rx="8" ry="3" fill="#9a8a7a"/>
+                <circle cx="${x - 6}" cy="${y - 8}" r="5" fill="#8B7355"/>
+                <circle cx="${x - 3}" cy="${y - 8}" r="5" fill="#8B7355"/>
+            `;
+    }
+}
+
+function startHuntingGame(preyTypeRaw) {
     const cat = GameState.catData;
     
     // Kits can't hunt!
@@ -7601,60 +8030,45 @@ function startHuntingGame() {
         return;
     }
     
-    // REALISTIC: Check if prey is even available based on season!
-    const preyChance = getPreyMultiplier() * getWeatherEffect().huntingPenalty;
+    huntingPreyType = normalizeHuntPreyType(preyTypeRaw);
+    const preyName = huntingPreyDisplayName(huntingPreyType);
     
-    if (Math.random() > preyChance) {
-        // No prey found due to season/weather
-        const noPreyMessages = {
-            'leaf-bare': 'The snow covers everything... no prey in sight.',
-            'leaf-fall': 'The leaves rustle but no prey appears...',
-            'newleaf': 'The rain scared all the prey away...',
-            'greenleaf': 'It\'s too hot, the prey is hiding...'
-        };
-        const weatherMessages = {
-            'stormy': 'The storm has scared all the prey away!',
-            'rainy': 'The rain makes it hard to find prey...',
-            'snowy': 'Snow covers the prey trails...'
-        };
-        
-        if (GameState.weather === 'stormy' || GameState.weather === 'rainy' || GameState.weather === 'snowy') {
-            showMessage(weatherMessages[GameState.weather]);
-        } else {
-            showMessage(noPreyMessages[GameState.season] || 'You search but find no prey...');
-        }
-        return;
-    }
+    // Season/weather already affect catch rewards & prey speed — always let the player into the hunt mini-game
+    // (Old random "no prey" gate made hunting feel broken, especially in leaf-bare / bad weather.)
     
     huntingGameActive = true;
-    mousePosition = { x: 200 + Math.random() * 200, y: 150 + Math.random() * 200 };
+    mousePosition = { x: 140 + Math.random() * 320, y: 120 + Math.random() * 220 };
     
-    // REALISTIC: Different message based on season
-    const huntMessages = {
-        'greenleaf': 'A fat mouse! The hunting is good in greenleaf!',
-        'newleaf': 'A mouse! Prey is returning in newleaf!',
-        'leaf-fall': 'A mouse! Quick, before leaf-bare comes!',
-        'leaf-bare': 'A mouse! Rare prey in leaf-bare - don\'t miss!'
+    const huntIntro = {
+        'greenleaf': `A ${preyName} darts out — greenleaf hunting is good! Click it!`,
+        'newleaf': `There — a ${preyName}! Quick, click it before it escapes!`,
+        'leaf-fall': `A ${preyName} scurries off! Catch it!`,
+        'leaf-bare': `Rare — a ${preyName}! Don\'t miss your click!`
     };
-    showMessage(huntMessages[GameState.season] || 'A mouse! Quick, click on it!');
+    showMessage(huntIntro[GameState.season] || `Catch the ${preyName} — click it!`);
     
     renderHuntingGame();
     
-    // REALISTIC: Mouse moves faster in warm weather, slower in cold
-    const mouseSpeed = GameState.temperature === 'cold' ? 1000 : 
-                       GameState.temperature === 'hot' ? 600 : 800;
+    let baseInterval = GameState.temperature === 'cold' ? 1000 :
+        GameState.temperature === 'hot' ? 600 : 800;
+    const weatherSlow = getWeatherEffect().huntingPenalty;
+    if (weatherSlow < 1) {
+        baseInterval = Math.round(baseInterval / Math.max(0.45, weatherSlow));
+    }
+    const seasonSlow = getPreyMultiplier();
+    if (seasonSlow < 1) {
+        baseInterval = Math.round(baseInterval / Math.max(0.55, seasonSlow));
+    }
+    const moveInterval = Math.max(350, Math.round(baseInterval * getHuntMoveIntervalMultiplier(huntingPreyType)));
     
-    // Mouse moves around
     mouseInterval = setInterval(() => {
         if (huntingGameActive) {
-            // Mouse moves to random position
             mousePosition.x = 100 + Math.random() * 400;
             mousePosition.y = 100 + Math.random() * 300;
             renderHuntingGame();
         }
-    }, mouseSpeed);
+    }, moveInterval);
     
-    // Time limit - 8 seconds to catch
     huntingTimeout = setTimeout(() => {
         if (huntingGameActive) {
             endHuntingGame(false);
@@ -7664,6 +8078,10 @@ function startHuntingGame() {
 
 function renderHuntingGame() {
     const gameWorld = document.getElementById('game-world');
+    const preyName = huntingPreyDisplayName(huntingPreyType);
+    const title = huntingPreyType === 'thrush'
+        ? `CATCH THE THRUSH!`
+        : `CATCH THE ${preyName.toUpperCase()}!`;
     
     gameWorld.innerHTML = `
         <svg id="hunting-svg" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
@@ -7674,34 +8092,24 @@ function renderHuntingGame() {
                 </radialGradient>
             </defs>
             
-            <!-- Hunting ground -->
             <rect x="0" y="0" width="600" height="500" fill="url(#huntGlow)"/>
             
-            <!-- Grass texture -->
             <ellipse cx="150" cy="400" rx="80" ry="30" fill="#2a5a2a" opacity="0.5"/>
             <ellipse cx="400" cy="350" rx="100" ry="40" fill="#2a5a2a" opacity="0.4"/>
             <ellipse cx="300" cy="450" rx="120" ry="35" fill="#2a5a2a" opacity="0.5"/>
             
-            <!-- Leaves and debris -->
             <circle cx="100" cy="200" r="3" fill="#8B4513" opacity="0.6"/>
             <circle cx="450" cy="280" r="4" fill="#CD853F" opacity="0.5"/>
             <circle cx="250" cy="150" r="3" fill="#A0522D" opacity="0.6"/>
             
-            <!-- THE MOUSE! Click it! -->
-            <g id="hunt-mouse" class="clickable" style="cursor: pointer;">
-                <ellipse cx="${mousePosition.x}" cy="${mousePosition.y}" rx="18" ry="12" fill="#8B7355"/>
-                <circle cx="${mousePosition.x - 10}" cy="${mousePosition.y - 4}" r="4" fill="#7a6a5a"/>
-                <circle cx="${mousePosition.x - 13}" cy="${mousePosition.y - 5}" r="2" fill="#1a1a1a"/>
-                <ellipse cx="${mousePosition.x + 15}" cy="${mousePosition.y}" rx="8" ry="3" fill="#9a8a7a"/>
-                <circle cx="${mousePosition.x - 6}" cy="${mousePosition.y - 8}" r="5" fill="#8B7355"/>
-                <circle cx="${mousePosition.x - 3}" cy="${mousePosition.y - 8}" r="5" fill="#8B7355"/>
+            <g id="hunt-target" class="clickable" style="cursor: crosshair;">
+                ${renderHuntingPreyShapes(mousePosition.x, mousePosition.y, huntingPreyType)}
             </g>
             
-            <!-- Instructions -->
-            <text x="300" y="50" text-anchor="middle" fill="#ffd700" font-size="20" font-weight="bold" style="text-shadow: 2px 2px 4px black;">CLICK THE MOUSE!</text>
-            <text x="300" y="480" text-anchor="middle" fill="#aaa" font-size="14">Hurry! It's getting away!</text>
+            <text x="300" y="50" text-anchor="middle" fill="#ffd700" font-size="18" font-weight="bold" style="text-shadow: 2px 2px 4px black;">${title}</text>
+            <text x="300" y="72" text-anchor="middle" fill="#c8e6c9" font-size="13">Click the ${preyName} when you can!</text>
+            <text x="300" y="480" text-anchor="middle" fill="#aaa" font-size="14">It keeps darting around — hurry!</text>
             
-            <!-- Cancel button -->
             <g id="cancel-hunt" class="clickable" style="cursor: pointer;">
                 <rect x="20" y="20" width="80" height="30" rx="5" fill="#6a4a4a" stroke="#8a6a6a" stroke-width="2"/>
                 <text x="60" y="40" text-anchor="middle" fill="white" font-size="12">Give up</text>
@@ -7709,13 +8117,11 @@ function renderHuntingGame() {
         </svg>
     `;
     
-    // Add click handler for mouse
-    document.getElementById('hunt-mouse')?.addEventListener('click', () => {
+    addTapHandler(document.getElementById('hunt-target'), () => {
         endHuntingGame(true);
     });
     
-    // Add cancel handler
-    document.getElementById('cancel-hunt')?.addEventListener('click', () => {
+    addTapHandler(document.getElementById('cancel-hunt'), () => {
         endHuntingGame(false);
     });
 }
@@ -7726,35 +8132,42 @@ function endHuntingGame(caught) {
     if (huntingTimeout) clearTimeout(huntingTimeout);
     
     const cat = GameState.catData;
+    const preyName = huntingPreyDisplayName(huntingPreyType);
+    const preyArticle = huntingPreyType === 'thrush' ? 'The thrush' : `The ${preyName}`;
     
     if (caught) {
-        playSoundMouse(); // Mouse squeak!
+        if (huntingPreyType === 'thrush') {
+            playSoundBird();
+        } else {
+            playSoundMouse();
+        }
         setTimeout(() => playSoundCatch(), 100);
         
-        // REALISTIC: Prey gives more food in greenleaf, less in leaf-bare
         const foodAmount = {
-            'greenleaf': 45, // Fat prey in summer!
+            'greenleaf': 45,
             'newleaf': 35,
             'leaf-fall': 30,
-            'leaf-bare': 20 // Skinny prey in winter...
+            'leaf-bare': 20
         };
-        const amount = foodAmount[GameState.season] || 35;
+        const base = foodAmount[GameState.season] || 35;
+        const amount = Math.max(8, base + getHuntPreyFoodBonus(huntingPreyType));
+        cat.preyCarried = Math.max(0, Number(cat.preyCarried || 0)) + 1;
         cat.hunger = Math.min(100, cat.hunger + amount);
         cat.experience += 15;
         
         const catchMessages = {
-            'greenleaf': 'Great catch! The mouse is fat from greenleaf!',
-            'newleaf': 'Great catch! Prey is plentiful in newleaf!',
-            'leaf-fall': 'Good catch! Store up before leaf-bare!',
-            'leaf-bare': 'You caught it! Every catch matters in leaf-bare...'
+            'greenleaf': `Great catch! That ${preyName} is well-fed from greenleaf!`,
+            'newleaf': `You caught the ${preyName}! Prey is returning in newleaf!`,
+            'leaf-fall': `Got it! Stock up before leaf-bare!`,
+            'leaf-bare': `You caught the ${preyName}! Every catch counts in leaf-bare...`
         };
-        showMessage(catchMessages[GameState.season] || 'Great catch!');
+        showMessage(`${catchMessages[GameState.season] || `You caught the ${preyName}!`} (Prey carried: ${cat.preyCarried})`);
     } else {
-        playSoundPreyRun(); // Prey escaped!
+        playSoundPreyRun();
         const escapeMessages = {
-            'leaf-bare': 'The mouse escaped... Prey is precious in leaf-bare.',
-            'greenleaf': 'The mouse escaped! But there\'s plenty more prey.',
-            'default': 'The mouse escaped into its hole...'
+            'leaf-bare': `${preyArticle} escaped... prey is precious in leaf-bare.`,
+            'greenleaf': `${preyArticle} got away! Plenty more out there.`,
+            'default': `${preyArticle} slips away — try another hunt spot!`
         };
         showMessage(escapeMessages[GameState.season] || escapeMessages['default']);
     }
@@ -7762,7 +8175,6 @@ function endHuntingGame(caught) {
     updateGameUI();
     saveGameData();
     
-    // Return to forest
     GameState.currentLocation = 'forest';
     renderGameWorld();
 }
@@ -8891,9 +9303,9 @@ function startGameLoop() {
         
         const cat = GameState.catData;
         
-        // Decrease hunger and thirst over time
-        cat.hunger = Math.max(0, cat.hunger - 0.5);
-        cat.thirst = Math.max(0, cat.thirst - 0.7);
+        // Decrease hunger and thirst over time (much slower)
+        cat.hunger = Math.max(0, cat.hunger - 0.08);
+        cat.thirst = Math.max(0, cat.thirst - 0.10);
         
         // Kits and elders get fed automatically by the clan - but ONLY in camp!
         // In the forest, you're on your own!
@@ -9020,9 +9432,9 @@ function startGameLoop() {
             }
         }
         
-        // If hungry or thirsty, decrease health
+        // If hungry or thirsty, decrease health (much slower)
         if (cat.hunger <= 0 || cat.thirst <= 0) {
-            cat.health = Math.max(0, cat.health - 1);
+            cat.health = Math.max(0, cat.health - 0.2);
         }
         
         // Check for death - use catDeath() to properly check for evil status!
@@ -9953,6 +10365,12 @@ function doAttack() {
             closePopup();
             showAttackPlayerMenu();
         });
+        if (cat.rank !== 'Kit') {
+            addAction(actions, 'Pick up a kit (multiplayer)', () => {
+                closePopup();
+                showPickUpKitMenu();
+            });
+        }
     }
     
     addAction(actions, 'Cancel', closePopup);
@@ -11710,14 +12128,16 @@ function renderWeatherEffects() {
         }
     }
     
-    return effectsHTML;
+    // MUST NOT capture clicks — full-screen rects/lines would block hunting & the whole forest UI
+    return `<g class="weather-effects" style="pointer-events: none;" aria-hidden="true">${effectsHTML}</g>`;
 }
 
 function renderSpeechBubbles() {
     let bubblesHTML = '';
     
     // Only show speech bubbles in valid locations where there are cats
-    const validLocations = ['camp', 'forest', 'starclan_world', 'starclan_forest', 
+    const validLocations = ['camp', 'forest', 'starclan_world', 'starclan_forest',
+                            'dark_forest_world', 'dark_forest_wilds',
                             'den_nursery', 'den_warriors', 'den_elders', 'den_apprentices', 
                             'den_medicine', 'den_leader', 'barn'];
     
@@ -12201,11 +12621,12 @@ function showDarkForestScreen() {
     darkForestScreen.innerHTML = `
         <div class="darkforest-bg"></div>
         <h2 style="color: #aa0000; text-shadow: 0 0 20px rgba(170,0,0,0.8);">The Dark Forest</h2>
-        <p class="darkforest-message" style="color: #888;">You open your eyes... but there are no stars here. Only darkness and twisted trees.</p>
-        <p style="color: #666; font-style: italic; margin: 10px 0;">This is the Place of No Stars. You have been judged for your actions in life.</p>
+        <p class="darkforest-message" style="color: #c9a0a0; font-size: 1.1rem; font-weight: bold;">You now live in the Dark Forest.</p>
+        <p style="color: #888;">There are no stars here — only endless gloom, twisted roots, and the eyes of cats who chose power over mercy.</p>
+        <p style="color: #666; font-style: italic; margin: 10px 0;">The Place of No Stars. Your path is yours to walk… or leave behind.</p>
         <div class="darkforest-options" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
-            <button class="darkforest-btn" id="stay-darkforest">Wander the Dark Forest</button>
-            <button class="darkforest-btn portal-btn" id="darkforest-restart">Fade Away (New Life)</button>
+            <button class="darkforest-btn" id="stay-darkforest">Stay in the Dark Forest</button>
+            <button class="darkforest-btn portal-btn" id="darkforest-restart">Portal to a New Life</button>
         </div>
     `;
     
@@ -12243,29 +12664,56 @@ function showDarkForestScreen() {
     document.getElementById('darkforest-restart')?.addEventListener('click', restartGame);
 }
 
-// Stay in Dark Forest - explore the dark world
+// Stay in Dark Forest — walkable realm like StarClan, but starless and cruel
 function stayInDarkForest() {
     playSoundDarkForest();
-    GameState.currentLocation = 'dark_forest';
+    GameState.currentLocation = 'dark_forest_world';
     GameState.playerX = 225;
     GameState.playerY = 200;
     GameState.inDarkForest = true;
     
-    // Hide the dark forest menu screen
     const darkForestScreen = document.getElementById('darkforest-screen');
     if (darkForestScreen) darkForestScreen.classList.add('hidden');
     
     showScreen('game');
     renderGameWorld();
-    showMessage('You wander through the endless dark trees...');
+    showMessage('You fade into the Dark Forest — a ghost camp of twisted shadows. Evil cats watch from the gloom…');
 }
 
-// Render Dark Forest world
-function renderDarkForest() {
-    const gameWorld = document.getElementById('game-world');
-    
-    // Evil cats that dwell in the Dark Forest
-    const darkForestCats = [
+/** Bottom-of-screen muzzle / ears overlay so the world feels like your own eyes (not top-down cat). */
+function renderDarkForestFirstPersonRig(viewW, viewH, idSuffix) {
+    const cat = GameState.catData || {};
+    const fur = cat.furColor || '#4a3a2a';
+    const nose = '#1a0a0c';
+    const vid = `fpVignette-${idSuffix}`;
+    const earL = viewW * 0.09;
+    const earR = viewW - earL;
+    const mid = viewW / 2;
+    const bottom = viewH;
+    const earTipY = viewH - 95;
+    return `
+        <g class="darkforest-first-person-rig" pointer-events="none">
+            <defs>
+                <radialGradient id="${vid}" cx="50%" cy="42%" r="72%">
+                    <stop offset="45%" stop-color="transparent"/>
+                    <stop offset="100%" stop-color="#050102"/>
+                </radialGradient>
+            </defs>
+            <rect x="0" y="0" width="${viewW}" height="${viewH}" fill="url(#${vid})" opacity="0.88"/>
+            <path d="M ${earL - 35} ${bottom} L ${earL} ${earTipY} L ${earL + 45} ${bottom} Z" fill="${fur}" opacity="0.42"/>
+            <path d="M ${earR + 35} ${bottom} L ${earR} ${earTipY} L ${earR - 45} ${bottom} Z" fill="${fur}" opacity="0.42"/>
+            <ellipse cx="${mid}" cy="${bottom - 12}" rx="22" ry="14" fill="${nose}" opacity="0.55"/>
+            <ellipse cx="${mid - 8}" cy="${bottom - 18}" rx="4" ry="2.5" fill="#0a0505" opacity="0.35"/>
+            <ellipse cx="${mid + 8}" cy="${bottom - 18}" rx="4" ry="2.5" fill="#0a0505" opacity="0.35"/>
+            <line x1="${mid - 35}" y1="${bottom - 28}" x2="${mid - 85}" y2="${bottom - 22}" stroke="#2a1818" stroke-width="1.2" opacity="0.45"/>
+            <line x1="${mid + 35}" y1="${bottom - 28}" x2="${mid + 85}" y2="${bottom - 22}" stroke="#2a1818" stroke-width="1.2" opacity="0.45"/>
+        </g>
+    `;
+}
+
+/** Evil cats in the Dark Forest (shared between hub + wilds) */
+function getDarkForestEvilCats() {
+    return [
         { name: 'Tigerstar', x: 100, y: 180, furColor: '#8B4513', eyeColor: '#ff0000' },
         { name: 'Brokenstar', x: 320, y: 200, furColor: '#4a3a2a', eyeColor: '#ff6600' },
         { name: 'Hawkfrost', x: 200, y: 280, furColor: '#5a4a3a', eyeColor: '#00ccff' },
@@ -12273,6 +12721,12 @@ function renderDarkForest() {
         { name: 'Thistleclaw', x: 80, y: 320, furColor: '#808080', eyeColor: '#ff3300' },
         { name: 'Darkstripe', x: 280, y: 150, furColor: '#3a3a3a', eyeColor: '#ff9900' }
     ];
+}
+
+// Render Dark Forest "camp" — mirrors StarClan world's layout, very dark + evil NPCs
+function renderDarkForestWorld() {
+    const gameWorld = document.getElementById('game-world');
+    const darkForestCats = getDarkForestEvilCats();
     
     let worldHTML = `
         <svg viewBox="0 0 450 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
@@ -12284,97 +12738,212 @@ function renderDarkForest() {
                         <feMergeNode in="SourceGraphic"/>
                     </feMerge>
                 </filter>
-                <radialGradient id="darkForestGrad" cx="50%" cy="50%" r="70%">
-                    <stop offset="0%" stop-color="#1a0a0a"/>
-                    <stop offset="100%" stop-color="#0a0505"/>
+                <radialGradient id="dfWorldSky" cx="50%" cy="30%" r="80%">
+                    <stop offset="0%" stop-color="#1a0508"/>
+                    <stop offset="70%" stop-color="#0d0204"/>
+                    <stop offset="100%" stop-color="#050102"/>
                 </radialGradient>
                 <linearGradient id="bloodMist" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stop-color="transparent"/>
-                    <stop offset="50%" stop-color="#330000"/>
+                    <stop offset="50%" stop-color="#440000"/>
                     <stop offset="100%" stop-color="transparent"/>
                 </linearGradient>
             </defs>
+            <g class="darkforest-scene" transform="translate(${225 - GameState.playerX}, ${200 - GameState.playerY})">
             
-            <!-- Dark, starless sky -->
-            <rect x="0" y="0" width="450" height="400" fill="url(#darkForestGrad)"/>
+            <rect x="0" y="0" width="450" height="400" fill="url(#dfWorldSky)"/>
             
-            <!-- NO STARS - just empty darkness -->
+            <!-- No stars — drifting embers -->
+            <circle cx="60" cy="50" r="2" fill="#551111" opacity="0.5"/>
+            <circle cx="200" cy="35" r="1.5" fill="#661818" opacity="0.4"/>
+            <circle cx="380" cy="55" r="2" fill="#441010" opacity="0.45"/>
+            <circle cx="320" cy="90" r="1" fill="#330808" opacity="0.5"/>
             
-            <!-- Dead, twisted ground -->
-            <ellipse cx="225" cy="380" rx="220" ry="50" fill="#1a1010"/>
-            <ellipse cx="225" cy="375" rx="200" ry="45" fill="#2a1515"/>
+            <ellipse cx="225" cy="380" rx="220" ry="50" fill="#140808"/>
+            <ellipse cx="225" cy="375" rx="200" ry="45" fill="#1a0c0c"/>
             
-            <!-- Twisted dead trees -->
-            <g fill="#2a1a1a" stroke="#3a2a2a" stroke-width="2">
-                <path d="M30,350 L35,280 L25,230 L40,180 L30,150 L50,200 L45,260 L55,290 L50,350"/>
-                <path d="M70,360 L80,300 L75,250 L90,200 L85,170 L70,190 L75,240 L65,280 L75,320"/>
-                <path d="M380,350 L375,290 L385,240 L370,190 L380,160 L395,200 L385,250 L390,300"/>
-                <path d="M420,360 L410,310 L420,270 L405,220 L415,180 L430,230 L420,280 L430,330"/>
+            <!-- Twisted "dens" (evil mirror of StarClan camp) -->
+            <ellipse cx="90" cy="280" rx="45" ry="30" fill="#2a1518" stroke="#5a2020" stroke-width="2"/>
+            <text x="90" y="285" text-anchor="middle" fill="#884444" font-size="9">The Pit</text>
+            
+            <ellipse cx="360" cy="280" rx="45" ry="30" fill="#2a1518" stroke="#5a2020" stroke-width="2"/>
+            <text x="360" y="285" text-anchor="middle" fill="#884444" font-size="9">Bone Dens</text>
+            
+            <ellipse cx="90" cy="150" rx="45" ry="30" fill="#2a1518" stroke="#5a2020" stroke-width="2"/>
+            <text x="90" y="155" text-anchor="middle" fill="#884444" font-size="9">Warriors</text>
+            
+            <ellipse cx="360" cy="150" rx="45" ry="30" fill="#2a1518" stroke="#5a2020" stroke-width="2"/>
+            <text x="360" y="155" text-anchor="middle" fill="#884444" font-size="9">Trainees</text>
+            
+            <polygon points="200,180 225,120 250,180" fill="#3a1820" stroke="#661818" stroke-width="2"/>
+            <text x="225" y="195" text-anchor="middle" fill="#aa5555" font-size="9">Bone Ledge</text>
+            
+            <!-- Dead trees -->
+            <g fill="#1a0f0f" stroke="#2a1818" stroke-width="1.5">
+                <path d="M20,360 L30,260 L22,200 L38,160 L25,130 L45,190 L40,250 L48,300 L42,360"/>
+                <path d="M410,360 L400,270 L412,210 L395,170 L405,140 L425,200 L415,260 L428,320"/>
             </g>
             
-            <!-- Fog/mist on ground -->
-            <ellipse cx="150" cy="350" rx="80" ry="20" fill="#330000" opacity="0.2"/>
-            <ellipse cx="300" cy="340" rx="100" ry="25" fill="#220000" opacity="0.15"/>
+            <ellipse cx="225" cy="320" rx="42" ry="22" fill="#120505"/>
+            <ellipse cx="225" cy="318" rx="36" ry="18" fill="#1a0808"/>
+            <text x="225" y="322" text-anchor="middle" fill="#552222" font-size="8">Blood Pool</text>
             
-            <!-- Dark pool (blood-colored water) -->
-            <ellipse cx="225" cy="320" rx="40" ry="20" fill="#1a0505"/>
-            <ellipse cx="225" cy="318" rx="35" ry="16" fill="#2a0a0a"/>
+            <ellipse cx="225" cy="95" rx="180" ry="28" fill="url(#bloodMist)" opacity="0.35"/>
             
-            <!-- Red mist across the forest -->
-            <ellipse cx="225" cy="100" rx="180" ry="30" fill="url(#bloodMist)" opacity="0.2"/>
-            
-            <!-- Back button -->
-            <g class="darkforest-back clickable" style="cursor: pointer;">
-                <rect x="10" y="10" width="80" height="35" rx="5" fill="#3a1a1a" stroke="#660000" stroke-width="2"/>
-                <text x="50" y="32" text-anchor="middle" fill="#aa6666" font-size="11" font-weight="bold">Back</text>
+            <g class="darkforest-wilds-exit clickable" style="cursor: pointer;">
+                <rect x="365" y="28" width="78" height="38" rx="5" fill="#2a0a0a" stroke="#881818" stroke-width="2"/>
+                <text x="404" y="48" text-anchor="middle" fill="#cc6666" font-size="9" font-weight="bold">Twisted</text>
+                <text x="404" y="58" text-anchor="middle" fill="#884444" font-size="8">Wilds →</text>
             </g>
     `;
     
-    // Add evil cats wandering
     darkForestCats.forEach(cat => {
+        const depthShadow = 0.2 + (cat.y / 500);
+        const shadowW = 12 + (cat.y / 40);
         worldHTML += `
-            <g class="darkforest-cat clickable" data-name="${cat.name}" style="cursor: pointer; opacity: 0.8;">
-                <!-- Dark aura around cat -->
-                <ellipse cx="${cat.x}" cy="${cat.y}" rx="25" ry="18" fill="#330000" opacity="0.3"/>
-                
-                <!-- Cat body -->
+            <g class="darkforest-cat clickable" data-name="${cat.name}" style="cursor: pointer; opacity: 0.88;">
+                <ellipse cx="${cat.x}" cy="${cat.y + 12}" rx="${shadowW}" ry="5" fill="#000" opacity="${depthShadow.toFixed(2)}"/>
+                <ellipse cx="${cat.x}" cy="${cat.y}" rx="25" ry="18" fill="#330000" opacity="0.35"/>
                 <ellipse cx="${cat.x}" cy="${cat.y}" rx="18" ry="10" fill="${cat.furColor}"/>
-                
-                <!-- Head -->
                 <circle cx="${cat.x + 12}" cy="${cat.y - 6}" r="8" fill="${cat.furColor}"/>
-                
-                <!-- Ears -->
                 <polygon points="${cat.x + 6},${cat.y - 12} ${cat.x + 9},${cat.y - 20} ${cat.x + 13},${cat.y - 10}" fill="${cat.furColor}"/>
                 <polygon points="${cat.x + 14},${cat.y - 10} ${cat.x + 18},${cat.y - 18} ${cat.x + 17},${cat.y - 8}" fill="${cat.furColor}"/>
-                
-                <!-- Glowing evil eyes -->
                 <ellipse cx="${cat.x + 9}" cy="${cat.y - 6}" rx="2" ry="2.5" fill="${cat.eyeColor}" filter="url(#darkGlow)"/>
                 <ellipse cx="${cat.x + 15}" cy="${cat.y - 6}" rx="2" ry="2.5" fill="${cat.eyeColor}" filter="url(#darkGlow)"/>
-                
-                <!-- Name -->
                 <text x="${cat.x}" y="${cat.y + 22}" text-anchor="middle" fill="#aa6666" font-size="9" font-weight="bold">${cat.name}</text>
             </g>
         `;
     });
     
-    // Add player cat
-    worldHTML += renderDarkForestPlayerCat();
-    
+    worldHTML += renderSpeechBubbles();
+    worldHTML += `</g>`;
+    worldHTML += renderDarkForestFirstPersonRig(450, 400, 'dfhub');
     worldHTML += `</svg>`;
     
     gameWorld.innerHTML = worldHTML;
+    gameWorld.style.position = 'relative';
     
-    // Add Back button event
-    document.querySelector('.darkforest-back')?.addEventListener('click', () => {
-        showDarkForestScreen();
+    const backBtn = document.createElement('button');
+    backBtn.id = 'darkforest-hub-back-btn';
+    backBtn.textContent = '← Choices';
+    backBtn.style.cssText = `
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #3a1010, #1a0505);
+        border: 2px solid #661818;
+        border-radius: 10px;
+        color: #cc8888;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 13px;
+        z-index: 100;
+    `;
+    backBtn.addEventListener('click', () => showDarkForestScreen());
+    gameWorld.appendChild(backBtn);
+    
+    document.querySelector('.darkforest-wilds-exit')?.addEventListener('click', () => {
+        GameState.currentLocation = 'dark_forest_wilds';
+        GameState.playerX = 420;
+        GameState.playerY = 380;
+        renderGameWorld();
+        showMessage('The Twisted Wilds — roots choke the sky. Only hatred keeps these paths open…');
     });
     
-    // Click on dark forest cats to talk
     document.querySelectorAll('.darkforest-cat').forEach(catEl => {
         catEl.addEventListener('click', () => {
-            const name = catEl.dataset.name;
-            talkToDarkForestCat(name);
+            talkToDarkForestCat(catEl.dataset.name);
         });
+    });
+}
+
+// Larger dark woods (like StarClan forest) — same evil tone, more space to roam
+function renderDarkForestWilds() {
+    const gameWorld = document.getElementById('game-world');
+    const spirits = [
+        { name: 'Tigerstar', x: 180, y: 220, furColor: '#8B4513', eyeColor: '#ff0000' },
+        { name: 'Mapleshade', x: 520, y: 280, furColor: '#d4a574', eyeColor: '#ffcc00' },
+        { name: 'Brokenstar', x: 720, y: 200, furColor: '#4a3a2a', eyeColor: '#ff6600' },
+        { name: 'Hawkfrost', x: 340, y: 480, furColor: '#5a4a3a', eyeColor: '#00ccff' },
+        { name: 'Thistleclaw', x: 600, y: 520, furColor: '#808080', eyeColor: '#ff3300' },
+        { name: 'Darkstripe', x: 120, y: 420, furColor: '#3a3a3a', eyeColor: '#ff9900' }
+    ];
+    
+    let worldHTML = `
+        <svg viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+            <defs>
+                <filter id="darkGlow2" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+                    <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+                <linearGradient id="dfWildSky" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#0a0305"/>
+                    <stop offset="50%" stop-color="#120508"/>
+                    <stop offset="100%" stop-color="#050102"/>
+                </linearGradient>
+                <radialGradient id="dfWildGround" cx="50%" cy="100%" r="85%">
+                    <stop offset="0%" stop-color="#1a0808"/>
+                    <stop offset="100%" stop-color="#0a0303"/>
+                </radialGradient>
+            </defs>
+            <g class="darkforest-scene" transform="translate(${450 - GameState.playerX}, ${340 - GameState.playerY})">
+            <rect x="0" y="0" width="900" height="700" fill="url(#dfWildSky)"/>
+            <ellipse cx="450" cy="750" rx="520" ry="160" fill="url(#dfWildGround)"/>
+            
+            <polygon points="40,620 90,320 140,620" fill="#1a0c0c" opacity="0.9"/>
+            <polygon points="120,630 200,340 280,630" fill="#150808" opacity="0.85"/>
+            <polygon points="650,620 720,300 800,620" fill="#1a0c0c" opacity="0.9"/>
+            <polygon points="760,630 820,360 880,630" fill="#150808" opacity="0.85"/>
+            <polygon points="400,600 460,280 520,600" fill="#180a0a" opacity="0.8"/>
+            
+            <ellipse cx="450" cy="120" rx="380" ry="45" fill="#220808" opacity="0.25"/>
+            
+            <g class="darkforest-wilds-camp-exit clickable" style="cursor: pointer;">
+                <rect x="12" y="12" width="100" height="38" rx="5" fill="#2a0a0a" stroke="#661818" stroke-width="2"/>
+                <text x="62" y="32" text-anchor="middle" fill="#cc6666" font-size="11" font-weight="bold">← Shadow</text>
+                <text x="62" y="44" text-anchor="middle" fill="#884444" font-size="8">Camp</text>
+            </g>
+    `;
+    
+    spirits.forEach(cat => {
+        const depthShadow = 0.2 + (cat.y / 900);
+        const shadowW = 12 + (cat.y / 60);
+        worldHTML += `
+            <g class="darkforest-wild-cat clickable" data-name="${cat.name}" style="cursor: pointer; opacity: 0.9;">
+                <ellipse cx="${cat.x}" cy="${cat.y + 14}" rx="${shadowW}" ry="6" fill="#000" opacity="${depthShadow.toFixed(2)}"/>
+                <ellipse cx="${cat.x}" cy="${cat.y}" rx="28" ry="20" fill="#330000" opacity="0.3"/>
+                <ellipse cx="${cat.x}" cy="${cat.y}" rx="20" ry="11" fill="${cat.furColor}"/>
+                <circle cx="${cat.x + 14}" cy="${cat.y - 7}" r="9" fill="${cat.furColor}"/>
+                <polygon points="${cat.x + 6},${cat.y - 14} ${cat.x + 10},${cat.y - 24} ${cat.x + 15},${cat.y - 12}" fill="${cat.furColor}"/>
+                <polygon points="${cat.x + 16},${cat.y - 12} ${cat.x + 21},${cat.y - 22} ${cat.x + 20},${cat.y - 10}" fill="${cat.furColor}"/>
+                <ellipse cx="${cat.x + 10}" cy="${cat.y - 7}" rx="2.5" ry="3" fill="${cat.eyeColor}" filter="url(#darkGlow2)"/>
+                <ellipse cx="${cat.x + 18}" cy="${cat.y - 7}" rx="2.5" ry="3" fill="${cat.eyeColor}" filter="url(#darkGlow2)"/>
+                <text x="${cat.x}" y="${cat.y + 26}" text-anchor="middle" fill="#aa5555" font-size="10" font-weight="bold">${cat.name}</text>
+            </g>
+        `;
+    });
+    
+    worldHTML += renderSpeechBubbles();
+    worldHTML += '</g>';
+    worldHTML += renderDarkForestFirstPersonRig(900, 700, 'dfwilds');
+    worldHTML += '</svg>';
+    
+    gameWorld.innerHTML = worldHTML;
+    
+    document.querySelector('.darkforest-wilds-camp-exit')?.addEventListener('click', () => {
+        GameState.currentLocation = 'dark_forest_world';
+        GameState.playerX = 225;
+        GameState.playerY = 200;
+        renderGameWorld();
+        showMessage('You slink back toward the shadow camp…');
+    });
+    
+    document.querySelectorAll('.darkforest-wild-cat').forEach(el => {
+        el.addEventListener('click', () => talkToDarkForestCat(el.dataset.name));
     });
 }
 
@@ -13601,6 +14170,7 @@ function handleNewConnection(conn) {
         console.log('Connection closed:', conn.peer);
         showHostStatus('Connection CLOSED: ' + conn.peer);
         GameState.connections = GameState.connections.filter(c => c.peer !== conn.peer);
+        clearMultiplayerCarryForPeer(conn.peer);
         delete GameState.otherPlayers[conn.peer];
         updatePlayerList();
         broadcastToAll({ type: 'playerLeft', peerId: conn.peer });
@@ -13665,18 +14235,46 @@ function handlePeerData(peerId, data) {
             updatePlayerList();
             break;
             
-        case 'playerUpdate':
-            // Update a specific player's position/state
-            if (GameState.otherPlayers[data.peerId]) {
-                Object.assign(GameState.otherPlayers[data.peerId], data.update);
-            } else {
-                GameState.otherPlayers[data.peerId] = data.update;
+        case 'carryKitRequest':
+            if (GameState.isHost) {
+                applyCarryKitSync({
+                    type: 'carryKitSync',
+                    carrierPeerId: data.carrierPeerId,
+                    kitPeerId: data.kitPeerId,
+                    active: data.active
+                });
+                broadcastToAll({
+                    type: 'carryKitSync',
+                    carrierPeerId: data.carrierPeerId,
+                    kitPeerId: data.kitPeerId,
+                    active: data.active
+                });
             }
+            break;
+            
+        case 'carryKitSync':
+            applyCarryKitSync(data);
+            if (GameState.currentScreen === 'game' || GameState.currentScreen === 'gameplay') {
+                renderGameWorld();
+            }
+            updatePlayerList();
+            break;
+            
+        case 'playerUpdate': {
+            // Update a specific player's position/state (merge host into 'host' row on clients)
+            const storageKey = getOtherPlayersStorageKey(data.peerId) || data.peerId;
+            if (GameState.otherPlayers[storageKey]) {
+                Object.assign(GameState.otherPlayers[storageKey], data.update);
+            } else {
+                GameState.otherPlayers[storageKey] = data.update;
+            }
+            snapAllCarriedKitsInState();
             // Re-render if in gameplay
-            if (GameState.currentScreen === 'gameplay') {
+            if (GameState.currentScreen === 'gameplay' || GameState.currentScreen === 'game') {
                 renderGameWorld();
             }
             break;
+        }
         
         case 'nightSync':
             // Sync night/day with other players!
@@ -13707,10 +14305,12 @@ function handlePeerData(peerId, data) {
             break;
             
         case 'playerLeft':
+            clearMultiplayerCarryForPeer(data.peerId);
             delete GameState.otherPlayers[data.peerId];
-            if (GameState.currentScreen === 'gameplay') {
+            if (GameState.currentScreen === 'gameplay' || GameState.currentScreen === 'game') {
                 renderGameWorld();
             }
+            updatePlayerList();
             break;
             
         case 'chat':
@@ -13737,11 +14337,12 @@ function handlePeerData(peerId, data) {
             showMessage('The game is starting! Choose your clan.');
             break;
             
-        case 'attack':
-            // Another player is attacking us!
-            receiveAttackFromPlayer(data.attackerName, data.damage);
-            
-            // If host, broadcast to all other clients
+        case 'attack': {
+            // Only the targeted player takes damage (was: everyone who received the message took damage)
+            if (isLocalPlayerAttackTarget(data.targetPeerId)) {
+                receiveAttackFromPlayer(data.attackerName, data.damage);
+            }
+            // Host relays to all clients except the sender so the victim (if a client) receives the hit
             if (GameState.isHost) {
                 GameState.connections.forEach(conn => {
                     if (conn.peer !== peerId && conn.open) {
@@ -13750,11 +14351,34 @@ function handlePeerData(peerId, data) {
                 });
             }
             break;
+        }
             
         case 'playerDied': {
             // Remove dead player from the world so they disappear for everyone
-            if (data.peerId) delete GameState.otherPlayers[data.peerId];
-            if (data.isHost) delete GameState.otherPlayers['host'];
+            if (data.peerId && GameState.peer?.id === data.peerId) {
+                GameState.carriedByPeerId = null;
+                GameState.carryingKitPeerId = null;
+            }
+            if (data.peerId) {
+                if (GameState.carryingKitPeerId === data.peerId) GameState.carryingKitPeerId = null;
+                if (GameState.carriedByPeerId === data.peerId) GameState.carriedByPeerId = null;
+                const storageKey = getOtherPlayersStorageKey(data.peerId);
+                delete GameState.otherPlayers[data.peerId];
+                if (storageKey && String(storageKey) !== String(data.peerId)) {
+                    delete GameState.otherPlayers[storageKey];
+                }
+            }
+            if (data.isHost) {
+                const hostPid = GameState.roomCode;
+                if (GameState.carryingKitPeerId && hostPid && GameState.carryingKitPeerId === hostPid) {
+                    GameState.carryingKitPeerId = null;
+                }
+                if (GameState.carriedByPeerId && hostPid && GameState.carriedByPeerId === hostPid) {
+                    GameState.carriedByPeerId = null;
+                }
+                clearMultiplayerCarryForPeer(hostPid);
+                delete GameState.otherPlayers['host'];
+            }
             
             addChatMessage('', `${data.playerName} faded away...`, true);
             showMessage(`${data.playerName} is gone...`);
@@ -13794,12 +14418,15 @@ function sendPlayerData() {
             eyeColor: GameState.catData?.eyeColor || '#2ecc71',
             pattern: GameState.catData?.pattern || 'solid',
             clan: GameState.selectedClan || 'thunder',
+            rank: GameState.catData?.rank || 'Kit',
             x: GameState.playerX,
             y: GameState.playerY,
             location: GameState.currentLocation,
             emotion: GameState.currentEmotion,
             isSitting: GameState.isSitting,
-            isHost: GameState.isHost
+            isHost: GameState.isHost,
+            carryingKitPeerId: GameState.carryingKitPeerId || null,
+            carriedByPeerId: GameState.carriedByPeerId || null
         }
     };
     
@@ -13849,10 +14476,13 @@ function broadcastAllPlayers() {
         eyeColor: GameState.catData?.eyeColor || '#2ecc71',
         pattern: GameState.catData?.pattern || 'solid',
         clan: GameState.selectedClan || 'thunder',
+        rank: GameState.catData?.rank || 'Warrior',
         x: GameState.playerX,
         y: GameState.playerY,
         location: GameState.currentLocation,
-        isHost: true
+        isHost: true,
+        carryingKitPeerId: GameState.carryingKitPeerId || null,
+        carriedByPeerId: GameState.carriedByPeerId || null
     };
     
     broadcastToAll({ type: 'allPlayers', players: allPlayers });
@@ -14065,11 +14695,14 @@ function sendPositionUpdate() {
             eyeColor: GameState.catData?.eyeColor || '#2ecc71',
             pattern: GameState.catData?.pattern || 'solid',
             clan: GameState.selectedClan || 'thunder',
+            rank: GameState.catData?.rank || 'Kit',
             x: GameState.playerX,
             y: GameState.playerY,
             location: GameState.currentLocation,
             emotion: GameState.currentEmotion,
-            isSitting: GameState.isSitting
+            isSitting: GameState.isSitting,
+            carryingKitPeerId: GameState.carryingKitPeerId || null,
+            carriedByPeerId: GameState.carriedByPeerId || null
         }
     };
     
@@ -14405,7 +15038,7 @@ function attackOtherPlayer(targetPeerId, targetName) {
         type: 'attack',
         attackerName: cat.name,
         attackerPeerId: GameState.peer?.id,
-        targetPeerId: targetPeerId,
+        targetPeerId: resolveAttackTargetPeerId(targetPeerId) || targetPeerId,
         damage: damage
     };
     
@@ -14446,6 +15079,8 @@ function receiveAttackFromPlayer(attackerName, damage) {
     
     // Check if dead
     if (cat.health <= 0) {
+        GameState.carriedByPeerId = null;
+        GameState.carryingKitPeerId = null;
         // Notify others of death so they disappear from the map
         const deathData = {
             type: 'playerDied',
